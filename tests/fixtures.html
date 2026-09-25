@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>X Capture · local fixture, NOT a real X page</title>
+<style>body{font:16px sans-serif}article{margin:14px;padding:16px;border:1px solid #ddd}img{max-width:220px}</style>
+<link rel="canonical" href="https://x.com/fixture_author/status/90001">
+<main><div data-testid="primaryColumn">
+<article data-testid="tweet" data-post-id="90001">
+<div data-testid="User-Name"><a href="/fixture_author">测试作者</a><a href="/fixture_author">@fixture_author</a><svg data-testid="icon-verified"></svg></div>
+<a href="/fixture_author/status/90001"><time datetime="2026-09-25T04:00:00Z">9月25日</time></a>
+<div data-testid="tweetText">这是主帖，<strong>粗体需要保留</strong>。<br><em>斜体背景</em>与<a href="https://example.com/reference">官方资料</a>。</div>
+<div data-testid="quoteTweet" role="link">
+ <div data-testid="User-Name"><a href="/quoted_author">被引用作者</a><a href="/quoted_author">@quoted_author</a></div>
+ <a href="/quoted_author/status/90999"><time datetime="2026-09-23T06:00:00Z">9月23日</time></a>
+ <div data-testid="tweetText">引用原文不能混进主帖正文。</div>
+</div>
+<div data-testid="pollResults"><div data-testid="pollOption-0">选项甲 65%</div><div data-testid="pollOption-1">选项乙 35%</div><div data-testid="pollSummary">200 票 · 已结束</div></div>
+<div data-testid="communityNote">背景说明：采集时可见的补充信息。</div>
+<div role="group"><button data-testid="reply" aria-label="12 Replies">12</button><button data-testid="retweet">4</button><button data-testid="like">45</button><a href="/fixture_author/status/90001/analytics">2,100</a></div>
+</article>
+<article data-testid="tweet" data-post-id="90002" data-in-reply-to-status-id="90001">
+<div data-testid="User-Name"><a href="/fixture_author">测试作者</a><a href="/fixture_author">@fixture_author</a></div>
+<a href="/fixture_author/status/90002"><time datetime="2026-09-25T04:01:00Z">2 分钟</time></a>
+<div data-testid="tweetText">作者继续补充。</div><div role="group"><button data-testid="reply">0</button><button data-testid="like">7</button></div>
+</article>
+<article data-testid="tweet" data-post-id="90003" data-in-reply-to-status-id="90001">
+<div data-testid="User-Name"><a href="/reader">测试读者</a><a href="/reader">@reader</a></div>
+<a href="/reader/status/90003"><time datetime="2026-09-25T04:02:00Z">1 分钟</time></a>
+<div data-testid="tweetText">非贴主回复，也有背景价值。</div><div role="group"><button data-testid="reply">1</button><button data-testid="like">3</button></div>
+</article>
+<article data-testid="tweet" data-post-id="90004">
+<div data-testid="User-Name"><a href="/fixture_author">测试作者</a><a href="/fixture_author">@fixture_author</a></div>
+<a href="/fixture_author/status/90004"><time datetime="2026-09-25T04:03:00Z">刚刚</time></a>
+<div data-testid="tweetText">展开后的长文完整内容…</div><button data-testid="tweet-text-show-more-link">Show more</button><div role="group"><button data-testid="reply">0</button><button data-testid="like">2</button></div>
+</article>
+</div></main>
+<script>
+const item=document.querySelector('[data-post-id="90004"]');
+item['__reactProps$fixture']={children:{tweet:{rest_id:'90004',legacy:{full_text:'展开后的长文完整内容。不能因为在页面上折叠而漏掉最后一段。',in_reply_to_status_id_str:'90002',conversation_id_str:'90001'},auth_token:'NOT-A-REAL-TOKEN-DO-NOT-COPY'}}};
+</script>
