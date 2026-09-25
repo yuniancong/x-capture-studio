@@ -12,7 +12,7 @@ export function safeLink(value:string,base='https://x.com/'):string|undefined{
 export function allowedAsset(url:string):boolean{
   try{const u=new URL(url);return u.protocol==='https:'&&!u.username&&!u.password&&(!u.port||u.port==='443')&&(/^([a-z\d-]+\.)*twimg\.com$/.test(u.hostname)||u.href==='https://raw.githubusercontent.com/notofonts/noto-cjk/Sans2.004/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf');}catch{return false;}
 }
-export function plainText(p:{blocks:any[]}):string{return p.blocks.map(b=>b.kind==='text'?b.runs.map((r:any)=>r.text).join(''):b.kind==='media'?(`[${b.media.kind}: ${b.media.alt||'媒体'}]`):b.kind==='embed'?(`[嵌入帖子]\n${plainText(b.post)}`):'').join('\n');}
+export function plainText(p:{blocks:any[]}):string{return p.blocks.map(b=>b.kind==='text'?b.runs.map((r:any)=>r.text).join(''):b.kind==='media'?`[${b.media.kind}: ${b.media.alt||'媒体'}]`:b.kind==='embed'?`[嵌入帖子]\n${plainText(b.post)}`:'').join('\n');}
 
 /** Copy the selected contextual record without pretending hidden fields were captured. */
 export function contextText(p:any,identity=true,sources=true,depth=0):string{
