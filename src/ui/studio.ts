@@ -4,7 +4,8 @@ import {postRole,ROLE_LABELS,rootPost,selectByRule,mergePosts} from '../core/sel
 import {Collector} from '../core/collector';
 import {layoutCapture} from '../core/layout';
 import {drawScene,exportBudget} from '../core/canvas';
-import {plainText,contextText} from '../core/urls';
+import {plainText} from '../core/urls';
+import {TextTools} from './text-tools';
 import {cacheFont,clearFont,loadAssets,loadPdfFont,useMemoryFont,decodeData} from '../platform/assets';
 import {exportPNG,mobileDevice} from '../export/png';
 import {provenance} from '../export/metadata';
@@ -18,6 +19,7 @@ export class Studio {
   capture:Capture; assets:AssetMap=new Map(); scene:Scene={width:760,height:100,commands:[],links:[],cards:[],texts:[],warnings:[]};
   private hostElement:HTMLDivElement;private shadow:ShadowRoot;private studio:HTMLDivElement;private controls:HTMLDivElement;
   private stage:HTMLDivElement;private preview:HTMLDivElement;private counter:HTMLSpanElement;private dimensions:HTMLSpanElement;
+  private tabs!:HTMLDivElement;private textTools:TextTools;
   private quality:HTMLDivElement;private status:HTMLDivElement;private tab='style';private saved:Record<string,Options>={};
   private zoom=1;private autoZoom=true;private observer?:IntersectionObserver;private resize?:ResizeObserver;private repaint=0;private toastTimer=0;
   private busy=false;private closed=false;private abort?:AbortController;private assetAbort=new AbortController();private overlay?:HTMLElement;
@@ -29,18 +31,21 @@ export class Studio {
     this.stage=el('div',{class:'xc-stage'});this.preview=el('div',{class:'xc-preview'});this.stage.append(this.preview);
     this.counter=el('span',{class:'xc-counter'});this.dimensions=el('span');this.quality=el('div',{class:'xc-quality'});this.status=el('div',{class:'xc-status',role:'status','aria-live':'polite',hidden:true});
     this.controls=el('div',{class:'xc-controls'});
+    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay()});
     const fit=button('适应预览',()=>{this.autoZoom=true;this.paint();},'xc-textbtn');
     const zoomOut=el('button',{type:'button',class:'xc-iconbtn','aria-label':'缩小预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.max(.2,this.zoom/1.2);this.paint();}},icon('minus',15));
     const zoomIn=el('button',{type:'button',class:'xc-iconbtn','aria-label':'放大预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.min(2.5,this.zoom*1.2);this.paint();}},icon('plus',15));
     const workspace=el('div',{class:'xc-workspace'},el('div',{class:'xc-topbar'},el('div',{},el('strong',{},'实时预览'),this.counter,host.kind==='demo'?el('span',{class:'xc-demo-mark'},'演示数据'):null),el('div',{class:'xc-tools'},fit,zoomOut,zoomIn)),this.stage,el('div',{class:'xc-stage-note'},'预览缩放不改变导出清晰度 · 原文只读 · 不添加水印'));
     const header=el('div',{class:'xc-header'},el('div',{class:'xc-brand'},icon('camera',20)),el('div',{},el('h1',{class:'xc-title'},'X CAPTURE'),el('div',{class:'xc-version'},'STUDIO · '+VERSION)),button('放大预览',()=>this.studio.classList.toggle('preview-large'),'xc-textbtn xc-mobile-preview-toggle'),el('button',{type:'button',class:'xc-iconbtn xc-close','aria-label':'关闭编辑器',onClick:()=>this.close()},icon('close')));
-    const tabs=el('div',{class:'xc-tabs',role:'tablist'});
-    for(const[key,label]of [['style','外观'],['content','内容'],['advanced','高级']])tabs.append(el('button',{type:'button',class:'xc-tab',role:'tab','aria-selected':this.tab===key,onClick:()=>{this.tab=key;tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b.textContent===label)));this.renderControls();}},label));
+    const tabs=this.tabs=el('div',{class:'xc-tabs',role:'tablist'});
+    for(const[key,label]of [['style','外观'],['content','内容'],['text','文本'],['advanced','高级']])tabs.append(el('button',{type:'button',class:'xc-tab',role:'tab','data-tab':key,'aria-selected':this.tab===key,onClick:()=>this.switchTab(key)},label));
     const png=el('button',{type:'button',class:'xc-export','data-action':'png',onClick:()=>void this.generate('png')},icon('download',17),'导出 PNG');
     const pdf=el('button',{type:'button',class:'xc-export secondary','data-action':'pdf',onClick:()=>void this.generate('pdf')},icon('file',17),'导出 PDF');
     const copy=el('button',{type:'button',class:'xc-textbtn','data-action':'copy',onClick:()=>void this.copyImage()},icon('copy',13),'复制图片');
-    const texts=button('复制上下文文本',()=>void this.copyText(),'xc-textbtn');
-    const footer=el('div',{class:'xc-footer'},el('div',{class:'xc-dimensions'},this.dimensions,this.quality),el('div',{class:'xc-export-row'},png,pdf),el('div',{class:'xc-footer-tools'},copy,texts),el('div',{class:'xc-shortcut'},'⌘ / Ctrl + S 导出 · Esc 关闭'));
+    const texts=button('复制文本',()=>void this.textTools.copy('text'),'xc-textbtn');
+    texts.dataset.action='copy-text';
+    const textExport=button('文本导出',()=>this.switchTab('text'),'xc-textbtn');
+    const footer=el('div',{class:'xc-footer'},el('div',{class:'xc-dimensions'},this.dimensions,this.quality),el('div',{class:'xc-export-row'},png,pdf),el('div',{class:'xc-footer-tools'},copy,texts,textExport),el('div',{class:'xc-shortcut'},'⌘ / Ctrl + S 导出 · Esc 关闭'));
     const panel=el('aside',{class:'xc-panel'},header,tabs,this.controls,footer);
     this.studio=el('div',{class:'xc-studio',role:'dialog','aria-modal':'true','aria-label':'X Capture 编辑器',tabindex:'-1'},workspace,panel,this.status);
     this.shadow.append(el('style',{},STYLES),el('div',{class:'xc-backdrop'},this.studio));
@@ -48,19 +53,22 @@ export class Studio {
       if(this.closed)return;
       const target=this.shadow.activeElement as HTMLElement|null;
       if(e.key==='Escape'){e.preventDefault();e.stopPropagation();this.overlay?this.closeOverlay():this.close();return;}
-      if((e.metaKey||e.ctrlKey)&&!target?.matches('input,textarea,select')){
+      const textInput=e.composedPath().some(n=>n instanceof Element&&n.matches('input,textarea,select,[contenteditable="true"]'))||!!target?.matches('input,textarea,select,[contenteditable="true"]');
+      if((e.metaKey||e.ctrlKey)&&!textInput){
         if(e.key.toLowerCase()==='s'){e.preventDefault();e.stopPropagation();void this.generate('png');}
         if(e.key.toLowerCase()==='c'&&!window.getSelection()?.toString()){e.preventDefault();e.stopPropagation();void this.copyImage();}
       }
       if(e.key==='Tab'){
-        const area=this.overlay||this.studio;const focusables=[...area.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input,select,[tabindex="0"]')].filter(n=>n.getClientRects().length>0);
+        const area=this.overlay||this.studio;const focusables=[...area.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input,textarea,select,[tabindex="0"]')].filter(n=>n.getClientRects().length>0);
         const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&target===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&target===last){e.preventDefault();first?.focus();}
       }
     };
   }
   async open(){
+    const textOptionsReady=this.textTools.load();
     this.options=normalizeOptions(await this.host.getValue('options',DEFAULTS).catch(()=>DEFAULTS));
     const saved=await this.host.getValue<Record<string,unknown>>('presets',{}).catch(()=>({}));for(const[k,v]of Object.entries(saved||{}).slice(0,50))this.saved[k]=normalizeOptions(v);
+    await textOptionsReady;
     this.order=this.capture.posts.map(p=>p.id);
     this.selected=selectByRule(this.capture,this.options.defaultReplies==='all'?'all':this.options.defaultReplies==='direct'?'direct':'thread');
     if(!this.selected.size&&this.capture.posts[0])this.selected.add(this.capture.posts[0].id);
@@ -69,7 +77,7 @@ export class Studio {
     if(typeof ResizeObserver!=='undefined'){this.resize=new ResizeObserver(()=>{if(this.autoZoom)this.schedule();});this.resize.observe(this.stage);}
     await this.refreshAssets();
   }
-  close(){if(this.closed)return;this.closed=true;this.abort?.abort();this.assetAbort.abort();this.observer?.disconnect();this.resize?.disconnect();cancelAnimationFrame(this.repaint);clearTimeout(this.toastTimer);document.removeEventListener('keydown',this.keyboard,true);document.documentElement.style.overflow=this.overflow;
+  close(){if(this.closed)return;this.closed=true;this.textTools.dispose();this.abort?.abort();this.assetAbort.abort();this.observer?.disconnect();this.resize?.disconnect();cancelAnimationFrame(this.repaint);clearTimeout(this.toastTimer);document.removeEventListener('keydown',this.keyboard,true);document.documentElement.style.overflow=this.overflow;
     if(this.lastResult){const url=this.lastResult.url;setTimeout(()=>URL.revokeObjectURL(url),60000);}this.hostElement.remove();if(this.previousFocus instanceof HTMLElement)this.previousFocus.focus();this.onClose?.();}
   private toast(message:string,sticky=false){if(this.closed)return;clearTimeout(this.toastTimer);this.status.textContent=message;this.status.hidden=false;if(!sticky)this.toastTimer=window.setTimeout(()=>this.status.hidden=true,6500);}
   private schedule(){cancelAnimationFrame(this.repaint);this.repaint=requestAnimationFrame(()=>this.render());}
@@ -94,6 +102,7 @@ export class Studio {
     await this.prepareBackground();
     const failures=await loadAssets(this.capture,this.host,this.assets,undefined,this.assetAbort.signal);if(this.closed)return;this.render();if(failures.length)this.toast(`${failures.length} 项媒体未载入；会保留占位并提示，不会伪装成完整媒体。`);
   }
+  private switchTab(key:string){this.tab=key;this.studio.classList.remove('preview-large');this.studio.classList.toggle('text-active',key==='text');this.tabs.querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===key)));this.renderControls();}
   private renderControls(){
     const o=this.options,nodes:Node[]=[];const change=(patch:Partial<Options>)=>this.update(patch);
     if(this.tab==='style'){
@@ -132,6 +141,8 @@ export class Studio {
         if(p.url)tools.append(el('a',{href:p.url,target:'_blank',rel:'noopener noreferrer',class:'xc-iconbtn','aria-label':'打开原帖 '+p.id,title:'打开原帖'},icon('external',13)));row.append(tools);nodes.push(row);
       }
       if(!this.capture.posts.length)nodes.push(el('p',{class:'xc-warning'},'未找到帖子。请在 X 打开一条帖子或 Article 的详情页，等待正文出现后重试。'));
+    }else if(this.tab==='text'){
+      nodes.push(this.textTools.render());
     }else{
       nodes.push(range('版式宽度',o.width,320,1800,10,v=>change({width:v}),'CSS px'));
       nodes.push(group('宽度快捷选择',segment([[390,'手机'],[680,'标准'],[760,'宽卡片']],o.width,v=>this.update({width:v},true))));
@@ -230,7 +241,6 @@ export class Studio {
     catch(e){this.toast((e as Error).message||'无法复制，请改用导出文件。');}
     finally{if(!this.closed)this.setBusy(false);}
   }
-  private async copyText(){try{const posts=this.order.filter(id=>this.selected.has(id)).map(id=>this.capture.posts.find(p=>p.id===id)!).filter(Boolean);const value=posts.map(p=>contextText(p,!this.options.anonymize,!this.options.anonymize||this.options.anonymousSources)).join('\n\n────────\n\n');await navigator.clipboard.writeText(value);this.toast('已复制选中内容的文本。');}catch{this.toast('此环境不允许读取剪贴板权限，请使用文本型 PDF。');}}
   private gallery(src:string){const images=this.scene.commands.filter(c=>c.type==='image'&&c.w>80);const urls=[...new Set(images.map(c=>c.type==='image'?c.src:''))];let idx=urls.indexOf(src);
     const show=()=>{const url=urls[idx],asset=this.assets.get(url);if(!asset)return;const card=el('div',{class:'xc-result-card',style:'width:800px'},el('button',{type:'button',class:'xc-iconbtn xc-result-close','aria-label':'关闭媒体预览',onClick:()=>this.closeOverlay()},icon('close')),el('h2',{class:'xc-result-title'},'媒体预览'),el('div',{class:'xc-result-meta'},`${idx+1} / ${urls.length} · 仅用于核对显示内容`),el('img',{src:asset.dataUrl,class:'xc-gallery-img',alt:'帖子媒体预览'}),el('div',{class:'xc-button-row',style:'margin-top:15px'},button('上一张',()=>{idx=(idx-1+urls.length)%urls.length;show();}),button('下一张',()=>{idx=(idx+1)%urls.length;show();})));this.showOverlay(card);};show();}
   private showOverlay(card:HTMLElement){this.closeOverlay();this.overlay=el('div',{class:'xc-result',role:'dialog','aria-modal':'true'},card);this.studio.append(this.overlay);this.overlay.querySelector<HTMLElement>('button,a')?.focus();}
