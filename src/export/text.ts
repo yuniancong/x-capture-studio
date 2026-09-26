@@ -29,6 +29,7 @@ export function normalizeTextOptions(value: unknown): TextOptions {
   return result;
 }
 const normalize = (s: string) => s.replace(/\r\n?/g, '\n').replace(/\u0000/g, '');
+/** Escape data, not whole documents. Captured HTML must never become active Markdown HTML. */
 function escapeMarkdown(s: string): string {
   return normalize(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/([\\`*_[\]~|])/g, '\\$1').replace(/^(\s*)([#>+\-])/gm, '$1\\$2')
@@ -43,9 +44,14 @@ function inlineCode(s: string) {
   const pad = /^[` ]|[` ]$/.test(s) ? ' ' : '';
   return marks + pad + s + pad + marks;
 }
-function markdownURL(s: string) { return s.replace(/[<>\s]/g, c => encodeURIComponent(c)); }
+function markdownURL(s: string) {
+  return s.replace(/[<>\s]/g, c => encodeURIComponent(c));
+}
 const validHandle = (s: string | undefined): s is string => !!s && s !== 'unknown' && /^[A-Za-z0-9_]{1,40}$/.test(s);
 
+/** One pure serializer for copy and file export. No DOM, media fetch, font or clipboard dependency.
+ * Only selected top-level posts are included, in exactly the same order as the visual export.
+ * Embedded posts remain nested; missing information is explicitly marked rather than fabricated. */
 export function serializeText(
   capture: Capture, selected: Set<string>, order: string[], rawOptions: TextOptions,
   format: TextFormat = 'text', privacy: TextPrivacy = {}
@@ -128,6 +134,7 @@ export function serializeText(
       if (b.kind === 'media') {
         if (!o.includeMedia) return '';
         const m = b.media, label = m.kind === 'image' ? '图片' : m.kind === 'gif' ? 'GIF' : '视频';
+        // Alt text is the observed value. Do not infer image contents or append resource URLs.
         const alt = m.alt?.trim();
         return txt(`[${label}${m.duration ? ' · ' + m.duration : ''}${alt && !['帖子图片', '视频封面', '文章内视频', '引用帖媒体'].includes(alt) ? '：' + alt : ''}]`);
       }
