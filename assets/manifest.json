@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "X Capture Studio",
-  "version": "1.0.0.2",
-  "version_name": "1.0.0-rc.2",
-  "description": "将 X / Twitter 帖子、长文及选中的回复导出为高清长图和保留文本的长页 PDF。无强制水印，本地生成。",
+  "version": "1.0.0.4",
+  "version_name": "1.0.0-rc.4",
+  "description": "将 X / Twitter 帖文、长文及选中回复保存为高清长图、文本 PDF、TXT 或 Markdown；支持复制文本与 AI 上下文，本地处理。",
   "permissions": [
     "storage",
     "clipboardWrite",
