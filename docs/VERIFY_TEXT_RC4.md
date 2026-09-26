@@ -39,16 +39,19 @@ Stay 专项执行实际分发 userscript，在 Chromium CDP 隔离环境中验�
 
 ## 复现
 
+仓库内可直接复现的检查：
+
 ```sh
 npm install
 npm run typecheck
 npm run build
 npm test
-XC_BROWSER=/path/to/chromium XC_TEXT_QA_DIR=/tmp/xc-text python tests/text_export_qa.py
 XC_OLD_SCRIPT=/path/to/rc2.user.js XC_BROWSER=/path/to/chromium XC_QA_OUT=/tmp/xc-stay python tests/stay_startup_qa.py
 XC_TEST_FONT=/path/to/embeddable-cjk-font XC_BROWSER=/path/to/chromium XC_QA_DIR=/tmp/xc-browser python tests/browser_qa.py
 XC_TEST_FONT=/path/to/embeddable-cjk-font XC_BROWSER=/path/to/chromium XC_QA_DIR=/tmp/xc-rc2 python tests/rc2_regression.py
 ```
+
+本轮另外执行的 34 项文本 UI / 文件 / 剪贴板与分享适配专项检查来自 rc.4 交付包的完整 QA harness；当前 GitHub main 没有单独提交该浏览器专项脚本，因此不把它列为仓库内可直接复现命令。文本核心 29 项已纳入 `scripts/test-text.cjs` 并由 `npm test` 执行。
 
 PDF 测试字体只用于本地测试，不包含在源码/安装包中。QA 目录保留本轮完整通过的 JSON 结果和日志；无真实帖子、凭证或字体文件。
 
