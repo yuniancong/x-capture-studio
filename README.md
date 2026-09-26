@@ -1,105 +1,50 @@
-# X Capture Studio
+# X Capture Studio · rc.4
 
-本地优先的 X / Twitter 高保真内容保存工具，同时提供：
+把 X / Twitter 主帖、作者串、长文及手动选中的回复背景，保存为高清长图、文本型 PDF、纯文本或 Markdown。支持 Chromium 浏览器扩展和 Safari + Stay 用户脚本；本地处理，无强制水印。
 
-- **Chromium 浏览器扩展**：Chrome / Edge 等 Chromium 浏览器。
-- **Stay Userscript**：用于 iPhone / iPad 的 **Safari + Stay**。
+## 新增文本功能
 
-核心目标不是媒体下载，而是把 Tweet、Thread、Article 以及用户选中的回复上下文，以接近 X 原始浏览外观的方式保存为高清长图或保留真实文字的 PDF。
+打开 Capture Studio → **文本**。
 
-![X Capture Studio](docs/assets/capture-studio-preview.png)
+- 底部 **复制文本**：快速复制当前选中的内容，默认纯文本。
+- 文本页签选择 **纯文本 / Markdown**，分别复制或导出 `.txt` / `.md`。
+- **复制给 AI**：结构化 Markdown + 简短的选择/加载范围说明。
 
-## 当前推荐版本
+选区、顺序、主帖/回复/引用角色和原帖链接保持一致；保留已获取的 Article 章节、列表与代码。提供字段开关，匿名规则与工作台共享。复制受限时保留可手动选择的全文及文件保存入口。
 
-| 平台 | 推荐版本 | 状态 |
-|---|---:|---|
-| Chromium 浏览器扩展 | **1.0.0-rc.2** | 已在本地集成测试并经实际桌面使用反馈确认可用 |
-| Safari + Stay userscript | **1.0.0-rc.3** | Stay 注入方式修订版，并经实际 Safari + Stay 使用反馈确认入口正常 |
+## 安装 / 更新
 
-> `main` 保留共享源码；两个安装端目前使用不同候选版本号，因为 rc.3 只针对 Stay 注入兼容性进行了专项修订。
+当前源码版本为 **1.0.0-rc.4**。仓库中的 `releases/` 继续保留 Chromium rc.2 与 Stay rc.3 预构建文件作为历史回退；rc.4 可由当前源码直接构建。
 
-## 主要能力
+**Chromium：**运行 `npm run build` 后，在 `chrome://extensions` 开发者模式加载 `dist/extension/`。更新已有版本时替换原扩展目录中的文件、重新加载扩展并刷新 X 页面。
 
-- Single / Thread / Select 内容选择。
-- 可把非贴主回复作为上下文纳入，并逐条手动勾选。
-- 分块卡片、接近 X 原貌、文档三种布局。
-- 参数化背景、渐变、透明、自定义图片 / 壁纸背景。
-- PNG 默认单张长图，支持 1× / 2× / 3× / 4× 输出倍率。
-- PDF 默认单张长页，正文保持真实文本，可选择、复制、搜索。
-- PNG / PDF 内保存原帖来源链接；PDF 中可点击。
-- Quote Post、长文、Article、图片与视频封面按展示型内容处理。
-- 本地处理，无强制水印。
+**Safari + Stay：**运行 `npm run build` 后导入 `dist/X-Capture-Studio.user.js`，启用后回到 Safari 的 X 页面完整刷新。目标仍为 Safari + Stay，不是 X 原生 App。保留原有六个 X/Twitter 域名范围、独立入口和自检。
 
-## 安装
+> 本轮通过对话交付的 rc.4 预构建包已经过用户实际试用；GitHub 当前提交以源码和可重现构建为准，旧预构建包保留用于回退。
 
-### Chromium
+## 开发 / 构建
 
-下载并解压：
+要求 Node.js 20+。只有固定版本 TypeScript 作为开发依赖；已附固定第三方 JavaScript 引擎及其许可，无字体文件。
 
-```text
-releases/X-Capture-Studio-Chrome-v1.0.0-rc.2.zip
-```
-
-1. 打开 `chrome://extensions`。
-2. 开启「开发者模式」。
-3. 选择「加载已解压的扩展程序」。
-4. 选择解压后直接包含 `manifest.json` 的目录。
-5. 刷新 X 页面。
-
-### Safari + Stay
-
-导入：
-
-```text
-releases/X-Capture-Studio-Stay-v1.0.0-rc.3.user.js
-```
-
-在 Stay 中启用脚本并允许其访问 X / Twitter，然后回到 Safari 完整刷新 X 页面。
-
-## 开发
-
-要求 Node.js 20+。
-
-```bash
+```sh
 npm install
 npm run typecheck
 npm run build
 npm test
 ```
 
-构建输出：
+输出：`dist/extension/`、`dist/X-Capture-Studio.user.js`、`dist/X-Capture-Studio-Demo.html`。构建不会自动提交、上传或发布。
 
-- `dist/extension`
-- `dist/X-Capture-Studio.user.js`
-- `dist/X-Capture-Studio-Demo.html`
+## 状态
 
-## 项目结构
+当前仓库推荐源码版本：Chromium 与 Safari + Stay 均为 **1.0.0-rc.4**；旧 Chromium rc.2 与 Stay rc.3 保留在 `releases/` 作为历史回退。2026-09-26 用户完成实际试用并反馈 rc.4 未发现问题；该反馈记录为用户验收结果，不替代更广泛的浏览器 / iOS 兼容性测试。
 
-```text
-src/                  共享解析、选择、布局、UI、导出与平台适配
-assets/               Manifest、HTML、Stay bootstrap、图标
-vendor/               固定版本第三方 JS 引擎及许可证
-scripts/              构建与测试脚本
-tests/                单元、契约、浏览器与 Stay 启动测试
-docs/                 决策、隐私、验证、变更记录
-releases/             当前确认可用的 Chromium / Stay 安装文件
-tools/                可选辅助工具
-```
+类型检查、构建、88 项单元/契约测试通过；另有 50 / 54 / 39 / 34 项分组回归通过。浏览器测试使用离线合成页面及明确的适配器，不等同于穷尽真实 X、Safari/Stay、系统剪贴板或 iOS 分享面板场景。
 
-## 版本与验证说明
+- [文本功能与规则](docs/TEXT_EXPORT.md)
+- [本轮验证与限制](docs/VERIFY_TEXT_RC4.md)
+- [版本矩阵](docs/RELEASE_MATRIX.md)
+- [变更记录](docs/CHANGELOG.md)
+- [隐私说明](docs/PRIVACY.md)
 
-- 浏览器端当前保留 **rc.2** 作为推荐安装版。
-- Stay 当前推荐 **rc.3**；它移除了会让 Stay 进入 page injection 的 `unsafeWindow` 依赖，并对 Stay 的公开注入实现做了兼容处理。
-- X 是动态页面，DOM 结构发生变化时可能需要更新适配器。
-- 本项目不会把“当前已加载回复”宣称为 X 上的完整评论集合。
-
-详见：
-
-- [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
-- [`docs/VERIFY_STAY_RC3.md`](docs/VERIFY_STAY_RC3.md)
-- [`docs/PRIVACY.md`](docs/PRIVACY.md)
-- [`docs/RELEASE_MATRIX.md`](docs/RELEASE_MATRIX.md)
-
-## License
-
-当前仓库尚未指定项目自身的开源许可证。第三方依赖许可证见 `vendor/THIRD_PARTY_NOTICES.md`。
+本项目自身未新增开源许可。第三方许可证保留在 `vendor/THIRD_PARTY_NOTICES.md`。
