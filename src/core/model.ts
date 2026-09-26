@@ -1,5 +1,5 @@
 /** Captured facts are separate from selection, style and inferred relationships. */
-export const VERSION = '1.0.0-rc.3';
+export const VERSION = '1.0.0-rc.4';
 export interface Run { text:string; bold?:boolean; italic?:boolean; underline?:boolean; strike?:boolean; code?:boolean; href?:string; }
 export type Block = {kind:'text'; runs:Run[]; level?:number; quote?:boolean; list?:string; code?:boolean} | {kind:'media'; media:Media} | {kind:'embed'; post:Post} | {kind:'divider'};
 export interface MediaDisplay {x:number;y:number;width:number;height:number;fit:'contain'|'cover';}
