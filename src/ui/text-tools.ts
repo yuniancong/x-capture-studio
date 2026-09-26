@@ -8,6 +8,7 @@ type Snapshot = {capture: Capture; selected: Set<string>; order: string[]; priva
 type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void;};
 const formatName = (format: TextFormat) => format === 'text' ? '纯文本' : format === 'ai' ? 'AI 上下文' : 'Markdown';
 
+/** Shares the current selection, but owns text-only options. Visual styling never rewrites text. */
 export class TextTools {
   private options: TextOptions = {...TEXT_DEFAULTS};
   private format: 'text' | 'markdown' = 'markdown';
@@ -20,6 +21,7 @@ export class TextTools {
   }
   dispose() {
     this.disposed = true;
+    // Allow in-progress native downloads to retain their Blob URLs briefly.
     const urls = [...this.urls]; this.urls.clear();
     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
   }
@@ -82,6 +84,7 @@ export class TextTools {
     if (!result.postCount) { this.ui.notify('尚未选择帖子，剪贴板未更改。'); return; }
     try {
       if (typeof navigator.clipboard?.writeText !== 'function') throw new Error('clipboard unavailable');
+      // This call happens directly inside the click handler, before any await/storage/network operation.
       await navigator.clipboard.writeText(result.text);
       if (!this.disposed) this.ui.notify(`已复制${formatName(format)} · ${result.postCount} 条。`);
     } catch {
@@ -108,7 +111,7 @@ export class TextTools {
     const actions = el('div', {class: 'xc-button-row'}, download, selectAll);
     const file = new File([blob], result.filename, {type: blob.type});
     let canShare = false;
-    try { canShare = !!navigator.share && !!navigator.canShare?.({files: [file]}); } catch {}
+    try { canShare = !!navigator.share && !!navigator.canShare?.({files: [file]}); } catch { /* Native file sharing is optional. */ }
     if (canShare) actions.append(button('系统分享', () => {
       void navigator.share({files: [file], title: result.filename}).catch(error => {
         if (error?.name !== 'AbortError' && !this.disposed) this.ui.notify('系统未完成分享，请使用保存文件。');
