@@ -1,10 +1,8 @@
-# Release Matrix
+# 版本矩阵
 
-| Surface | Version | Artifact | Evidence |
-|---|---:|---|---|
-| Chromium extension | 1.0.0-rc.2 | `releases/X-Capture-Studio-Chrome-v1.0.0-rc.2.zip` | 本地 typecheck / build / unit / browser 文件回读测试；用户实际桌面使用反馈可用 |
-| Safari + Stay | 1.0.0-rc.3 | `releases/X-Capture-Studio-Stay-v1.0.0-rc.3.user.js` | Stay 注入专项测试；用户实际 Safari + Stay 反馈入口正常 |
+| 端 | 本轮候选 | 原有回退 | 验证范围 |
+|---|---|---|---|
+| Chromium 扩展 | **1.0.0-rc.4** | 1.0.0-rc.2 | 本地功能、文件及回归通过；2026-09-26 用户实际试用反馈未发现问题 |
+| Safari + Stay | **1.0.0-rc.4** | 1.0.0-rc.3 | 公共注入规则/隔离宿主模拟通过；2026-09-26 用户实际试用反馈未发现问题 |
 
-## Why the versions differ
-
-`1.0.0-rc.3` 是针对 Stay 注入模型的专项修订。桌面 Chromium 端在该轮没有必要升级，因此继续把 `1.0.0-rc.2` 作为推荐安装版本，避免把未单独做桌面实机验收的新版本冒充为已验证桌面版本。
+rc.4 新增文本导出。单长图、单长页文本 PDF 和原有外观规则保留。用户反馈记录为实际使用验收证据，但不等同于穷尽所有 X 页面结构、浏览器版本或 iOS 版本的兼容性测试。
