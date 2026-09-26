@@ -115,6 +115,7 @@ test('text: configuration normalization ignores hostile keys and invalid values'
   const x = C.normalizeTextOptions(JSON.parse('{"__proto__":{"bad":true},"includeStats":"yes","includeAuthor":false}')); assert.equal(x.includeAuthor, false); assert.equal(x.includeStats, false); assert.equal(x.bad, undefined);
 });
 
+
 test('text: Markdown preserves explicit post line breaks, without escaping digits', () => {
   const x = run([post(1, '第一行\n第二行\n1. 原文编号')], { format: 'markdown' });
   assert(x.text.includes('第一行  \n第二行'));
