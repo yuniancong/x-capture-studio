@@ -35,6 +35,8 @@ export interface MediaResources {
   variants?:ResourceVariant[]; tracks?:MediaTrack[]; manifests?:ManifestInfo[];
   domSourceKind?:'remote'|'blob'|'none';
   playbackDimensions?:{width:number;height:number;source:'video-element';observedAt:string};
+  /** PNG/PDF only: a loaded rendition chosen by the image-quality level. Never exported as a link. */
+  renderSrc?:string;
   selectedImageUrl?:string; resolutionStatus?:'pending'|'complete'|'partial'; resourceNotes?:string[];
 }
 export interface ManifestResult { variants:ResourceVariant[]; tracks:MediaTrack[]; info:ManifestInfo; variables?:Record<string,string>; }

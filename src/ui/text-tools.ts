@@ -2,6 +2,7 @@ import {resourceDiagnostics,attachObservations} from '../media/discovery';
 import {passiveMediaLog} from '../media/passive-log';
 import {MediaDiscoveryClient,DiscoveryStatus} from '../media/discovery-client';
 import {MediaResolver} from '../media/resolver';
+import type {MediaQuality} from '../media/quality';
 import {visitMedia} from '../media/resources';
 import {Capture, Host} from '../core/model';
 import {TextFormat, TextOptions, TextPrivacy, TextResult, TEXT_DEFAULTS, normalizeTextOptions, serializeText} from '../export/text';
@@ -9,8 +10,8 @@ import {mobileDevice} from '../export/png';
 import {el, button, icon} from './dom';
 import {segment, toggle} from './controls';
 
-type Snapshot = {capture: Capture; selected: Set<string>; order: string[]; privacy: TextPrivacy};
-type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void; refresh?():Promise<void>; showPage?(done:()=>void):()=>void;};
+type Snapshot = {capture: Capture; selected: Set<string>; order: string[]; privacy: TextPrivacy; quality?: MediaQuality};
+type UI = {mediaChanged?(): void; notify(message: string): void; show(card: HTMLElement): void; close(): void; refresh?():Promise<void>; showPage?(done:()=>void):()=>void;};
 const formatName = (format: TextFormat) => format === 'text' ? '纯文本' : format === 'ai' ? 'AI 上下文' : 'Markdown';
 
 /** Shares the current selection, but owns text-only options. Visual styling never rewrites text. */
@@ -27,7 +28,7 @@ export class TextTools {
   constructor(private snapshot: () => Snapshot, private host: Host, private ui: UI) {
     if(host.readResource)this.resolver=new MediaResolver((request,signal)=>host.readResource!(request,signal));
     this.discovery=new MediaDiscoveryClient(host,()=>{const s=this.snapshot();return {...s,quotes:this.options.includeQuote,private:!!(s.privacy.anonymize&&!s.privacy.anonymousSources)||!this.options.includeMedia};},
-      ()=>this.ui.refresh?.()||Promise.resolve(),status=>{if(this.discoveryStatus)this.discoveryStatus.textContent=this.discoveryMessage(status);if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}},
+      ()=>this.ui.refresh?.()||Promise.resolve(),status=>{if(this.discoveryStatus)this.discoveryStatus.textContent=this.discoveryMessage(status);if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();this.ui.mediaChanged?.();}},
       ()=>{this.returnFromPage?.();this.returnFromPage=undefined;if(!this.disposed)void this.prepareResources(true);});
   }
   async load() {
@@ -42,6 +43,8 @@ export class TextTools {
     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
   }
   selectionChanged():void {this.discovery.invalidateScope();}
+  /** Quality levels only change which known link is written; refresh the open preview. */
+  qualityChanged():void {if(!this.disposed)this.updatePreview?.();}
   /** Local only: media this page already requested, attached by CDN media identity. No request. */
   private attachPassive():void {
     if(this.disposed||!this.options.includeMedia)return;const s=this.snapshot();
@@ -50,7 +53,7 @@ export class TextTools {
   }
   result(format: TextFormat = this.format): TextResult {
     const s = this.snapshot();
-    return serializeText(s.capture, s.selected, s.order, this.options, format, s.privacy);
+    return serializeText(s.capture, s.selected, s.order, this.options, format, s.privacy, s.quality);
   }
   render(): HTMLElement {
     const root = el('section', {class: 'xc-text-tools', 'aria-label': '文本导出'});
@@ -164,7 +167,7 @@ export class TextTools {
       this.inspectionLabel=`已检查 ${done}/${total} 项媒体`;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;
     }).then(r=>{this.inspectionLabel=`媒体检查${r.partial?'部分完成':'完成'} · ${r.requests} 次有界请求 · 未验证项保留原链接`;
     }).catch(()=>{this.inspectionLabel='检查未完成，保留已发现的资源。';}).finally(()=>{
-      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}
+      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();this.ui.mediaChanged?.();}
     });return this.inspection;
   }
   async copy(format:TextFormat='text') {
@@ -172,8 +175,8 @@ export class TextTools {
     const current=this.result(format);if(!current.postCount){this.ui.notify('尚未选择帖子，剪贴板未更改。');return;}
     const ready=this.prepareResources();
     // Capture the requested selection now. A later selection change cannot change an in-flight copy.
-    const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy};
-    const result=()=>serializeText(snapshot.capture,selected,order,options,format,privacy);
+    const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy},quality=snapshot.quality&&{...snapshot.quality};
+    const result=()=>serializeText(snapshot.capture,selected,order,options,format,privacy,quality);
     try{
       if(this.inspection&&typeof navigator.clipboard?.write==='function'&&typeof ClipboardItem!=='undefined'){
         // Promise-valued ClipboardItem keeps iOS's trusted user-gesture boundary.
@@ -188,10 +191,10 @@ export class TextTools {
     }catch{await ready;if(!this.disposed)this.openResult(result(),'浏览器未允许写入剪贴板。完整正文在下方，可全选复制或保存文件。');}
   }
   async exportFile(format:TextFormat='markdown') {
-    if(this.disposed)return;const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy};
+    if(this.disposed)return;const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy},quality=snapshot.quality&&{...snapshot.quality};
     if(!selected.size){this.ui.notify('尚未选择帖子，请先在「内容」中勾选。');return;}
     await this.prepareResources();if(this.disposed)return;
-    const result=serializeText(snapshot.capture,selected,order,options,format,privacy);const download=this.openResult(result);if(!mobileDevice())download.click();
+    const result=serializeText(snapshot.capture,selected,order,options,format,privacy,quality);const download=this.openResult(result);if(!mobileDevice())download.click();
   }
   private openResult(result: TextResult, message?: string): HTMLAnchorElement {
     const blob = new Blob([result.text], {type: result.mimeType}), url = URL.createObjectURL(blob);

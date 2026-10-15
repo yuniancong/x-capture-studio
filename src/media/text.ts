@@ -3,7 +3,8 @@ import {sourceURL} from '../core/urls';
 import {videoPageForMedia} from '../core/media-links';
 import {preferredImage,recommendedVariants,existingVariants,sensitiveURL,resourceURL,mediaFormat,trackEvidence,mergeTracks} from './resources';
 import type {ResourceVariant,MediaTrack} from './types';
-export interface MediaTextOptions { all:boolean; images:boolean; subtitles:boolean; sensitive:boolean; markdown:boolean; links:boolean; sources:boolean; }
+import {ImageLevel,VideoLevel,verifiedImageForLevel,videoVariantsForLevel} from './quality';
+export interface MediaTextOptions { all:boolean; images:boolean; subtitles:boolean; sensitive:boolean; markdown:boolean; links:boolean; sources:boolean; imageLevel?:ImageLevel; videoLevel?:VideoLevel; }
 const escape=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/([\\`*_[\]~|])/g,'\\$1');
 const urlText=(s:string,md:boolean)=>md?'<'+s.replace(/[<>\s]/g,c=>encodeURIComponent(c))+'>':s;
 function details(v:ResourceVariant,all:boolean):string {
@@ -30,7 +31,8 @@ export function mediaTextLines(m:Media,p:Post,o:MediaTextOptions):{text:string;w
   let hidden=false;const addr=(url:string,flag?:boolean)=>{if(restricted(url,flag)){hidden=true;return;}return urlText(url,o.markdown);};
   const lines:string[]=[];
   if(m.kind==='image'){
-    const best=preferredImage(m);const address=best&&addr(best.url,best.sensitive);
+    // A chosen level uses its decoded rendition (or the next lower one); otherwise the previous rule.
+    const best=(o.imageLevel&&o.imageLevel!=='default'?verifiedImageForLevel(m,o.imageLevel):undefined)||preferredImage(m);const address=best&&addr(best.url,best.sensitive);
     if(address&&!sourceURL(best!.url)){
       lines.push(o.markdown&&o.images?`![${escape(alt||'图片')}](<${best!.url.replace(/[<>\s]/g,c=>encodeURIComponent(c))}>)`:`${marker} ${address}`);
       if(o.all)for(const v of existingVariants(m).filter(v=>v.kind==='image'&&v.url!==best!.url)){
@@ -45,7 +47,8 @@ export function mediaTextLines(m:Media,p:Post,o:MediaTextOptions):{text:string;w
       const external=o.sources&&m.mediaRole==='embed'?resourceURL(m.playbackUrl):undefined;
       const a=external?addr(external):undefined;if(a)lines.push(`${marker} 外部播放器：${a}`);
     }
-    for(const v of recommendedVariants(m,o.all)){
+    const leveled=!o.all&&o.videoLevel?videoVariantsForLevel(m,o.videoLevel):undefined;
+    for(const v of leveled?.length?leveled:recommendedVariants(m,o.all)){
       const a=addr(v.url,v.sensitive);if(!a)continue;
       const format=(v.format||mediaFormat(v.url,v.mime)||'未知格式').toUpperCase();
       const title=v.kind==='file'?'视频文件直链':v.kind==='hls'?'HLS 视频播放流':v.kind==='dash'?'DASH 视频播放流':'VMAP 媒体描述';

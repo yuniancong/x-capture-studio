@@ -2,6 +2,7 @@ import {Block, Capture, Media, Post, Run} from '../core/model';
 import {authorChain} from '../core/selection';
 import {safeLink, sourceURL} from '../core/urls';
 import {mediaTextLines} from '../media/text';
+import {MediaQuality,QUALITY_DEFAULTS,normalizeQuality} from '../media/quality';
 
 export type TextFormat = 'text' | 'markdown' | 'ai';
 export interface TextOptions {
@@ -57,9 +58,9 @@ const validHandle = (s: string | undefined): s is string => !!s && s !== 'unknow
  * Embedded posts remain nested; missing information is explicitly marked rather than fabricated. */
 export function serializeText(
   capture: Capture, selected: Set<string>, order: string[], rawOptions: TextOptions,
-  format: TextFormat = 'text', privacy: TextPrivacy = {}
+  format: TextFormat = 'text', privacy: TextPrivacy = {}, rawQuality: MediaQuality = QUALITY_DEFAULTS
 ): TextResult {
-  const o = normalizeTextOptions(rawOptions), md = format !== 'text';
+  const o = normalizeTextOptions(rawOptions), md = format !== 'text', quality = normalizeQuality(rawQuality);
   const byId = new Map(capture.posts.map(p => [p.id, p]));
   const posts = [...new Set(order)].filter(id => selected.has(id)).map(id => byId.get(id)).filter((p): p is Post => !!p);
   const index = new Map(posts.map((p, i) => [p.id, i + 1]));
@@ -134,7 +135,7 @@ export function serializeText(
     function mediaText(m:Media):string {
       if(!o.includeMedia)return '';
       const result=mediaTextLines(m,p,{all:o.includeAllResources,images:o.markdownImages,subtitles:o.includeSubtitles,sensitive:o.includeSensitiveMedia,
-        markdown:md,links:linkAllowed,sources:sourceAllowed});
+        markdown:md,links:linkAllowed,sources:sourceAllowed,imageLevel:quality.image,videoLevel:quality.video});
       result.warnings.forEach(w=>warnings.add(w));return result.text;
     }
     function block(b: Block): string {
