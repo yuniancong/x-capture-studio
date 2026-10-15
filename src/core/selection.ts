@@ -1,3 +1,4 @@
+import {enrichMediaLinks} from './media-links';
 import {Capture,Post,Role,SelectionRule} from './model';
 export function rootPost(c:Capture):Post|undefined{return c.posts.find(p=>p.id===c.rootId)||c.posts[0];}
 /** Only explicit reply IDs establish thread continuity. Same author alone never does. */
@@ -36,6 +37,7 @@ export function mergePosts(old:Post[],fresh:Post[]):Post[]{
   for(const p of fresh){const a=map.get(p.id);if(!a){map.set(p.id,p);continue;}
     const textLen=(q:Post)=>q.blocks.filter(b=>b.kind==='text').map(b=>b.kind==='text'?b.runs.map(r=>r.text).join(''):'').join('').length;
     const keep=textLen(a)>textLen(p)?a:p;
+    enrichMediaLinks(keep.blocks,(keep===a?p:a).blocks.filter(b=>b.kind==='media').map(b=>b.kind==='media'?b.media:null));
     map.set(p.id,{...a,...p,blocks:keep.blocks,author:{...a.author,...p.author,avatar:p.author.avatar||a.author.avatar,badge:p.author.badge||a.author.badge},quote:p.quote&&a.quote&&p.quote.id===a.quote.id?mergePosts([a.quote],[p.quote])[0]:p.quote||a.quote,parentId:p.parentId||a.parentId,conversationId:p.conversationId||a.conversationId,relationEvidence:p.relationEvidence==='data'||a.relationEvidence==='data'?'data':p.relationEvidence,warnings:[...new Set(keep.warnings)]});
   }
   return [...map.values()];

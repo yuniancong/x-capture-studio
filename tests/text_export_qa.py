@@ -134,7 +134,7 @@ async def stay_harness(pw):
     # This suite only reuses harness helpers; the old-vs-new comparison belongs to stay_startup_qa.py.
     if not historical.is_file(): historical = ROOT/'dist/X-Capture-Studio.user.js'
     os.environ.setdefault('XC_OLD_SCRIPT', str(historical))
-    spec=importlib.util.spec_from_file_location('stayqa',ROOT/'tests/stay_startup_qa.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+    spec=importlib.util.spec_from_file_location('stayqa',ROOT/'tests/content_world_harness.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
     code=(ROOT/'dist/X-Capture-Studio.user.js').read_text()
     check('Stay: bundled script keeps isolated mode and no unsafeWindow grant', mod.classify(code)['mode']=='content')
     browser=await pw.chromium.launch(executable_path=BROWSER,headless=True,args=['--no-sandbox'])

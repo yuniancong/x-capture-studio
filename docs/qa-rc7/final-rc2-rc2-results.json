@@ -1,0 +1,323 @@
+{
+  "version": "1.0.0-rc.2",
+  "environment": "Offline Chromium + synthetic DOM + independent PNG/PDF parsing; mocked macOS xattr. No Safari/Stay device, macOS Finder or live-X test.",
+  "checks": [
+    {
+      "name": "Quote capture keeps two outer posts, without quote duplication",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Quote display name recovered from non-anchor UserName",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Quote avatar comes from the inner author, not main author",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Public page props enrich missing quote permalinks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Visible translated quote text not replaced by raw English",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Badge preserves source viewBox, fill rule and geometry",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Main body does not absorb quoted text or media",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Handle does not concatenate neighboring timestamp digits",
+      "passed": true,
+      "detail": "quoted_author"
+    },
+    {
+      "name": "Relative quote time retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "No like/repost actions during collection",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Rendered badge matches independent source SVG geometry",
+      "passed": true,
+      "detail": {
+        "normalizedPixelDifference": 0
+      }
+    },
+    {
+      "name": "Relative, smooth and arc geometry match browser reference",
+      "passed": true,
+      "detail": 0.00012425857843137254
+    },
+    {
+      "name": "Both quote headers draw actual avatar bitmaps",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Original four-column mosaic geometry retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Old text checkmark removed from scene",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG root Source field is exact individual permalink",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG XMP includes both quoted permalinks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG output uses actual 2x pixels",
+      "passed": true,
+      "detail": [
+        1520,
+        2122
+      ]
+    },
+    {
+      "name": "PDF quoted Chinese body remains selectable text",
+      "passed": true,
+      "detail": "林墨\n@demo_author\n观点和引用来源，都应该完整保留下来。\n这是一组虚构测试内容，不是真实用户的发言。\n许舟\n@quoted_author · 4 小时\n引用帖不是一段蓝色链接。\n头像、昵称、认证图形、时间和正文需要一起显示。\n四张图片保留页面里的横向排列，不强制变成 2×2 网格。\n2026/9/25 04:10:00\n2\n11\n74\n1万\n林墨@demo_author · 1 小时\n另一种引用卡片结构，也不能被忽略。\n许舟\n@quoted_author · 昨天\n这里是当前页面显示"
+    },
+    {
+      "name": "PDF has actual embedded font and vector badge paths",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PDF has clickable quote permalink annotations",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PDF still a single long page",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Missing link retains complete visible quote with explicit warning",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Expanded background palette is usable",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Local wallpaper import selects image background",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Wallpaper softness, overlay and grid actually alter scene",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG genuinely contains imported backdrop, not flat fill",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Broken canShare does not break result dialog",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Wallpaper PDF retains vector text plus raster backdrop",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: no runtime exceptions in new flows",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay lifecycle: no-body",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: no-body",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay lifecycle: stale-marker",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: stale-marker",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay lifecycle: removed-launcher",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: removed-launcher",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay lifecycle: replaced-body",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: replaced-body",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay lifecycle: missing-observers",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: missing-observers",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay opens despite missing-observers",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay lifecycle: throwing-gm-menu",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: throwing-gm-menu",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay opens despite throwing-gm-menu",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay lifecycle: never-resolving-gm",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: never-resolving-gm",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay opens despite never-resolving-gm",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay lifecycle: reinjected",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay visible entry above mobile bottom bars: reinjected",
+      "passed": true,
+      "detail": {
+        "x": 234.59375,
+        "y": 699,
+        "width": 110.40625,
+        "height": 44
+      }
+    },
+    {
+      "name": "Stay opens despite reinjected",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Finder helper extracts original source from PNG bytes",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Finder helper extracts original source from PDF XMP",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Helper writes only WhereFroms and leaves file bytes intact",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Helper restores old attribute from recovery record",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "passed": 54,
+  "failed": 0
+}

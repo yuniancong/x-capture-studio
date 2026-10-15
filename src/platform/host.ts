@@ -1,3 +1,4 @@
+import {nativeResource} from './resource-network';
 import {FONT_URL,Host} from '../core/model';
 import {allowedAsset} from '../core/urls';
 import {unbase64} from '../export/binary';
@@ -39,16 +40,29 @@ function storageRead<T>(read:()=>unknown,fallback:T):Promise<T>{return new Promi
 });}
 export function createHost(kind:Host['kind']):Host{
   if(kind==='extension')return {kind,
+    async observe(action,sessionId){try{return await chrome.runtime.sendMessage({type:'xc:observe',action,sessionId})||{state:'unavailable',records:[]};}catch{return {state:'unavailable',records:[]};}},
+    async openObservationPermission(){try{return !!(await chrome.runtime.sendMessage({type:'xc:observe-enable'}))?.ok;}catch{return false;}},
     async getValue<T>(key:string,fallback:T){const v=await chrome.storage.local.get(key);return v[key]??fallback;},
     async setValue(key,value){await chrome.storage.local.set({[key]:value});},
     async readBytes(url,signal){if(!allowedAsset(url))throw new Error('资源域名不在允许列表。');if(signal?.aborted)throw new DOMException('已取消','AbortError');
       const res=await chrome.runtime.sendMessage({type:'xc:asset',url});if(!res?.ok)throw new Error(res?.error||'资源读取失败。');if(signal?.aborted)throw new DOMException('已取消','AbortError');return unbase64(res.data);},
+    async readResource(request,signal){
+      const id=typeof crypto.randomUUID==='function'?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint32Array(4)),v=>v.toString(16)).join('-');const cancel=()=>{void chrome.runtime.sendMessage({type:'xc:resource-cancel',requestId:id}).catch(()=>{});};
+      if(signal?.aborted)return {status:0,url:request.url,mime:'',bytes:new Uint8Array(),problem:'cancelled'};
+      signal?.addEventListener('abort',cancel,{once:true});
+      try{const r=await chrome.runtime.sendMessage({type:'xc:resource',requestId:id,request});
+        if(signal?.aborted)return {status:0,url:request.url,mime:'',bytes:new Uint8Array(),problem:'cancelled'};
+        if(!r?.ok)return {status:0,url:request.url,mime:'',bytes:new Uint8Array(),problem:'network-or-cors'};
+        return {...r.response,bytes:unbase64(r.data||'')};
+      }finally{signal?.removeEventListener('abort',cancel);}
+    },
     async probe(ids){const r=await chrome.runtime.sendMessage({type:'xc:probe',ids});return r?.data||[];}
   };
   return {kind,
     async getValue<T>(key:string,fallback:T){try{if(kind==='stay'){if(typeof GM_getValue==='function')return await storageRead(()=>GM_getValue!(key,fallback),fallback);if(typeof GM!=='undefined'&&GM.getValue)return await storageRead(()=>GM.getValue(key,fallback),fallback);}const v=localStorage.getItem('xc:'+key);return v?JSON.parse(v):fallback;}catch{return fallback;}},
     async setValue(key,value){if(kind==='stay'){if(typeof GM_setValue==='function'){await GM_setValue(key,value);return;}if(typeof GM!=='undefined'&&GM.setValue){await GM.setValue(key,value);return;}}localStorage.setItem('xc:'+key,JSON.stringify(value));},
     async readBytes(url,signal){if(!allowedAsset(url))throw new Error('资源域名不在允许列表。');if(kind==='stay'){try{return await gmRequest(url,signal);}catch(e){if(signal?.aborted)throw e;return nativeBytes(url,signal);}}return nativeBytes(url,signal);},
+    readResource:nativeResource,
     async probe(ids){return pageProbe(ids,window);}
   };
 }

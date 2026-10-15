@@ -79,7 +79,7 @@ export function layoutCapture(capture:Capture,selection:Set<string>,order:string
     if(!o.showMedia)return y;
     const gap=8;
     const draw=(m:any,mx:number,my:number,mw:number,mh:number,fit=o.mediaFit)=>{
-      const src=m.src||'',asset=assets.get(src);rect(mx,my,mw,mh,colors.soft,Math.min(o.radius,12));
+      const src=m.renderSrc&&assets.has(m.renderSrc)?m.renderSrc:m.src||'',asset=assets.get(src);rect(mx,my,mw,mh,colors.soft,Math.min(o.radius,12));
       if(src&&asset)s.commands.push({type:'image',x:mx,y:my,w:mw,h:mh,src,r:Math.min(o.radius,12),fit,alt:m.alt||''});
       else {const label=m.kind==='image'?'图片尚未加载':m.kind==='gif'?'GIF 动态媒体':'视频封面尚未加载';flow([{text:label}],mx+16,my+Math.max(12,mh/2-14),mw-32,o.metaSize,colors.muted);s.warnings.push(`媒体未载入：${m.alt||m.kind}`);}
       if(m.kind!=='image'){rect(mx+10,my+mh-32,Math.min(160,mw-20),24,'#0f1419',6,undefined,.85);textLine(m.kind==='gif'?'GIF':`▶ 视频${m.duration?' · '+m.duration:''}`,mx+18,my+mh-29,12,'#ffffff');}
@@ -99,7 +99,7 @@ export function layoutCapture(capture:Capture,selection:Set<string>,order:string
       const col=(w-gap)/2,rows=Math.ceil(media.length/2),rowH=Math.min(o.mediaMaxHeight,col*.78);
       media.forEach((m,i)=>draw(m,x+(i%2)*(col+gap),y+Math.floor(i/2)*(rowH+gap),media.length===3&&i===2?w:col,rowH));return y+rows*rowH+(rows-1)*gap+12;
     }
-    for(const m of media){const a=assets.get(m.src),iw=a?.width||m.width||800,ih=a?.height||m.height||450;const h=Math.min(o.mediaMaxHeight,Math.max(100,w*ih/iw));draw(m,x,y,w,h,o.mediaLayout==='native'&&m.display?m.display.fit:o.mediaFit);y+=h+12;}
+    for(const m of media){const a=assets.get(m.renderSrc&&assets.has(m.renderSrc)?m.renderSrc:m.src),iw=a?.width||m.width||800,ih=a?.height||m.height||450;const h=Math.min(o.mediaMaxHeight,Math.max(100,w*ih/iw));draw(m,x,y,w,h,o.mediaLayout==='native'&&m.display?m.display.fit:o.mediaFit);y+=h+12;}
     return y;
   }
   function body(blocks:Block[],x:number,y:number,w:number,size:number,depth=0){

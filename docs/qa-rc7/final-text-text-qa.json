@@ -1,0 +1,181 @@
+{
+  "version": "1.0.0-rc.5",
+  "baseline": "b31ac3ab864ae481b09b1dc595d0a0a83fb70071",
+  "browser": "Chromium via Playwright; offline demo + recording clipboard/storage adapters + separate simulated Stay/GM isolated world",
+  "browserReason": "Browser plugin/skill absent; Playwright fallback. Both synthetic X and localhost navigation returned ERR_BLOCKED_BY_ADMINISTRATOR. No browser policies changed or network fallback used. Tests use set_content offline documents and explicitly recorded clipboard/storage adapters; native clipboard not verified.",
+  "checks": [
+    {
+      "name": "Desktop: current production UI renders parsed synthetic DOM",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: DOM content keeps quote, note, poll and folded-text warning",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: Markdown preview keeps emphasis and captured links",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: no internal page credential field or layout junk in text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: footer copy passes clean text to the recording clipboard adapter",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: recorded Markdown copy equals preview byte-for-byte",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: AI copy adds only a brief scope/data note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: copy does not wait for or fetch images/fonts",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: Markdown file is real UTF-8 with exact preview content",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: TXT export equals clean clipboard output",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: native text-copy shortcut is not hijacked by image-copy handler",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: text-specific options change metadata, not body",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: manual selection/order reflected without adding excluded root body",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: omitted parent is explicitly marked",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: anonymity removes generated author/URL fields and warns about body",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: anonymous filename omits post ID and account",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: empty selection does not overwrite clipboard",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: empty preview disables all text actions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: text preference survives close/reopen through recording storage adapter",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: Article Markdown preserves title, headings, lists, blockquote and code",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: Article includes independent embedded author/source and final paragraph",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: no uncaught JS errors during copy, export, selection and content changes",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay: bundled script keeps isolated mode and no unsafeWindow grant",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: production userscript passes exact Markdown to clipboard API",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: clipboard call occurs within the actual tap activation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: AI copy preserves author and selected reply",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: phone interface has no horizontal overflow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: primary text actions meet touch size and are in viewport",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: clipboard rejection reveals complete readonly manual fallback",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: fallback select-all selects complete UTF-16 text range",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: fallback text file really downloads with complete Unicode",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: mobile Markdown is a separate save action with exact contents",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: system-share adapter supplies the actual file under a user gesture",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: no uncaught exceptions in all text flows",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "complete": true,
+  "passed": 34,
+  "failed": 0
+}

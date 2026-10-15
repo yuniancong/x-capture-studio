@@ -28,7 +28,7 @@
 
 请在 Safari 打开以下链接，并保存 `.user.js` 文件：
 
-[**下载 X Capture Studio · Stay v1.0.0-rc.5**](../releases/X-Capture-Studio-Stay-v1.0.0-rc.5.user.js)
+[**下载 X Capture Studio · Stay v1.0.0-rc.8**](../releases/X-Capture-Studio-Stay-v1.0.0-rc.8.user.js)
 
 如果 Safari 打开的是 JavaScript 纯文本页面而不是下载文件，请从 GitHub 文件页面选择“下载原始文件”，或保存到 iPhone / iPad 的 **“文件” App**。请确认文件扩展名仍为 `.user.js`（不是 `.txt` 或 `.html`）。
 
@@ -65,7 +65,7 @@
 ## 如果按钮没有出现
 
 - 在 Safari 当前 X 页面检查 **Stay 已允许访问此网站**；不是仅在“设置”里开启了总开关。
-- 在 Stay 资料库确认脚本 **已激活**，版本为 rc.5，且没有另一个旧版同时运行。
+- 在 Stay 资料库确认脚本 **已激活**，版本为 rc.8，且没有另一个旧版同时运行。
 - 返回 Safari 完整刷新；如仍无入口，在 Safari 的 Stay 扩展面板中查看脚本匹配、运行状态和日志。
 - 如果面板显示“未匹配”，确认正在访问 `https://x.com/` 或 `https://twitter.com/`，而不是 `X` 原生 App 或站外镜像。
 - 可将 Stay 面板的脚本状态和日志截图发到 [GitHub Issues](https://github.com/yuniancong/x-capture-studio/issues)，请不要附上 Cookie、Token、个人私信或浏览器凭证。

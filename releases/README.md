@@ -1,8 +1,10 @@
-# 安装包和历史版本
+# 安装包与回退版本
 
-当前推荐候选版本：**1.0.0-rc.5**。
+当前版本：**v1.0.0-rc.8**（已并入 `main`；桌面已实测，iPhone/Stay 由用户真机验收）。
 
-- Chromium：`X-Capture-Studio-Chrome-v1.0.0-rc.5.zip`
-- Safari + Stay：`X-Capture-Studio-Stay-v1.0.0-rc.5.user.js`
+- Chromium: [`X-Capture-Studio-Chrome-v1.0.0-rc.8.zip`](X-Capture-Studio-Chrome-v1.0.0-rc.8.zip)
+- Safari + Stay: [`X-Capture-Studio-Stay-v1.0.0-rc.8.user.js`](X-Capture-Studio-Stay-v1.0.0-rc.8.user.js)
+- Stay ZIP: [`X-Capture-Studio-Stay-v1.0.0-rc.8.zip`](X-Capture-Studio-Stay-v1.0.0-rc.8.zip)
+- 校验和：[`RC8_CHECKSUMS_SHA256.txt`](RC8_CHECKSUMS_SHA256.txt)；可用 `npm run build && python3 scripts/package_release.py --check` 从源码重建并比对字节。
 
-之前的 `rc.2` Chromium ZIP 和 `rc.3` Stay 脚本保留作为历史回退。不把 GitHub 代码更新与真机平台验收混为一谈；rc.5 当前仅完成本地/模拟环境回归。
+回退保留：Chromium rc.7/rc.5/rc.2、Stay rc.7/rc.5/rc.3，保持原字节。详见 [`../docs/VERIFY_VIDEO_RC8.md`](../docs/VERIFY_VIDEO_RC8.md)。

@@ -10,13 +10,62 @@ python3 finder_source.py capture.png             # asks before writing on macOS
 python3 finder_source.py --restore capture.png   # restores its saved previous field
 """
 from __future__ import annotations
-import argparse, base64, datetime, html, json, os, pathlib, plistlib, re, stat
-import struct, subprocess, sys, zlib
+import argparse, base64, ctypes, ctypes.util, datetime, errno, html, json, os, pathlib
+import plistlib, re, stat, struct, subprocess, sys, zlib
 from urllib.parse import urlsplit
 
 ATTRIBUTE = 'com.apple.metadata:kMDItemWhereFroms'
 MAX_FILE = 256 * 1024 * 1024
 MAX_METADATA = 2 * 1024 * 1024
+MISSING_ATTR = {getattr(errno, 'ENOATTR', 93), getattr(errno, 'ENODATA', 61)}
+
+# os.getxattr/setxattr/removexattr exist only on Linux; macOS needs libc via ctypes.
+_libc = None
+def _darwin_libc():
+    global _libc
+    if _libc is None:
+        lib = ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)
+        lib.getxattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p,
+                                 ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+        lib.getxattr.restype = ctypes.c_ssize_t
+        lib.setxattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p,
+                                 ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+        lib.setxattr.restype = ctypes.c_int
+        lib.removexattr.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
+        lib.removexattr.restype = ctypes.c_int
+        _libc = lib
+    return _libc
+
+XATTR_NOFOLLOW = 0x0001  # <sys/xattr.h>; read_file already rejects symlinks.
+
+def _raise(path) -> None:
+    code = ctypes.get_errno()
+    raise OSError(code, os.strerror(code), str(path))
+
+def getxattr(path, name: str) -> bytes:
+    if hasattr(os, 'getxattr'):
+        return os.getxattr(path, name)
+    lib, p, n = _darwin_libc(), os.fsencode(path), name.encode()
+    size = lib.getxattr(p, n, None, 0, 0, XATTR_NOFOLLOW)
+    if size < 0:
+        _raise(path)
+    buf = ctypes.create_string_buffer(size)
+    size = lib.getxattr(p, n, buf, size, 0, XATTR_NOFOLLOW)
+    if size < 0:
+        _raise(path)
+    return buf.raw[:size]
+
+def setxattr(path, name: str, value: bytes) -> None:
+    if hasattr(os, 'setxattr'):
+        return os.setxattr(path, name, value)
+    if _darwin_libc().setxattr(os.fsencode(path), name.encode(), value, len(value), 0, XATTR_NOFOLLOW) < 0:
+        _raise(path)
+
+def removexattr(path, name: str) -> None:
+    if hasattr(os, 'removexattr'):
+        return os.removexattr(path, name)
+    if _darwin_libc().removexattr(os.fsencode(path), name.encode(), XATTR_NOFOLLOW) < 0:
+        _raise(path)
 
 def permalink(value: str) -> str | None:
     try:
@@ -104,10 +153,9 @@ def backup_path(path: pathlib.Path) -> pathlib.Path:
 def apply_sources(path: pathlib.Path, sources: list[str]) -> None:
     old = None
     try:
-        old = os.getxattr(path, ATTRIBUTE)
+        old = getxattr(path, ATTRIBUTE)
     except OSError as exc:
-        import errno
-        if exc.errno not in (getattr(errno, 'ENOATTR', 93), getattr(errno, 'ENODATA', 61)):
+        if exc.errno not in MISSING_ATTR:
             raise
     backup = backup_path(path)
     if not backup.exists():
@@ -118,8 +166,8 @@ def apply_sources(path: pathlib.Path, sources: list[str]) -> None:
         with backup.open('x', encoding='utf-8') as out:
             json.dump(payload, out, ensure_ascii=False, indent=2)
     data = plistlib.dumps(sources, fmt=plistlib.FMT_BINARY)
-    os.setxattr(path, ATTRIBUTE, data)
-    if plistlib.loads(os.getxattr(path, ATTRIBUTE)) != sources:
+    setxattr(path, ATTRIBUTE, data)
+    if plistlib.loads(getxattr(path, ATTRIBUTE)) != sources:
         raise RuntimeError('写入后的来源核验不一致，请保留备份文件。')
 
 def restore(path: pathlib.Path) -> None:
@@ -132,13 +180,12 @@ def restore(path: pathlib.Path) -> None:
     old = doc.get('previous')
     if old is None:
         try:
-            os.removexattr(path, ATTRIBUTE)
+            removexattr(path, ATTRIBUTE)
         except OSError as exc:
-            import errno
-            if exc.errno not in (getattr(errno, 'ENOATTR', 93), getattr(errno, 'ENODATA', 61)):
+            if exc.errno not in MISSING_ATTR:
                 raise
     else:
-        os.setxattr(path, ATTRIBUTE, base64.b64decode(old, validate=True))
+        setxattr(path, ATTRIBUTE, base64.b64decode(old, validate=True))
 
 def choose_file() -> pathlib.Path:
     script = 'set f to choose file with prompt "选择 X Capture 下载的 PNG / PDF 原文件"\nreturn POSIX path of f'

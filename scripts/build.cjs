@@ -1,5 +1,5 @@
 const fs=require('fs'),path=require('path');
-let ts;try{ts=require('typescript');}catch{try{ts=require('/opt/nvm/versions/node/v22.16.0/lib/node_modules/typescript');}catch{throw Error('Run npm install before npm run build.');}}
+let ts;try{ts=require('typescript');}catch{throw Error('Run npm install before npm run build.');}
 const ROOT=path.resolve(__dirname,'..'),OUT=path.join(ROOT,'dist');fs.mkdirSync(OUT,{recursive:true});
 function resolve(name,from){
  if(name==='fontkit')return path.join(ROOT,'vendor/fontkit.cjs');if(name==='qrcode-core')return path.join(ROOT,'vendor/qrcode.cjs');
@@ -27,18 +27,20 @@ function bundle(entry,platform,asModule=false){const modules=[],ids=new Map();
 }
 const notice='/* Third-party JavaScript notices; no font data included.\n'+fs.readFileSync(path.join(ROOT,'vendor/THIRD_PARTY_NOTICES.md'),'utf8').replace(/\*\//g,'* /')+'\n*/\n';
 const ext=path.join(OUT,'extension');fs.mkdirSync(ext,{recursive:true});
-for(const[name,entry,platform]of [['content.js','src/entry.ts','extension'],['background.js','src/background.ts','extension'],['popup.js','src/popup.ts','extension'],['demo.js','src/entry.ts','demo']])fs.writeFileSync(path.join(ext,name),(name==='content.js'||name==='demo.js'?notice:'')+bundle(entry,platform));
+for(const[name,entry,platform]of [['content.js','src/entry.ts','extension'],['background.js','src/background.ts','extension'],['popup.js','src/popup.ts','extension'],['observation.js','src/observation-page.ts','extension'],['demo.js','src/entry.ts','demo']])fs.writeFileSync(path.join(ext,name),(name==='content.js'||name==='demo.js'?notice:'')+bundle(entry,platform));
 fs.copyFileSync(path.join(ROOT,'vendor/THIRD_PARTY_NOTICES.md'),path.join(ext,'THIRD_PARTY_NOTICES.md'));
-for(const file of ['manifest.json','popup.html'])fs.copyFileSync(path.join(ROOT,'assets',file),path.join(ext,file));
+for(const file of ['manifest.json','popup.html','observation.html'])fs.copyFileSync(path.join(ROOT,'assets',file),path.join(ext,file));
 fs.cpSync(path.join(ROOT,'assets/icons'),path.join(ext,'icons'),{recursive:true});
 const demo=fs.readFileSync(path.join(ROOT,'assets/demo.html'),'utf8');fs.writeFileSync(path.join(ext,'demo.html'),demo.replace('<!--SCRIPT-->','<script src="demo.js"></script>'));
 fs.writeFileSync(path.join(OUT,'X-Capture-Studio-Demo.html'),demo.replace('<!--SCRIPT-->',()=>'<script>'+notice+bundle('src/entry.ts','demo').replace(/<\/script/gi,'<\\/script')+'</script>'));
-const header=`// ==UserScript==\n// @name         X Capture Studio\n// @name:zh-CN   X Capture Studio · 高清长图与文本 PDF\n// @namespace    urn:x-capture-studio\n// @version      1.0.0-rc.5\n// @description  本地保存 X 帖文与上下文：高清 PNG、文本 PDF、TXT/Markdown；支持复制给 AI，无强制水印。\n// @author       yuniancong\n// @match        https://x.com/*\n// @match        https://www.x.com/*\n// @match        https://mobile.x.com/*\n// @match        https://www.twitter.com/*\n// @match        https://twitter.com/*\n// @match        https://mobile.twitter.com/*\n// @run-at       document-end\n// @noframes\n// @grant        GM_getValue\n// @grant        GM_setValue\n// @grant        GM_registerMenuCommand\n// @grant        GM_xmlhttpRequest\n// @grant        GM_log\n// @grant        GM_info\n// @connect      pbs.twimg.com\n// @connect      abs.twimg.com\n// @connect      video.twimg.com\n// @connect      raw.githubusercontent.com\n// ==/UserScript==\n\n`;
+const ownLicense=fs.readFileSync(path.join(ROOT,'LICENSE'),'utf8');
+fs.copyFileSync(path.join(ROOT,'LICENSE'),path.join(ext,'LICENSE'));
+const header=`// ==UserScript==\n// @name         X Capture Studio\n// @name:zh-CN   X Capture Studio · 高清长图与文本 PDF\n// @namespace    urn:x-capture-studio\n// @version      1.0.0-rc.8\n// @description  本地保存 X 帖文与上下文：高清 PNG、文本 PDF、TXT/Markdown；支持复制给 AI，无强制水印。\n// @author       yuniancong\n// @license      MIT\n// @match        https://x.com/*\n// @match        https://www.x.com/*\n// @match        https://mobile.x.com/*\n// @match        https://www.twitter.com/*\n// @match        https://twitter.com/*\n// @match        https://mobile.twitter.com/*\n// @run-at       document-end\n// @noframes\n// @grant        GM_getValue\n// @grant        GM_setValue\n// @grant        GM_registerMenuCommand\n// @grant        GM_xmlhttpRequest\n// @grant        GM_log\n// @grant        GM_info\n// @connect      pbs.twimg.com\n// @connect      abs.twimg.com\n// @connect      video.twimg.com\n// @connect      raw.githubusercontent.com\n// ==/UserScript==\n\n`;
 const stayBody=bundle('src/entry.ts','stay');
 // Guard the artifact, not only TypeScript sources: the public host scans inactive code and comments too.
 if(/\bwindow\./.test(stayBody))throw Error('Stay build contains a qualified window access; audit its injection mode before releasing.');
 const bootstrap=fs.readFileSync(path.join(ROOT,'assets/stay-bootstrap.js'),'utf8');
-fs.writeFileSync(path.join(OUT,'X-Capture-Studio.user.js'),header+notice+bootstrap+'\ntry {\n'+stayBody+'\n} catch (error) { __XC_STAY_BOOT__.fail(error); }\n');
+fs.writeFileSync(path.join(OUT,'X-Capture-Studio.user.js'),header+'/* X Capture Studio license\n'+ownLicense.replace(/\*\//g,'* /')+'\n*/\n'+notice+bootstrap+'\ntry {\n'+stayBody+'\n} catch (error) { __XC_STAY_BOOT__.fail(error); }\n');
 if(fs.existsSync(path.join(ROOT,'tests/core-entry.ts')))fs.writeFileSync(path.join(OUT,'core-test.cjs'),bundle('tests/core-entry.ts','demo',true));
-fs.writeFileSync(path.join(OUT,'build-info.json'),JSON.stringify({version:'1.0.0-rc.5',date:'2026-10-15',typescript:ts.version,platforms:['Chromium MV3','Stay userscript'],fontsBundled:false},null,2));
+fs.writeFileSync(path.join(OUT,'build-info.json'),JSON.stringify({version:'1.0.0-rc.8',date:'2026-10-16',typescript:ts.version,platforms:['Chromium MV3','Stay userscript'],fontsBundled:false},null,2));
 console.log('Built extension, standalone userscript and offline demo in dist/');

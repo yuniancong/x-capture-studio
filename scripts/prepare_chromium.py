@@ -18,11 +18,11 @@ import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
 
-VERSION = '1.0.0-rc.5'
-SOURCE_REF = '7c119e79f764d27cc98aeeb81595cf1dfffc9f98'
+VERSION = '1.0.0-rc.8'
+SOURCE_REF = 'main'  # SHA-256 pinned below
 ARCHIVE = f'X-Capture-Studio-Chrome-v{VERSION}.zip'
 URL = f'https://raw.githubusercontent.com/yuniancong/x-capture-studio/{SOURCE_REF}/releases/{ARCHIVE}'
-SHA256 = 'da3a2db2d0c4902bc5033c08e04bc9977edd0e7437a3539bd37ea356451dcc20'
+SHA256 = '47715b0ff6e24f5d88c26ad355817817893672fee6398518af5bae1eaa4f5824'
 LIMIT_BYTES = 25 * 1024 * 1024
 
 

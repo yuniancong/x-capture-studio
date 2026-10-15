@@ -1,0 +1,11 @@
+TYPECHECK_PASS
+# pass 59 # fail 0 # pass 51 # fail 0 # pass 34 # fail 0 # pass 72 # fail 0 # pass 49 # fail 0 # pass 10 # fail 0
+discovery_qa exit=0 pass=40 fail=0
+multimedia_qa exit=0 pass=53 fail=0
+hd_links_qa exit=0 pass=28 fail=0
+media_links_qa exit=0 pass=24 fail=0
+text_export_qa exit=0 pass=34 fail=0
+browser_qa exit=0 pass=50 fail=0
+rc2_regression exit=1 pass=52 fail=0
+
+[exited with code 0]

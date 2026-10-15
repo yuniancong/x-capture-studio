@@ -1,15 +1,17 @@
+import type {ObservationResult} from '../media/discovery';
+import type {MediaResources,ResourceRequest,ResourceResponse} from '../media/types';
 /** Captured facts are separate from selection, style and inferred relationships. */
-export const VERSION = '1.0.0-rc.5';
+export const VERSION = '1.0.0-rc.8';
 export interface Run { text:string; bold?:boolean; italic?:boolean; underline?:boolean; strike?:boolean; code?:boolean; href?:string; }
 export type Block = {kind:'text'; runs:Run[]; level?:number; quote?:boolean; list?:string; code?:boolean} | {kind:'media'; media:Media} | {kind:'embed'; post:Post} | {kind:'divider'};
 export interface MediaDisplay {x:number;y:number;width:number;height:number;fit:'contain'|'cover';}
 export interface Badge {paths:{path:string;color:string;rule?:'nonzero'|'evenodd'}[]; viewBox:[number,number,number,number];}
-export interface Media { src:string; kind:'image'|'video'|'gif'; alt:string; width?:number; height?:number; duration?:string; href?:string; display?:MediaDisplay; sourceUrl?:string; posterUrl?:string; textOrder?:number; }
+export interface Media extends MediaResources { src:string; kind:'image'|'video'|'gif'; alt:string; width?:number; height?:number; duration?:string; href?:string; display?:MediaDisplay; sourceUrl?:string; playbackUrl?:string; attachmentIndex?:number; posterUrl?:string; textOrder?:number; }
 export interface Author { name:string; handle:string; avatar?:string; verified?:boolean; badge?:Badge; }
 export interface Poll { options:{text:string; percent?:number}[]; summary?:string; }
 export interface Post {
   id:string; url:string; author:Author; blocks:Block[]; published?:string; displayTime?:string;
-  kind:'post'|'article'; title?:string; quote?:Post; linkCard?:{title:string; description?:string; url:string; image?:string};
+  kind:'post'|'article'; textStructure?:'text-with-attachments'|'interleaved'; title?:string; quote?:Post; linkCard?:{title:string; description?:string; url:string; image?:string; media?:Media};
   metrics:Record<string,string>; poll?:Poll; note?:string; edited?:string;
   parentId?:string; conversationId?:string; replyToHandle?:string;
   relationEvidence:'data'|'dom'|'unknown'; warnings:string[]; capturedAt:string;
@@ -46,10 +48,13 @@ export interface Asset { image:HTMLImageElement; dataUrl:string; width:number;he
 export type AssetMap=Map<string,Asset>;
 export interface Host {
   kind:'extension'|'stay'|'demo';
+  observe?(action:'start'|'poll'|'stop',sessionId:string):Promise<ObservationResult>;
+  openObservationPermission?():Promise<boolean>;
   getValue<T>(key:string,fallback:T):Promise<T>;
   setValue(key:string,value:unknown):Promise<void>;
   readBytes(url:string,signal?:AbortSignal):Promise<Uint8Array>;
   probe?(ids:string[]):Promise<Partial<Post>[]>;
+  readResource?(request:ResourceRequest,signal?:AbortSignal):Promise<ResourceResponse>;
 }
 export const FONT_URL='https://raw.githubusercontent.com/notofonts/noto-cjk/Sans2.004/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf';
 export const FONT_CACHE_KEY='noto-cjk-sc-Sans2.004';

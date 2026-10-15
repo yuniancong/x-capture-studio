@@ -5,6 +5,8 @@ import type {Studio} from './ui/studio';
 import {postID} from './core/urls';
 import {icon} from './ui/dom';
 import {VERSION} from './core/model';
+import {passiveMediaLog} from './media/passive-log';
+import {postNodes} from './core/post-nodes';
 
 // Keep the launcher independent of PDF/fontkit initialization. A rendering error must not hide the entry point.
 const host=createHost(__PLATFORM__),collector=new Collector(host);
@@ -22,16 +24,17 @@ async function open(rootId?:string,demo=false){
 }
 function diagnostics(){
   if(stayBoot){stayBoot.diagnose();return;}
-  const count=document.querySelectorAll('article[data-testid="tweet"]').length;
+  const count=postNodes(document).length;
   alert(`X Capture ${VERSION}\n运行端：${__PLATFORM__}\n页面状态：${document.readyState}\n已识别帖子容器：${count}\n编辑器：${active?'已打开':'未打开'}\n最近错误：${lastError||'无'}\n\n${count?'已注入页面；点 X Capture 可打开编辑器。':'脚本已运行，但当前没有可识别的帖子。请在浏览器（不是 X 原生 App）打开帖子详情，等待正文后再点。'}\n无入口时请检查 Stay 中脚本是否启用、x.com 站点访问权限，并禁用旧版重复脚本。`);
 }
 function attachButtons(){
   const main=document.querySelector('[data-testid="primaryColumn"]')||document.querySelector('main')||document;
-  for(const article of main.querySelectorAll<HTMLElement>('article[data-testid="tweet"]')){
-    if(article.parentElement?.closest('article[data-testid="tweet"]'))continue;
+  for(const article of postNodes(main)){
     const old=article.querySelector<HTMLElement>('[data-xcapture-ui="button"]');
     if(old?.dataset.version===VERSION)continue;old?.remove();
-    const bar=[...article.querySelectorAll<HTMLElement>('[role="group"]')].find(g=>g.querySelector('[data-testid="reply"]'));
+    // Logged-out X has no role="group"; its bar is the row holding the post's own reply action.
+    const bar=[...article.querySelectorAll<HTMLElement>('[role="group"]')].find(g=>g.querySelector('[data-testid="reply"]'))||
+      [...article.querySelectorAll<HTMLElement>('[data-engagement-action="reply"]')].find(n=>n.closest('article')===article)?.parentElement||undefined;
     if(!bar)continue; // The independent floating launcher covers changed/missing action bars and Articles.
     const b=document.createElement('button');b.type='button';b.dataset.xcaptureUi='button';b.dataset.version=VERSION;
     b.title='X Capture · 保存此帖与上下文';b.setAttribute('aria-label',b.title);
@@ -62,15 +65,16 @@ if(__PLATFORM__==='demo'){
   if(document.documentElement)ready();else document.addEventListener('DOMContentLoaded',ready,{once:true});
 }else{
   const runtime=window as any;runtime.__xcRuntimeV2?.dispose?.();
-  let timer=0,disposed=false;
-  const refresh=()=>{timer=0;if(disposed)return;try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
+  let timer=0,disposed=false,pageAt=location.href;
+  passiveMediaLog.start();
+  const refresh=()=>{timer=0;if(disposed)return;if(pageAt!==location.href){active?.close();collector.reset();pageAt=location.href;}try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
   // Leading deadline, not repeated debounce: a busy X timeline cannot starve reinjection forever.
   const schedule=()=>{if(!timer&&!disposed)timer=window.setTimeout(refresh,200);};
   const observer=new MutationObserver(records=>{if(records.every(r=>r.target instanceof Element&&r.target.closest('[data-xcapture-ui]')))return;schedule();});
   observer.observe(document,{childList:true,subtree:true});
   const interval=window.setInterval(()=>{if(!document.hidden)schedule();},2000);
   document.addEventListener('DOMContentLoaded',schedule);document.addEventListener('visibilitychange',schedule);window.addEventListener('pageshow',schedule);
-  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
+  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;passiveMediaLog.stop();active?.close();clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
   refresh();
   if(__PLATFORM__==='extension')try{chrome.runtime.onMessage.addListener((msg:any,_sender:any,respond:any)=>{if(msg?.type==='xc:open'){void open(postID(location.href));respond({ok:true});}return false;});}catch(e){lastError=(e as Error).message;}
   if(__PLATFORM__==='stay'&&!stayBoot){

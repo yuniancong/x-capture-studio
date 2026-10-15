@@ -1,7 +1,7 @@
 /* Small, local startup sentinel. No page-world dependency, network, canvas or fonts. */
 var __XC_STAY_BOOT__ = (function () {
   'use strict';
-  var VERSION = '1.0.0-rc.5';
+  var VERSION = '1.0.0-rc.8';
   var root = globalThis;
   try { if (root.__xcStayBootV3) root.__xcStayBootV3.dispose(); } catch (_) {}
   var state = { stage: 'START', error: '', events: [], started: Date.now() };

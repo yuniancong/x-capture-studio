@@ -147,7 +147,7 @@ async def main():
     path=pathlib.Path(tmp)/'capture.png';path.write_bytes((OUT/'quotes.png').read_bytes());before=hashlib.sha256(path.read_bytes()).hexdigest();writes=[]
     def getx(path,k):return attrs[k]
     def setx(path,k,v):writes.append(k);attrs[k]=v
-    with patch.object(mod.os,'getxattr',getx),patch.object(mod.os,'setxattr',setx):
+    with patch.object(mod,'getxattr',getx),patch.object(mod,'setxattr',setx):
       mod.apply_sources(path,expected);check('Helper writes only WhereFroms and leaves file bytes intact',set(writes)=={mod.ATTRIBUTE} and hashlib.sha256(path.read_bytes()).hexdigest()==before)
       mod.restore(path);check('Helper restores old attribute from recovery record',attrs==old)
   report={'version':'1.0.0-rc.2','environment':'Offline Chromium + synthetic DOM + independent PNG/PDF parsing; mocked macOS xattr. No Safari/Stay device, macOS Finder or live-X test.','checks':checks,'passed':sum(c['passed'] for c in checks),'failed':sum(not c['passed'] for c in checks)}

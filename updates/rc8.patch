@@ -1,0 +1,1911 @@
+diff --git a/INSTALL_RC8.md b/INSTALL_RC8.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..360ff1b44ca105a96dc6f7d6baf62bb89f074bbc
+--- /dev/null
++++ b/INSTALL_RC8.md
+@@ -0,0 +1,45 @@
++# X Capture Studio rc.8 · 安装与使用
++
++本候选基于 rc.7 (`d89729b4f4dcf1d9f333c5c7dc54c5dfbd54c0e1`) 增量制作；不替换已公开 main，不改写历史。浏览器最低版本为 Chrome / Edge 120。Stay 沿用原有脚本权限和注入机制。
++
++## Chrome / Edge
++
++先保留 rc.7 扩展目录用于回退。解压 rc.8 浏览器 ZIP，选择直接包含 `manifest.json` 的目录，通过扩展管理页加载；更新原目录时先备份，再重新加载扩展，刷新 X 页面。不要同时启用两份 X Capture。
++
++### 第一次启用桌面视频补充发现
++
++1. 在 X 帖子打开 Capture Studio，进入 **文本 → 媒体资源与高清检查**。
++2. 点击 **启用桌面视频观察**。打开的扩展页面会说明权限，点击 **允许视频请求观察**，由浏览器完成授权；再返回原标签页。
++3. 点击 **检查高清 / 视频 / 字幕**，开启约 30 秒的会话。点击 **返回网页播放视频**，由你手动播放目标视频。
++4. 点击页面悬浮条的 **返回结果并完成检查**，然后复制文本或导出 TXT / Markdown。
++
++“停止检查”会结束本次观察。关闭编辑器、导航离开、撤销权限、标签页关闭及到期会清理临时会话。拒绝观察权限仍可截图、PDF、读取 DOM 和已加载页面数据；**不会因拒绝权限而禁用基本功能**。
++
++新增权限：可选 `webRequest` 只读媒体请求观察；`alarms` 用于 Service Worker 暂停后到期清理。未新增目标网站权限，不申请 `webRequestBlocking`、debugger、cookies、history 或 <all_urls>。
++
++## iPhone / iPad · Safari + Stay
++
++停用旧 X Capture 脚本（保留用于回退），解压 Stay ZIP，把 `.user.js` 导入 Stay 并启用；Safari 允许 Stay 访问 X 网站后完整刷新当前帖子。不要在 X 原生 App 内找入口。
++
++进入 **文本 → 媒体资源与高清检查** 可验证已发现的图片/视频/字幕；无需授权 Chrome 专用接口。Safari 当前能提供的 M3U8 继续保留。
++
++## 如何看待结果
++
++- 播放页 `/video/n` 不等于视频文件；MP4、HLS、DASH 分别表示。
++- Chrome 未实际请求或没有可观察到 M3U8 时，不能凭空得到它；内存缓存可能不触发 webRequest。工具补查当前文档最近的资源时间线，但不强刷缓存或自动重播。
++- 只向有明确媒体 ID / CDN 家族 / 精确 URL 关系的目标附加资源。多视频、预加载、引用帖造成的歧义只显示“待确认”数量，不胡乱填进当前帖。
++- “检测到字幕轨道元信息”不等于有字幕正文；清单声明、资源验证和 Cue 内容确认分别标记。
++- 当前视频内在尺寸不是 HLS 主播放列表最高画质。完整资源模式中它单独展示。
++- 折叠长文缺少可信媒体位置时保留可见顺序并提示展开后重新读取，不伪造完整性。
++
++## 安全的诊断反馈
++
++展开 **资源诊断（不含链接与账号）** 可以看到 DOM 是否为 Blob、各来源候选数量、媒体格式、解析清单数量和字幕证据。反馈时附此区域与当前版本即可。无需提供 Cookie、Token、完整 HAR 或浏览历史。
++
++## 回退
++
++桌面禁用 rc.8，重新加载备份的 rc.7 目录并刷新页面。Stay 停用 rc.8、启用原 rc.7 后刷新 Safari。预设数据模型兼容；本次没有做不可逆的数据迁移。可选观察权限可在扩展设置撤销。
++
++## 验收边界
++
++本地生产构建的适配器与合成页面通过检查，不等同于真实 X 或 iOS 真机验收。详见 `docs/VERIFY_DISCOVERY_RC8.md`。本轮实际 MV3 worker 安装烟测未取得 worker，记录 BLOCKED，未绕过环境管理策略。
+diff --git a/README.md b/README.md
+index 3fea0747907eb4c7ae268302abac36f96108db26..ee59283cc8b4bbaaf1fbd282b4ffb46637a2b9a5 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,7 @@
+ # X Capture Studio
+ 
++> **rc.8 修复候选（本地交付）**：基于 rc.7 增加可选短时桌面媒体观察，修正字幕证据、HLS 画质与折叠长文媒体顺序。安装与权限说明见 [INSTALL_RC8.md](INSTALL_RC8.md)，实现边界见 [DISCOVERY_RC8.md](docs/DISCOVERY_RC8.md)。下面原 rc.7 安装入口为历史基线；不要将候选交付当作 main 已更新。
++
+ > **v1.0.0-rc.7 多媒体升级候选。** 已提交到升级分支供安装测试和审查，rc.5 安装包保留为回退；真实 X 与 Safari＋Stay 真机尚待验收。阅读 [rc.7 安装与使用说明](INSTALL_RC7.md)。
+ 
+ **A local-first, high-fidelity X / Twitter capture tool for Chromium and Safari + Stay.**
+diff --git a/assets/manifest.json b/assets/manifest.json
+index 48060b45d0bcc547716d49890534ad3f29775339..21f18ee0d96711745fbf1c0ed211734d31056ead 100644
+--- a/assets/manifest.json
++++ b/assets/manifest.json
+@@ -1,13 +1,14 @@
+ {
+   "manifest_version": 3,
+   "name": "X Capture Studio",
+-  "version": "1.0.0.7",
+-  "version_name": "1.0.0-rc.7",
++  "version": "1.0.0.8",
++  "version_name": "1.0.0-rc.8",
+   "description": "将 X / Twitter 帖文、长文及选中回复保存为高清长图、文本 PDF、TXT 或 Markdown；支持复制文本与 AI 上下文，本地处理。",
+   "permissions": [
+     "storage",
+     "clipboardWrite",
+-    "scripting"
++    "scripting",
++    "alarms"
+   ],
+   "host_permissions": [
+     "https://x.com/*",
+@@ -48,5 +49,9 @@
+       "run_at": "document_idle",
+       "all_frames": false
+     }
+-  ]
++  ],
++  "optional_permissions": [
++    "webRequest"
++  ],
++  "minimum_chrome_version": "120"
+ }
+diff --git a/assets/observation.html b/assets/observation.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..d1a201a61d71b347c9c9e0d333522eb689086fa4
+--- /dev/null
++++ b/assets/observation.html
+@@ -0,0 +1,3 @@
++<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X Capture · 视频观察权限</title>
++<style>body{margin:0;background:#101826;color:#e6edf7;font:16px/1.7 system-ui,sans-serif}main{max-width:620px;margin:9vh auto;padding:30px}h1{font-size:26px}button{background:#55b7f5;color:#102334;border:0;border-radius:10px;padding:13px 20px;font:600 16px system-ui;cursor:pointer;margin:8px 8px 8px 0}button:focus-visible{outline:3px solid white}small{color:#aebacc}#status{min-height:2em;color:#9fd9ff}</style>
++<main><small>X CAPTURE STUDIO</small><h1>补充桌面视频资源发现</h1><p>允许非阻断式 <code>webRequest</code> 观察后，只有你点击“检查高清 / 视频 / 字幕”时，才会在当前 X 标签页开启约 30 秒的采集窗口。</p><p>只保留 <code>video.twimg.com</code> 的媒体 URL、类型和状态。不读取 Cookie、登录凭证或请求正文，不修改请求，不下载整段视频。临时记录放在内存会话存储，停止、导航或到期即清理。</p><p>拒绝这项可选权限，截图、PDF、DOM 视频取链和 Stay 脚本仍然可以使用。由于内存缓存或网站播放策略，不能保证每条视频都提供 M3U8。</p><button id="enable">允许视频请求观察</button><button id="back">返回原标签页</button><div id="status" role="status" aria-live="polite"></div><small>授权后返回 X，再点击一次“检查高清 / 视频 / 字幕”。不需要提供账号密码。</small></main><script src="observation.js"></script></html>
+diff --git a/assets/stay-bootstrap.js b/assets/stay-bootstrap.js
+index 89bf19bb0f7b0ae816d4ea3dfe93dae9685d484a..e69843f58ad654cd06b72d60000500345e7cd1e1 100644
+--- a/assets/stay-bootstrap.js
++++ b/assets/stay-bootstrap.js
+@@ -1,7 +1,7 @@
+ /* Small, local startup sentinel. No page-world dependency, network, canvas or fonts. */
+ var __XC_STAY_BOOT__ = (function () {
+   'use strict';
+-  var VERSION = '1.0.0-rc.7';
++  var VERSION = '1.0.0-rc.8';
+   var root = globalThis;
+   try { if (root.__xcStayBootV3) root.__xcStayBootV3.dispose(); } catch (_) {}
+   var state = { stage: 'START', error: '', events: [], started: Date.now() };
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+index 5afcd7edd90844a01e6d25732ccbb014a19d762d..f9b80f35f4ac0235f90da1e1336ce20ada6f2af9 100644
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # 更新记录
+ 
++## 1.0.0-rc.8 · 跨平台发现修复候选
++
++- 桌面可选非阻断式 webRequest 观察 + 有界 session 生命周期 + 当前文档资源时间线补充；唯一媒体身份匹配，歧义不附加。
++- 字幕 hint/声明/地址/验证/Cue 证据分层；不把无 URL 的 TextTrack 直接叫内嵌字幕。
++- 当前视频内在尺寸与清单变体尺寸分开，HLS master 不被标为 320×320 最高画质。
++- 折叠长文尾部文字锚点恢复；位置不明则保留并提示，不把全文堆到所有图片前。
++- 新权限：可选 webRequest + 到期清理 alarms；Chrome/Edge 120+；Stay 权限不变。
++- main 与 rc.7 远端分支未改动；本候选需真实平台验收，详见 VERIFY_DISCOVERY_RC8.md。
++
++
+ ## 1.0.0-rc.7 · 多媒体升级候选 · 2026-10-15
+ 
+ - rc.6 基础上的图片实际校验/降级，多视频资源保留，HLS/DASH/VMAP 及字幕/音轨关联。
+diff --git a/docs/DISCOVERY_RC8.md b/docs/DISCOVERY_RC8.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..627642a9f17cfeb9125c5adb4744a0358626750b
+--- /dev/null
++++ b/docs/DISCOVERY_RC8.md
+@@ -0,0 +1,55 @@
++# rc.8 多媒体发现与证据设计
++
++## 固定基线
++
++GitHub rc.7 分支 `feature/multimedia-rc7`，commit `d89729b4f4dcf1d9f333c5c7dc54c5dfbd54c0e1`。main 保留 `026378947da2753f3f3dc2b3e9a84edf261619b8`。rc.8 为增量修复，不重复实现已有 HLS/DASH/图片降级。
++
++## 发现 → 关联 → 验证 → 表示
++
++- 发现：DOM、页面已有媒体字段、当前文档最近的 PerformanceResourceTiming 名称、可选 Chrome webRequest。
++- 关联：先匹配同媒体的精确 URL，再以观察到的 CDN 资源家族与媒体 ID 唯一匹配。不用帖子 ID 冒充 CDN 视频 ID，不凭时间邻近归属。
++- 验证：复用有预算的 MediaResolver，解析清单/检查图片/检查直链响应头；HTTP 请求成功本身不等于文件完整、字幕正文存在或最高画质确认。
++- 表示：正常/完整资源模式复用统一序列化器，保留资源来源并坚持原位输出。
++
++网络模块只存必要的 URL、媒体 Content-Type、HTTP 状态、来源/时间及文档范围，不留 Cookie、Authorization、请求正文或完整响应头。Content-Type 从 responseHeaders 提取后立即丢弃其他字段。不读取响应体。
++
++## 观察会话
++
++30 秒；最多 8 个同时活动的标签页会话；每会话最多 96 个去重 URL。前台合并网络与时间线最多 192 条。只监听 `https://video.twimg.com/*` 的 media/xmlhttprequest/other 类型，且请求须来自已授权 X 顶层文档。未知/opaque initiator、其他 tab、不同 document、跨站 iframe、非标准端口和不合法 URL 均不附加。
++
++事件监听同步顶层注册。序列化异步操作避免 hydration 覆盖刚记录的事件。会话使用 `chrome.storage.session`（仅会话内存）及 `alarms` + 活跃时定时器到期清理；stop、导航、tab close、撤销权限清理。恢复时重新核验范围与 TTL。事件使用接收时刻与会话比较，不混淆 Chrome 网络时戳和 wall-clock。
++
++会话仅由点击检查启动，不在普通浏览时保存视频请求。不修改请求、播放器、缓存或网站登录。不自动播放。内存缓存未产生可观察请求时，有限回读当前文档最近 120 秒时间线条目；只读允许的资源名称，没有访问全局浏览历史。
++
++收到 URL 不足以对应唯一视频时只报告歧义数量。本版不提供人为强行挂接未知 URL 的控件。跨域嵌入保留原播放器入口，不跨框架读取私有状态。
++
++## 字幕证据
++
++`hint < declared < url-observed < resource-validated < cue-confirmed`。
++
++浏览器空 TextTrack 只有 hint；已知 HTML track 为 declared / URL-observed；HLS/DASH 声明提供轨道关系。仅字幕清单解析或合法资源验证支持 resource-validated。可读取非空 cues 支持 cue-confirmed。未加载 cues 不代表没有字幕。
++
++“in-band”是来源关系，不是“URL 为空”的同义词：只有真实清单声明支持内嵌关系；没有 URI 的损坏 HLS SUBTITLES 不被当作内嵌字幕。CEA-608 CC1/CC2 等不同 service 不合并。保留来源、语言、group、Period、Representation 等限制，避免不同轨混合。
++
++## 画质
++
++`playbackDimensions` 保存媒体元素当前内在尺寸及观察时间，完全独立于 `ResourceVariant.width/height`。DOM 不用播放尺寸标注 HLS 或其他 URL 的固定质量。清单声明的子流/Representation 尺寸保留；HLS master 不继承当前轨道或旧变体固定尺寸。已有资源仍保留其来源与可验证质量，不因排序丢失 MP4/M3U8/MPD。
++
++## 折叠正文
++
++通过按顺序匹配的文字前缀锚点，只延伸能定位的末尾文字块，不移动非文字块，不搜索性猜测缺失文本在哪张图片之前。含未确认内联尾部媒体、翻译不一致或中间锚点不连续时保留原块并警告。普通“纯正文+尾部附件”与真正 interleaved 结构在 DOM 解析时区分。无法恢复的全文不冒充已完整采集。
++
++## 不在本轮范围内
++
++不要求两端 URL 一致；不保证任意 X 视频都提供 M3U8；不下载分片、合并视频、访问解密密钥、抓私有接口或绕过平台限制。无 webRequest 权限、旧 Chromium、拒绝授权及 Stay 均保留基础取链。新权限说明见 INSTALL_RC8.md。
++
++## 官方参考（实现前已核查）
++
++- Chrome webRequest（MV3 非阻断观察、host + initiator 访问、缓存限制）：https://developer.chrome.com/docs/extensions/reference/api/webRequest
++- Service Worker 事件同步注册：https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/events
++- chrome.storage.session：https://developer.chrome.com/docs/extensions/reference/api/storage
++- HTML 视频内在尺寸、TextTrack：https://html.spec.whatwg.org/multipage/media.html
++- HLS 主/子清单和字幕：https://datatracker.ietf.org/doc/html/rfc8216
++- Stay 历史公开注入实现：https://github.com/shenruisi/Stay
++
++历史 Stay 源码的模拟约束不等同于当前 App 二进制；真机状态单列，不用解析单测冒充平台验收。
+diff --git a/docs/PRIVACY_RC8.md b/docs/PRIVACY_RC8.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ea3a6a1862450769f617a5133b7ca9b67907fbf0
+--- /dev/null
++++ b/docs/PRIVACY_RC8.md
+@@ -0,0 +1,13 @@
++# rc.8 权限与隐私增补
++
++在原有本地处理及源链接导出规则上，本轮增加可选的桌面媒体请求观察。
++
++- `webRequest` 为可选权限，只在扩展自身页面中的用户点击触发授权请求；拒绝后原功能继续可用。
++- `alarms` 为新增权限，用于短时会话到期清理，避免 worker 休眠后遗留记录。最低 Chrome/Edge 120。没有申请 webRequestBlocking、cookies、history、debugger 或扩大网站 host_permissions。
++- 即使授予权限，也只在主动检查的 30 秒会话中记录指定 X 标签页顶部文档对 video.twimg.com 的媒体请求。普通浏览不留全局媒体列表。
++- 不监听请求正文/请求头；仅从可用的响应头列表提取 Content-Type，立即丢弃其他字段。不会输出 Cookie、Set-Cookie、Authorization。
++- 临时 URL（可能包含平台查询参数）仅存在当前扩展会话内存；stop、导航、关闭 tab、撤销权限、到期时清理。恢复会话重验 TTL，不存入长期 local 存储。
++- 对签名地址不修改其参数；沿用 rc.7 的受限链接分享保护，默认不导出识别出的敏感 URL。明确授权本机用途后可用完整地址，但不意味着可公开分享。
++- 诊断只含计数、来源与格式，不含账号、标题、帖子 ID、媒体 URL 或签名参数。测试数据均为合成，不使用用户账户。
++- 新增观察不绕过 CORS、播放权限、DRM；请求观察不等于媒体文件已验证。无法明确关联的候选不会自动填入另一条帖子。
++- 本轮不声称解决原项目所有隐私问题，例如主动分享含私人背景图的样式 JSON 前仍需自行检查；既有元数据和正文中的个人信息不会自动语义脱敏。
+diff --git a/docs/SPEC_MATRIX_RC8.md b/docs/SPEC_MATRIX_RC8.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c64c461069560784687128b29fb45666c09def20
+--- /dev/null
++++ b/docs/SPEC_MATRIX_RC8.md
+@@ -0,0 +1,15 @@
++# rc.8 范围与证据矩阵
++
++| 目标 | 实现 | 本地证据 | 外部边界 |
++|---|---|---|---|
++| Blob/React 缺失时补充取链 | network-observer / discovery / discovery-client | 新49单元+40生产bundle交互；实际background消息流 | 原生MV3与真实X尚待实测 |
++| 只主动短时观察 | optional webRequest、30s ledger、session+alarms | 初始不采、拒绝授权、stop、导航、tab close、撤销、重启、超时 | 原生授权UI未测 |
++| 多视频正确归属 | 精确URL、媒体ID、CDN family；歧义不附加 | postID≠mediaID、quote、预载、不同tab/doc、重复资源 | 未识别CDN结构会留待确认 |
++| 不丢MP4/HLS/DASH | 与rc7变体模型合并；source provenance保留 | 既有72媒体单元+53UI+新增去重 | 平台不提供格式时不编造 |
++| 字幕不误报 | hint/声明/URL/资源/Cue；独立inBand证据 | 空TextTrack、不同CEA服务、HTML/HLS/DASH、单调证据合并 | Cue未加载不等于没有字幕 |
++| 画质不误报 | playbackDimensions独立；master不带固定尺寸 | DOM320尺寸、master合并、UI复制检查 | 未解析清单不知最高质量 |
++| 长文原位 | 有序前缀锚点，仅可定位尾部扩展 | 混排、重复扩展、翻译不一致、截断中间、未知内联尾部 | 无锚点保留partial，不声称完整 |
++| 高清图片降级 | 保留rc7图片resolver | 原51文本+34HD+72media契约，29HD UI | 网络权限/签名/格式仍限制可用率 |
++| Stay不回归 | 原有隔离注入，DOM HLS；无Chrome接口 | 390x844生产脚本、复制TXT/MD、原回归 | 不是真iPhone |
++| 原界面与PNG/PDF | 最小文本区增量、原renderer不变 | 50PNG/PDF、54背景引用、34文本 | 无真实用户内容截图验收 |
++| 交付 | 构建ZIP、source、patch、sha256 | 解压重建比较 + receipt | Github本轮未写入 |
+diff --git a/docs/VERIFY_DISCOVERY_RC8.md b/docs/VERIFY_DISCOVERY_RC8.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c80ab67f089d57b7a2e3965e1d7e28b4c3d2c835
+--- /dev/null
++++ b/docs/VERIFY_DISCOVERY_RC8.md
+@@ -0,0 +1,90 @@
++# rc.8 验证记录
++
++状态：GENERATED / LOCAL_TESTS_PASSED / REAL_PLATFORM_PENDING / NOT_WRITTEN_TO_EXTERNAL_SYSTEM。
++
++## 基线与版本
++
++公开 GitHub rc.7：`feature/multimedia-rc7` / `d89729b4f4dcf1d9f333c5c7dc54c5dfbd54c0e1`。main 仍为已脱敏的 `026378947da2753f3f3dc2b3e9a84edf261619b8`。本轮没有任何远端写入、强推或历史重写。构建版本为 `1.0.0-rc.8`，Manifest 数字版本 `1.0.0.8`。
++
++## 失败先行
++
++实际保留的 red 日志对应：
++1. HLS 当前播放尺寸错误写入清单质量；空 TextTrack 被当成内嵌字幕。
++2. 尚无有界观察账本和可靠资源关联。
++3. 旧版展开正文会把媒体放到全文后；缺少锚点算法。
++4. 观察桥接失败会令检查挂在 starting 状态。
++5. 内联尾部媒体位置不明时不应直接用全文替换。
++6. 同一 HLS root 从网络发现与清单解析重复入库。
++
++修复后对应测试以及原有测试全部通过。不是使用同一实现计算期望值；时间/Chrome/GM/HTTP 属外部边界，使用固定、独立预期。
++
++## 执行结果
++
++| 套件 | 实际结果 |
++|---|---:|
++| TypeScript 类型检查 | PASS |
++| Chromium + Stay + Demo 构建 | PASS |
++| 原有核心单元/契约 | 59/59 |
++| 原有文本单元/契约 | 51/51 |
++| 原有高清链接契约 | 34/34 |
++| 原有多媒体单元/契约 | 72/72 |
++| 新增 rc.8 发现、归属、生命周期、证据、长文及 worker 无 DOM 初始化 | 49/49 |
++| 原有 PNG/PDF/浏览器文件回读 | 50/50 |
++| 原有引用/背景/隐私/Finder 模拟 | 54/54 |
++| 原有文本 UI/复制/文件 | 34/34 |
++| 原有高清链接 UI | 29/29 |
++| 原有媒体链接 UI | 24/24 |
++| 原有多媒体 UI | 53/53 |
++| 新增生产 bundle 观察链路、双端 UI、文件、权限页 | 40/40 |
++
++合计 **265 项单元/契约、284 项浏览器及文件检查**。原有六套浏览器检查本轮实际相加为 244 项（不是先前汇总口径的 243），再加新增 40 项。
++
++这些计数只代表实际运行的断言，不表示全部真实平台情况都覆盖。
++
++浏览器环境：Playwright + 系统 Chromium，桌面 1480×1000、Stay 390×844 触摸视口（旧套件使用各自既定视口）。未提供 Browser 插件，使用 Playwright。新套件执行真实构建的 `background.js`、`content.js` 及 Stay userscript；Chrome/GM/剪贴板和网络事件/请求使用明确的测试适配器。不是浏览器原生 webRequest 的实机证明。
++
++新流程测试：Blob currentSrc / 无 React 变体 → 拒绝权限基础导出仍可用 → 扩展权限页调用授权 → 主动观察 → 隐藏工作台、点击底层页面播放按钮 → 控制的 Chrome 请求事件经过生产 background 监听器 → 唯一媒体归属 → 返回、清单解析 → MP4+HLS 共存 → TXT/MD 真正下载并读取字节。混入的其他视频预载只计为待确认，不进入选中视频。
++
++另检查：空字幕只作 hint、主清单无虚假 320×320 固定画质、原位图文顺序、无异常、无横向溢出、诊断不含来源 URL/账号、会话停止清理、手机不显示 Chrome 专属权限项、原有 HLS 能力保留。
++
++## Standards Review
++
++本轮新增模块未发现阻塞性静态问题：最小目标域名、非阻断请求观察、只投影 Content-Type、不保存全头/凭据、TTL 和清理、跨 tab/document/选区隔离、后台同步注册、session 恢复、并发操作串行、可取消前台等待、未知归属不强行挂接。
++
++遗留/边界：网络请求观察仅支持顶层 X 文档到 video.twimg.com；worker/子框架未知来源不自动附加；缓存可能不发事件；歧义候选仅显示数量。旧安装脚本与旧文档保持为历史基线，不被悄悄替换为未发布 rc.8。
++
++## Spec Review
++
++四项代码修订均落地，并有失败先行和生产构建的本地集成证据。继承 rc.7 的高清图片降级、多变体/HLS/DASH/音轨字幕、图文位置、PNG/PDF/选择/背景/文本能力。位置无法确认时保留可见块和警告，**不是保证所有折叠正文都能恢复**。
++
++远端提交阶段为 BLOCKED：本轮发现的 GitHub 工具只有读取操作，create/update 查询无写入动作；本机连接器也未提供执行命令接口。插件搜索只返回已安装的 GitHub，不增加写入能力。已提供可应用补丁和源码，未虚构远端分支/Commit/PR。
++
++## 真实平台单独判定
++
++- 实际 unpacked MV3 启动烟测：在新 Chromium profile 载入生产扩展，12 秒未取得 serviceworker，记录 **BLOCKED**；没有通过关闭环境管理策略来绕过。
++- Node worker-like 全局中运行真实 background bundle（没有 window/document）通过，只能证明启动代码不依赖 DOM，不能替代真实 MV3 安装。
++- 用户的 Cat Kingdom 真实帖子：本轮未取得其真实 Chrome 网络采集，不宣称已抓到该视频 M3U8。
++- iPhone Safari/Stay 原生导入、权限、播放器、系统剪贴板与分享：**NOT_RUN**。
++- 原生可选权限提示框：本轮只验证 extension-page 调用时机/拒绝/允许的接口边界，不伪装为真实系统确认。
++
++## 可重跑
++
++```bash
++npm install
++npm run typecheck
++npm run build
++npm test
++python tests/discovery_qa.py
++python tests/multimedia_qa.py
++python tests/hd_links_qa.py
++python tests/media_links_qa.py
++python tests/text_export_qa.py
++XC_TEST_FONT=/path/to/licensed-cjk.otf python tests/browser_qa.py
++XC_TEST_FONT=/path/to/licensed-cjk.otf python tests/rc2_regression.py
++```
++
++Python 需 Playwright、Pillow、PyMuPDF；旧套件另需合法可嵌入的测试字体，不随包分发。XC_BROWSER 可指定 Chromium；各套件输出目录环境变量见脚本头。本轮将文本 QA 改用统一 content_world_harness，避免依赖历史一次性启动脚本。原仓库的历史文件不删改。
++
++源码包是可重新构建的快照，不是含完整 Git 历史的镜像。rc.7 存档与远端不一致的三份旧验证/文本说明和一次性 stay_startup_qa.py 不收入新源码包，也不在补丁中覆盖；使用精确限定路径的补丁升级远端。运行时代码、构建文件、活跃测试完整保留。
++
++最终安装包必须通过 CRC、版本、SHA-256 和源码解压后重建字节比较；其实际结果写入交付 receipt，不以本说明的文字替代检查。
+diff --git a/package.json b/package.json
+index f8866ae6e065d8e244cb627f5c3a93c5dfd0c4e7..c577e91ed61f60c513e7cef9d46e3588e25e7722 100644
+--- a/package.json
++++ b/package.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "x-capture-studio",
+-  "version": "1.0.0-rc.7",
++  "version": "1.0.0-rc.8",
+   "private": true,
+   "description": "Local-first X capture: Chromium extension and Stay userscript",
+   "scripts": {
+     "build": "node scripts/build.cjs",
+     "typecheck": "tsc --noEmit",
+-    "test": "node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs"
++    "test": "node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs && node scripts/test-discovery.cjs"
+   },
+   "devDependencies": {
+     "typescript": "5.8.3"
+diff --git a/scripts/build.cjs b/scripts/build.cjs
+index 974d9614829d95d66e80d5d8cf78783d478f6536..3e33f6032dab013a441d10207967e65dcc17e5ec 100644
+--- a/scripts/build.cjs
++++ b/scripts/build.cjs
+@@ -27,20 +27,20 @@ function bundle(entry,platform,asModule=false){const modules=[],ids=new Map();
+ }
+ const notice='/* Third-party JavaScript notices; no font data included.\n'+fs.readFileSync(path.join(ROOT,'vendor/THIRD_PARTY_NOTICES.md'),'utf8').replace(/\*\//g,'* /')+'\n*/\n';
+ const ext=path.join(OUT,'extension');fs.mkdirSync(ext,{recursive:true});
+-for(const[name,entry,platform]of [['content.js','src/entry.ts','extension'],['background.js','src/background.ts','extension'],['popup.js','src/popup.ts','extension'],['demo.js','src/entry.ts','demo']])fs.writeFileSync(path.join(ext,name),(name==='content.js'||name==='demo.js'?notice:'')+bundle(entry,platform));
++for(const[name,entry,platform]of [['content.js','src/entry.ts','extension'],['background.js','src/background.ts','extension'],['popup.js','src/popup.ts','extension'],['observation.js','src/observation-page.ts','extension'],['demo.js','src/entry.ts','demo']])fs.writeFileSync(path.join(ext,name),(name==='content.js'||name==='demo.js'?notice:'')+bundle(entry,platform));
+ fs.copyFileSync(path.join(ROOT,'vendor/THIRD_PARTY_NOTICES.md'),path.join(ext,'THIRD_PARTY_NOTICES.md'));
+-for(const file of ['manifest.json','popup.html'])fs.copyFileSync(path.join(ROOT,'assets',file),path.join(ext,file));
++for(const file of ['manifest.json','popup.html','observation.html'])fs.copyFileSync(path.join(ROOT,'assets',file),path.join(ext,file));
+ fs.cpSync(path.join(ROOT,'assets/icons'),path.join(ext,'icons'),{recursive:true});
+ const demo=fs.readFileSync(path.join(ROOT,'assets/demo.html'),'utf8');fs.writeFileSync(path.join(ext,'demo.html'),demo.replace('<!--SCRIPT-->','<script src="demo.js"></script>'));
+ fs.writeFileSync(path.join(OUT,'X-Capture-Studio-Demo.html'),demo.replace('<!--SCRIPT-->',()=>'<script>'+notice+bundle('src/entry.ts','demo').replace(/<\/script/gi,'<\\/script')+'</script>'));
+ const ownLicense=fs.readFileSync(path.join(ROOT,'LICENSE'),'utf8');
+ fs.copyFileSync(path.join(ROOT,'LICENSE'),path.join(ext,'LICENSE'));
+-const header=`// ==UserScript==\n// @name         X Capture Studio\n// @name:zh-CN   X Capture Studio · 高清长图与文本 PDF\n// @namespace    urn:x-capture-studio\n// @version      1.0.0-rc.7\n// @description  本地保存 X 帖文与上下文：高清 PNG、文本 PDF、TXT/Markdown；支持复制给 AI，无强制水印。\n// @author       yuniancong\n// @license      MIT\n// @match        https://x.com/*\n// @match        https://www.x.com/*\n// @match        https://mobile.x.com/*\n// @match        https://www.twitter.com/*\n// @match        https://twitter.com/*\n// @match        https://mobile.twitter.com/*\n// @run-at       document-end\n// @noframes\n// @grant        GM_getValue\n// @grant        GM_setValue\n// @grant        GM_registerMenuCommand\n// @grant        GM_xmlhttpRequest\n// @grant        GM_log\n// @grant        GM_info\n// @connect      pbs.twimg.com\n// @connect      abs.twimg.com\n// @connect      video.twimg.com\n// @connect      raw.githubusercontent.com\n// ==/UserScript==\n\n`;
++const header=`// ==UserScript==\n// @name         X Capture Studio\n// @name:zh-CN   X Capture Studio · 高清长图与文本 PDF\n// @namespace    urn:x-capture-studio\n// @version      1.0.0-rc.8\n// @description  本地保存 X 帖文与上下文：高清 PNG、文本 PDF、TXT/Markdown；支持复制给 AI，无强制水印。\n// @author       yuniancong\n// @license      MIT\n// @match        https://x.com/*\n// @match        https://www.x.com/*\n// @match        https://mobile.x.com/*\n// @match        https://www.twitter.com/*\n// @match        https://twitter.com/*\n// @match        https://mobile.twitter.com/*\n// @run-at       document-end\n// @noframes\n// @grant        GM_getValue\n// @grant        GM_setValue\n// @grant        GM_registerMenuCommand\n// @grant        GM_xmlhttpRequest\n// @grant        GM_log\n// @grant        GM_info\n// @connect      pbs.twimg.com\n// @connect      abs.twimg.com\n// @connect      video.twimg.com\n// @connect      raw.githubusercontent.com\n// ==/UserScript==\n\n`;
+ const stayBody=bundle('src/entry.ts','stay');
+ // Guard the artifact, not only TypeScript sources: the public host scans inactive code and comments too.
+ if(/\bwindow\./.test(stayBody))throw Error('Stay build contains a qualified window access; audit its injection mode before releasing.');
+ const bootstrap=fs.readFileSync(path.join(ROOT,'assets/stay-bootstrap.js'),'utf8');
+ fs.writeFileSync(path.join(OUT,'X-Capture-Studio.user.js'),header+'/* X Capture Studio license\n'+ownLicense.replace(/\*\//g,'* /')+'\n*/\n'+notice+bootstrap+'\ntry {\n'+stayBody+'\n} catch (error) { __XC_STAY_BOOT__.fail(error); }\n');
+ if(fs.existsSync(path.join(ROOT,'tests/core-entry.ts')))fs.writeFileSync(path.join(OUT,'core-test.cjs'),bundle('tests/core-entry.ts','demo',true));
+-fs.writeFileSync(path.join(OUT,'build-info.json'),JSON.stringify({version:'1.0.0-rc.7',date:'2026-10-15',typescript:ts.version,platforms:['Chromium MV3','Stay userscript'],fontsBundled:false},null,2));
++fs.writeFileSync(path.join(OUT,'build-info.json'),JSON.stringify({version:'1.0.0-rc.8',date:'2026-10-16',typescript:ts.version,platforms:['Chromium MV3','Stay userscript'],fontsBundled:false},null,2));
+ console.log('Built extension, standalone userscript and offline demo in dist/');
+diff --git a/scripts/test-discovery.cjs b/scripts/test-discovery.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5713f30f51cb9ba1d93fdf737fea81c68cd4346a
+--- /dev/null
++++ b/scripts/test-discovery.cjs
+@@ -0,0 +1,226 @@
++const test=require('node:test'),assert=require('node:assert/strict');
++const C=require('../dist/core-test.cjs');
++const hls='https://video.twimg.com/amplify_video/880001/pl/master.m3u8';
++const fakeVideo=(tracks=[])=>({baseURI:'https://x.com/example/status/880010',currentSrc:hls,videoWidth:320,videoHeight:320,readyState:2,
++ getAttribute:()=>null,querySelectorAll:()=>[],closest:()=>null,textTracks:tracks});
++test('HLS dimensions: DOM playback size must not label manifest quality',()=>{
++ const m=C.videoDOMResources(fakeVideo());assert.equal(m.variants[0].width,undefined);
++ assert.equal(m.playbackDimensions.width,320);assert.equal(m.playbackDimensions.source,'video-element');
++});
++test('Subtitle evidence: an empty TextTrack is a hint, not confirmed in-band captions',()=>{
++ const m=C.videoDOMResources(fakeVideo([{id:'',kind:'captions',language:'',label:'',mode:'disabled',cues:null}]));
++ assert.equal(m.tracks[0].evidence,'hint');assert.notEqual(m.tracks[0].inBand,true);
++});
++const page='https://x.com/example/status/880010';
++test('Network observer accepts only explicitly opened, bounded X tab sessions',()=>{
++ const ledger=new C.ObservationLedger();
++ assert.equal(ledger.record({tabId:7,frameId:0,initiator:'https://x.com',url:hls,type:'xmlhttprequest',requestId:'a'},1000),false);
++ assert(ledger.begin({tabId:7,documentId:'doc1',page,sessionId:'test-session-01'},1000));
++ assert(ledger.record({tabId:7,frameId:0,documentId:'doc1',initiator:'https://x.com',url:hls,type:'xmlhttprequest',requestId:'a'},1001));
++ const s=ledger.poll({tabId:7,documentId:'doc1',page,sessionId:'test-session-01'},1002);
++ assert.equal(s.records[0].url,hls);assert.equal(s.records.length,1);
++ assert.equal(ledger.record({tabId:8,frameId:0,initiator:'https://x.com',url:hls,type:'media',requestId:'b'},1003),false);
++ assert.equal(ledger.poll({tabId:7,documentId:'doc1',page,sessionId:'test-session-01'},32000).state,'expired');
++});
++test('Network association uses media identity, not post ID or request order',()=>{
++ const m={kind:'video',src:'https://pbs.twimg.com/amplify_video_thumb/880001/img/poster.jpg',variants:[]};
++ const p={id:'880010',url:page,author:{name:'Example',handle:'example'},kind:'post',blocks:[{kind:'media',media:m}],metrics:{},relationEvidence:'unknown',warnings:[],capturedAt:'2026-10-16'};
++ const c={rootId:p.id,posts:[p],sourceUrl:page,capturedAt:'2026-10-16',collectionNotes:[]};
++ const r=C.attachObservations(c,new Set([p.id]),[{url:hls,source:'network',observedAt:1001,frameId:0}],true);
++ assert.equal(r.matched,1);assert.equal(m.variants[0].kind,'hls');assert.equal(m.variants[0].state,'observed');
++});
++const text=s=>({kind:'text',runs:[{text:s}]});const media={kind:'media',media:{kind:'image',src:'https://pbs.twimg.com/media/foo.jpg',alt:'图'}};
++test('Folded body extends the last known text block, not all text ahead of media',()=>{
++ const p={blocks:[text('第一段。'),media,text('第二段…')],warnings:['正文可能折叠：请展开。']};
++ assert.equal(C.expandAnchoredText(p,'第一段。\n\n第二段完整补充。'),'expanded');
++ assert.deepEqual(p.blocks.map(b=>b.kind),['text','media','text']);
++ assert.equal(p.blocks[0].runs[0].text,'第一段。');assert(p.blocks[2].runs.map(r=>r.text).join('').includes('完整补充'));
++ assert.strictEqual(p.blocks[1],media);
++});
++test('Unlocated expansion is flagged instead of moving every image to the end',()=>{
++ const p={blocks:[text('第一段。'),media,text('第二段…')],warnings:['正文可能折叠']};const original=p.blocks;
++ assert.equal(C.expandAnchoredText(p,'第一段。中间还有未定位内容。第二段完整补充。'),'uncertain');
++ assert.strictEqual(p.blocks,original);assert(p.warnings.some(w=>w.includes('位置')));
++});
++const context={tabId:7,documentId:'doc1',page,sessionId:'test-session-01'};
++const event={tabId:7,documentId:'doc1',frameId:0,initiator:'https://x.com',url:hls,type:'xmlhttprequest',requestId:'a'};
++function opened(){const l=new C.ObservationLedger();l.begin(context,1000);return l;}
++for(const [name,patch] of [
++ ['wrong tab',{tabId:8}],['wrong frame',{frameId:1}],['wrong document',{documentId:'doc2'}],
++ ['foreign initiator',{initiator:'https://other.example'}],['opaque initiator',{initiator:'null'}],['missing initiator',{initiator:undefined}],
++ ['non-media request type',{type:'script'}],['not an approved CDN',{url:'https://evil.example/video.mp4'}],
++ ['lookalike CDN',{url:'https://video.twimg.com.attacker.example/a.mp4'}],['localhost',{url:'https://127.0.0.1/a.mp4'}],
++ ['credentials',{url:'https://u:p@video.twimg.com/a.mp4'}],['nonstandard port',{url:'https://video.twimg.com:8443/a.mp4'}]
++])test('Observation isolation rejects '+name,()=>{const l=opened();assert.equal(l.record({...event,...patch},1001),false);assert.equal(l.poll(context,1002).records.length,0);});
++test('Observation ignores events delivered from before a new session',()=>{const l=opened();assert.equal(l.record(event,999),false);});
++test('Observation upper bounds, dedup and sanitized storage restore',()=>{
++ const l=opened();for(let i=0;i<140;i++)l.record({...event,url:`https://video.twimg.com/amplify_video/${90000+i}/pl/a.m3u8`},1001);
++ let s=l.poll(context,1002);assert.equal(s.records.length,96);assert(s.limited);
++ l.record({...event,url:s.records[0].url,mime:'application/vnd.apple.mpegurl',statusCode:200},1002);
++ assert.equal(l.poll(context,1003).records.length,96);
++ const fresh=new C.ObservationLedger(l.dump(1003),1004);assert.equal(fresh.poll(context,1004).records.length,96);
++ assert.equal(new C.ObservationLedger(l.dump(1003),50000).dump(50000).length,0);
++ assert.equal(l.poll({...context,sessionId:'other-session'},1003).state,'scope-changed');
++ assert.equal(l.poll({...context,page:page+'/other'},1003).records.length,0);
++});
++test('Segments are counts only; no segment exported as an entire file',()=>{
++ const l=opened();l.record({...event,url:'https://video.twimg.com/amplify_video/880001/seg/part.ts'},1001);
++ assert.equal(l.poll(context,1002).records.length,0);assert.equal(l.poll(context,1002).segments,1);
++});
++test('Extension and service worker initiators are not page playback traffic',()=>{
++ const l=opened();assert(!l.record({...event,initiator:'chrome-extension://our-id'},1001));assert(!l.record({...event,tabId:-1},1001));
++});
++test('Observed HTTP success is not verified playable media',()=>{
++ const l=opened();l.record({...event,statusCode:200},1001);assert.equal(l.poll(context,1001).records[0].status,200);
++ assert(!JSON.stringify(l.dump(1001)).includes('verified'));
++});
++function post(id,medias){return {id,url:`https://x.com/example/status/${id}`,author:{name:'Example',handle:'example'},kind:'post',blocks:medias.map(m=>({kind:'media',media:m})),metrics:{},warnings:[],relationEvidence:'unknown',capturedAt:'2026-10-16'};}
++function capture(posts){return {rootId:posts[0].id,sourceUrl:posts[0].url,posts,capturedAt:'2026-10-16',collectionNotes:[]};}
++const video=id=>({kind:'video',src:`https://pbs.twimg.com/amplify_video_thumb/${id}/img/p.jpg`,variants:[],alt:'视频封面'});
++const rec=(url,extra={})=>({url,source:'network',observedAt:2000,frameId:0,...extra});
++test('Two videos and preloads never bind by arrival order',()=>{
++ const a=video('880001'),b=video('880002'),c=capture([post('1',[a,b])]);
++ const r=C.attachObservations(c,new Set(['1']),[rec('https://video.twimg.com/amplify_video/880002/pl/b.m3u8'),rec(hls),rec('https://video.twimg.com/amplify_video/999999/pl/unrelated.m3u8')]);
++ assert.equal(r.matched,2);assert.equal(r.unmatched,1);assert(a.variants[0].url===hls);assert(b.variants[0].url.includes('880002'));
++});
++test('Unselected replies cannot be targets of a selected-post export',()=>{
++ const a=video('880001'),b=video('880002'),c=capture([post('1',[a]),post('2',[b])]);
++ const r=C.attachObservations(c,new Set(['1']),[rec('https://video.twimg.com/amplify_video/880002/pl/b.m3u8')]);assert.equal(r.matched,0);assert.equal(a.variants.length,0);
++});
++test('Quote media remain owned by quoted post',()=>{
++ const a=video('880002'),b=video('880001'),p=post('1',[a]);p.quote=post('2',[b]);const c=capture([p]);
++ assert.equal(C.attachObservations(c,new Set(['1']),[rec(hls)]).matched,1);assert.equal(b.ownerId,'2');assert.equal(a.variants.length,0);
++});
++test('Ambiguous identical media in two blocks are not assigned silently',()=>{
++ const a=video('880001'),b=video('880001'),c=capture([post('1',[a,b])]);const r=C.attachObservations(c,new Set(['1']),[rec(hls)]);
++ assert.equal(r.ambiguous,1);assert.equal(a.variants.length,0);assert.equal(b.variants.length,0);
++});
++test('MP4, HLS, DASH and MIME-only sources all retained once',()=>{
++ const a=video('880001'),c=capture([post('1',[a])]);
++ const list=[rec(hls),rec('https://video.twimg.com/amplify_video/880001/vid/a.mp4'),rec('https://video.twimg.com/amplify_video/880001/pl/a.mpd'),rec('https://video.twimg.com/amplify_video/880001/pl/entry',{mime:'application/vnd.apple.mpegurl'})];
++ C.attachObservations(c,new Set(['1']),list);C.attachObservations(c,new Set(['1']),list);
++ assert.equal(a.variants.length,4);assert.deepEqual(new Set(a.variants.map(v=>v.kind)),new Set(['hls','file','dash']));
++});
++test('Do not map generic poster URLs to an arbitrary video',()=>{
++ const a={kind:'video',src:'https://pbs.twimg.com/media/generic.jpg'},c=capture([post('1',[a])]);assert.equal(C.attachObservations(c,new Set(['1']),[rec(hls)]).matched,0);
++});
++test('A structured media_key can match CDN identity with a different post ID',()=>{
++ const a={kind:'video',src:'',mediaId:'13_880001'},c=capture([post('880010',[a])]);assert.equal(C.attachObservations(c,new Set(['880010']),[rec(hls)]).matched,1);
++});
++test('Performance fallback keeps approved recent media URLs without requiring TAO timing fields',()=>{
++ const entries=[{name:hls,startTime:10},{name:'https://private.example/secret?token=do-not-copy',startTime:20},{name:hls,startTime:25},{name:'https://video.twimg.com/seg/a.ts',startTime:30}];
++ assert.equal(C.performanceMediaEntries({timeOrigin:1000,getEntriesByType:()=>entries},2000).length,1);
++ assert.equal(C.performanceMediaEntries({timeOrigin:1000,getEntriesByType:()=>entries},200000).length,0);
++});
++function eventBus(){const handlers=[];return {handlers,addListener(fn,...args){handlers.push({fn,args});},removeListener(fn){const i=handlers.findIndex(h=>h.fn===fn);if(i>=0)handlers.splice(i,1);},emit(...a){for(const h of handlers)h.fn(...a);}};}
++function fakeChrome(memory={},permitted=true){const api={runtime:{id:'our-extension',getURL:p=>'chrome-extension://our-extension/'+p},
++ storage:{session:{get:async key=>({[key]:memory[key]}),set:async o=>{Object.assign(memory,structuredClone(o));},remove:async k=>{delete memory[k];}}},
++ permissions:{contains:async()=>permitted,onAdded:eventBus(),onRemoved:eventBus()},
++ webRequest:{onBeforeRequest:eventBus(),onResponseStarted:eventBus(),onErrorOccurred:eventBus()},
++ tabs:{onRemoved:eventBus(),onUpdated:eventBus(),created:[],create:async o=>{api.tabs.created.push(o);}},
++ alarms:{onAlarm:eventBus(),create:async()=>{},clear:async()=>true}};return api;}
++const sender={id:'our-extension',frameId:0,documentId:'doc1',url:page,tab:{id:7,url:page}};
++test('Real adapter policy: listeners registered synchronously; no blocking or request-body access',async()=>{
++ const api=fakeChrome();const bridge=new C.ChromeObservationBridge(api,()=>1000);
++ assert.equal(api.webRequest.onBeforeRequest.handlers.length,1);
++ assert.deepEqual(api.webRequest.onResponseStarted.handlers[0].args,[{urls:['https://video.twimg.com/*'],types:['media','xmlhttprequest','other']},['responseHeaders']]);
++ assert(!JSON.stringify(api.webRequest.onBeforeRequest.handlers[0].args).includes('blocking'));
++ await bridge.settled();
++});
++test('Adapter persists only approved event fields and restores across worker restart',async()=>{
++ let now=1000;const mem={},api=fakeChrome(mem);const bridge=new C.ChromeObservationBridge(api,()=>now);
++ await bridge.command('start',sender,'test-session-01');now=1001;
++ api.webRequest.onResponseStarted.emit({...event,statusCode:200,responseHeaders:[{name:'Content-Type',value:'application/vnd.apple.mpegurl'},{name:'Set-Cookie',value:'PRIVATE-NOT-TO-STORE'}],requestHeaders:[{name:'Authorization',value:'PRIVATE-TOKEN'}],requestBody:'PRIVATE-BODY'});
++ await bridge.settled();assert(!JSON.stringify(mem).includes('PRIVATE'));
++ const fresh=new C.ChromeObservationBridge(fakeChrome(mem),()=>1002);const r=await fresh.command('poll',sender,'test-session-01');assert.equal(r.records.length,1);assert.equal(r.records[0].mime,'application/vnd.apple.mpegurl');
++ await fresh.command('stop',sender,'test-session-01');assert.equal(Object.keys(mem).length,0);
++});
++test('Permission denied does not open an observation session',async()=>{
++ const mem={},api=fakeChrome(mem,false),bridge=new C.ChromeObservationBridge(api,()=>1000);
++ assert.equal((await bridge.command('start',sender,'test-session-01')).state,'permission-required');
++ api.webRequest.onBeforeRequest.emit(event);await bridge.settled();assert.equal(Object.keys(mem).length,0);
++});
++test('Stop, tab close, navigation, and alarm expiry clean session storage',async()=>{
++ for(const mode of ['stop','removed','navigation','expiry','permission']){
++  const mem={},api=fakeChrome(mem);let now=1000;const b=new C.ChromeObservationBridge(api,()=>now);
++  await b.command('start',sender,'test-session-01');api.webRequest.onBeforeRequest.emit(event);await b.settled();
++  if(mode==='stop')await b.command('stop',sender,'test-session-01');
++  if(mode==='removed')api.tabs.onRemoved.emit(7);
++  if(mode==='navigation')api.tabs.onUpdated.emit(7,{url:'https://x.com/example/status/OTHER'});
++  if(mode==='expiry'){now=40000;api.alarms.onAlarm.emit({name:'xc-media-observation-expiry'});}
++  if(mode==='permission')api.permissions.onRemoved.emit({permissions:['webRequest']});
++  await b.settled();assert.equal(Object.keys(mem).length,0,mode);
++ }
++});
++test('Forged sender, stale route, subframe, and stale token cannot read or stop another session',async()=>{
++ const b=new C.ChromeObservationBridge(fakeChrome(),()=>1000);await b.command('start',sender,'test-session-01');
++ for(const s of [{...sender,id:'other'},{...sender,frameId:1},{...sender,url:page+'/wrong'},{...sender,documentId:'another-document'}]){
++   assert.notEqual((await b.command('poll',s,'test-session-01')).state,'active');
++ }
++ await b.command('stop',sender,'wrong-token');assert.equal((await b.command('poll',sender,'test-session-01')).state,'active');await b.command('stop',sender,'test-session-01');
++});
++test('Longtext restores a plain trailing attachment and does not duplicate on repeat',()=>{
++ const p={blocks:[text('Hello…'),media],warnings:['正文可能折叠']};assert.equal(C.expandAnchoredText(p,'Hello and more'),'expanded');
++ assert.equal(p.blocks[0].runs.map(r=>r.text).join(''),'Hello and more');assert.equal(p.blocks[1],media);
++ assert.equal(C.expandAnchoredText(p,'Hello and more'),'unchanged');
++});
++test('Longtext refuses translation mismatch and a truncated middle anchor',()=>{
++ for(const p of [{blocks:[text('中文…'),media],warnings:['正文可能折叠']},{blocks:[text('Start…'),media,text('End…')],warnings:['正文可能折叠']}]){
++  assert.equal(C.expandAnchoredText(p,'Start changed English with some long content End full text'),'uncertain');
++ }
++});
++test('Subtitle hint -> cue confirmed strengthens evidence without asserting in-band origin',()=>{
++ const a={id:'1',kind:'captions',source:'track',state:'observed',evidence:'hint',language:'en',label:'English'};
++ const t=C.mergeTracks([a],[{...a,evidence:'cue-confirmed',cueCount:3}],[a]);assert.equal(t.length,1);assert.equal(t[0].evidence,'cue-confirmed');assert.notEqual(t[0].inBand,true);
++});
++test('Different caption services/languages are never deduplicated into one',()=>{
++ const a={id:'cc1',kind:'captions',source:'hls',state:'observed',inBand:true,language:'en',label:'English'};
++ assert.equal(C.mergeTracks([a,{...a,id:'cc2'},{...a,id:'cc3',language:'es'}]).length,3);
++});
++test('HLS master never inherits active video size during resource merge or export',()=>{
++ const m=video('880001');m.variants=C.mergeVariants([{url:hls,kind:'hls',source:'dom',state:'observed',width:320,height:320}],[{url:hls,kind:'hls',source:'hls',state:'verified',playlist:'master'}]);
++ assert.equal(m.variants[0].width,undefined);
++ const t=C.mediaTextLines(m,post('1',[m]),{all:true,images:false,subtitles:true,sensitive:false,markdown:false,links:true,sources:true});assert(!t.text.includes('320×320'));
++});
++const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
++function clientFixture(host,refresh=async()=>{}){
++ const m=video('880001'),c=capture([post('880010',[m])]);let snap={capture:c,selected:new Set(['880010']),quotes:true,private:false},url=page,done=0;
++ const changed=[];const client=new C.MediaDiscoveryClient(host,()=>snap,refresh,s=>changed.push(s),()=>{done++;},()=>url,()=>[],{callTimeoutMs:30});
++ return {client,m,c,changed,get done(){return done;},setScope:s=>{snap={...snap,...s};},setURL:u=>{url=u;}};
++}
++test('Client: host failure falls back, does not leave checking state stuck',async()=>{
++ const f=clientFixture({observe:async()=>{throw Error('bridge offline');}});await f.client.start();assert(!f.client.active);assert.equal(f.client.status.state,'unavailable');f.client.dispose();
++});
++test('Client: unavailable bridge times out instead of hanging the editor',async()=>{
++ const f=clientFixture({observe:()=>new Promise(()=>{})});await f.client.start();assert(!f.client.active);f.client.dispose();
++});
++test('Client: current selection change rejects a delayed observation result',async()=>{
++ const d=deferred(),calls=[];const f=clientFixture({observe:async(a,id)=>{calls.push(a);return a==='start'?d.promise:{state:'stopped',records:[]};}});
++ const start=f.client.start();await new Promise(r=>setTimeout(r,0));f.setScope({selected:new Set()});d.resolve({state:'active',expiresAt:Date.now()+30000,records:[{url:hls,source:'network',observedAt:Date.now(),frameId:0}]});await start;
++ assert(!f.m.variants?.length);assert(calls.includes('stop'));f.client.dispose();
++});
++test('Client: playback observations merge and stop with immediate manual return',async()=>{
++ const record={url:hls,source:'network',observedAt:Date.now(),frameId:0};const calls=[];
++ const f=clientFixture({observe:async(a,id)=>{calls.push(a);return {state:a==='stop'?'stopped':'active',expiresAt:Date.now()+30000,records:a==='poll'?[record]:[]};}});
++ await f.client.start();await f.client.stop(true);assert.equal(f.client.status.matched,1);assert(f.m.variants.some(v=>v.url===hls));assert(calls.includes('stop'));f.client.dispose();
++});
++test('Client: late results after disposal cannot mutate the capture',async()=>{
++ const d=deferred();const f=clientFixture({observe:async a=>a==='poll'?d.promise:{state:a==='start'?'active':'stopped',expiresAt:Date.now()+30000,records:[]}});
++ await f.client.start();const poll=f.client.poll();f.client.dispose();d.resolve({state:'active',records:[{url:hls,source:'network',observedAt:Date.now(),frameId:0}]});await poll;assert(!f.m.variants?.length);
++});
++test('Inline trailing media: a full-text string does not reveal its missing offset',()=>{
++ const p={blocks:[text('Before…'),media],warnings:['正文可能折叠'],textStructure:'interleaved'};
++ assert.equal(C.expandAnchoredText(p,'Before and additional text after the image'),'uncertain');assert.equal(p.blocks[1],media);
++});
++test('Same HLS root observed by network and manifest becomes one variant, not duplicate roots',()=>{
++ const a={url:hls,kind:'hls',source:'network',state:'observed'},b={...a,source:'hls',role:'video',playlist:'master',state:'verified'};
++ assert.equal(C.mergeVariants([a],[b]).length,1);
++ assert.equal(C.mergeVariants([a],[b,{...b,role:'audio'}]).length,2);
++});
++test('Production MV3 background bundle initializes without window/document globals',async()=>{
++ const fs=require('node:fs'),vm=require('node:vm'),api=fakeChrome();api.runtime.onMessage=eventBus();
++ const context={chrome:api,URL,Map,Set,Date,Promise,Math,Number,Array,Object,String,RegExp,Uint8Array,AbortController,TextDecoder,TextEncoder,URLSearchParams,setTimeout,clearTimeout,console,fetch,atob,btoa,crypto};
++ vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../dist/extension/background.js'),'utf8'),context,{timeout:1000});
++ assert.equal(api.webRequest.onBeforeRequest.handlers.length,1);assert.equal(api.runtime.onMessage.handlers.length,1);
++ await new Promise(r=>setTimeout(r,0));
++});
+diff --git a/src/background.ts b/src/background.ts
+index 1a14c2182ecd399120b5f6e23a7f758b0d25627a..8cf76dd296b8cabdf0b82909f3c0ed4c0fb12b8c 100644
+--- a/src/background.ts
++++ b/src/background.ts
+@@ -1,3 +1,5 @@
++import {ChromeObservationBridge} from './platform/network-observer';
++const observation=new ChromeObservationBridge(chrome);
+ import {nativeResource,safeResourceRequest} from './platform/resource-network';
+ const resourceTasks=new Map<string,AbortController>();
+ const resourceRate=new Map<number,{at:number;count:number}>();
+@@ -8,6 +10,12 @@ import {nativeBytes} from './platform/host';
+ const isX=(url:string)=>{try{return /^(?:www\.|mobile\.)?(?:x\.com|twitter\.com)$/.test(new URL(url).hostname);}catch{return false;}};
+ chrome.runtime.onMessage.addListener((msg:any,sender:any,respond:any)=>{
+   if(sender.id!==chrome.runtime.id||!sender.tab?.id||!isX(sender.tab.url||sender.url||''))return false;
++  if(msg?.type==='xc:observe'){
++    observation.command(msg.action,sender,msg.sessionId).then(respond).catch(()=>respond({state:'unavailable',records:[]}));return true;
++  }
++  if(msg?.type==='xc:observe-enable'){
++    observation.openPermissionPage(sender).then(ok=>respond({ok})).catch(()=>respond({ok:false}));return true;
++  }
+   if(msg?.type==='xc:asset'){
+     if(typeof msg.url!=='string'||!allowedAsset(msg.url)){respond({ok:false,error:'资源地址不在允许列表。'});return false;}
+     nativeBytes(msg.url).then(b=>respond({ok:true,data:base64(b)})).catch(e=>respond({ok:false,error:e.message}));return true;
+diff --git a/src/core/collector.ts b/src/core/collector.ts
+index 7f2e63df28fdfda7ce2f8f57f3437c890e5bd267..60142bbe861004f4e6d99ec6a7d4dd7bbfccdcb8 100644
+--- a/src/core/collector.ts
++++ b/src/core/collector.ts
+@@ -1,3 +1,4 @@
++import {expandAnchoredText} from './text-expansion';
+ import {Capture,Host,Post} from './model';
+ import {collectDOM} from './parser';
+ import {mergePosts} from './selection';
+@@ -42,11 +43,8 @@ export class Collector {
+         if(p.parentId)p.relationEvidence='data';
+         if(raw.quote){p.quote=enrichQuote(p.quote,raw.quote,p.capturedAt);if(p.quote?.url)p.warnings=p.warnings.filter(w=>!w.includes('引用原帖链接未识别'));}
+         else if(p.quote&&!p.quote.url&&/^\d+$/.test(raw.quotedId||'')){p.quote.id=raw.quotedId;p.quote.url=`https://x.com/i/web/status/${raw.quotedId}`;p.quote.warnings=p.quote.warnings.filter(w=>!w.includes('引用原帖链接未识别'));p.warnings=p.warnings.filter(w=>!w.includes('引用原帖链接未识别'));}
+-        if(typeof raw.fullText==='string'&&p.warnings.some(w=>w.includes('正文可能折叠'))&&raw.fullText.length>p.blocks.filter(b=>b.kind==='text').map(b=>b.kind==='text'?b.runs.map(r=>r.text).join(''):'').join('').length&&p.kind==='post'){
+-          const visible=p.blocks.filter(b=>b.kind==='text').map(b=>b.kind==='text'?b.runs.map(r=>r.text).join(''):'').join('');
+-          const prefix=visible.replace(/[\s…]+$/g,'').slice(0,24);
+-          if(prefix&&!raw.fullText.startsWith(prefix))continue;
+-          const media=p.blocks.filter(b=>b.kind!=='text');p.blocks=[{kind:'text',runs:[{text:raw.fullText}]},...media];p.warnings=p.warnings.filter(w=>!w.includes('正文可能折叠'));
++        if(typeof raw.fullText==='string'&&p.warnings.some(w=>w.includes('正文可能折叠'))){
++          expandAnchoredText(p,raw.fullText);
+         }
+       }}catch{/* DOM fallback remains truthful about missing relation evidence. */}
+     }
+diff --git a/src/core/model.ts b/src/core/model.ts
+index 22f8428df1eb8166ac842604c450cb164d0d2e78..f3b86ff8bacd820ebd1aab6640e23866965ce19f 100644
+--- a/src/core/model.ts
++++ b/src/core/model.ts
+@@ -1,6 +1,7 @@
++import type {ObservationResult} from '../media/discovery';
+ import type {MediaResources,ResourceRequest,ResourceResponse} from '../media/types';
+ /** Captured facts are separate from selection, style and inferred relationships. */
+-export const VERSION = '1.0.0-rc.7';
++export const VERSION = '1.0.0-rc.8';
+ export interface Run { text:string; bold?:boolean; italic?:boolean; underline?:boolean; strike?:boolean; code?:boolean; href?:string; }
+ export type Block = {kind:'text'; runs:Run[]; level?:number; quote?:boolean; list?:string; code?:boolean} | {kind:'media'; media:Media} | {kind:'embed'; post:Post} | {kind:'divider'};
+ export interface MediaDisplay {x:number;y:number;width:number;height:number;fit:'contain'|'cover';}
+@@ -10,7 +11,7 @@ export interface Author { name:string; handle:string; avatar?:string; verified?:
+ export interface Poll { options:{text:string; percent?:number}[]; summary?:string; }
+ export interface Post {
+   id:string; url:string; author:Author; blocks:Block[]; published?:string; displayTime?:string;
+-  kind:'post'|'article'; title?:string; quote?:Post; linkCard?:{title:string; description?:string; url:string; image?:string; media?:Media};
++  kind:'post'|'article'; textStructure?:'text-with-attachments'|'interleaved'; title?:string; quote?:Post; linkCard?:{title:string; description?:string; url:string; image?:string; media?:Media};
+   metrics:Record<string,string>; poll?:Poll; note?:string; edited?:string;
+   parentId?:string; conversationId?:string; replyToHandle?:string;
+   relationEvidence:'data'|'dom'|'unknown'; warnings:string[]; capturedAt:string;
+@@ -47,6 +48,8 @@ export interface Asset { image:HTMLImageElement; dataUrl:string; width:number;he
+ export type AssetMap=Map<string,Asset>;
+ export interface Host {
+   kind:'extension'|'stay'|'demo';
++  observe?(action:'start'|'poll'|'stop',sessionId:string):Promise<ObservationResult>;
++  openObservationPermission?():Promise<boolean>;
+   getValue<T>(key:string,fallback:T):Promise<T>;
+   setValue(key:string,value:unknown):Promise<void>;
+   readBytes(url:string,signal?:AbortSignal):Promise<Uint8Array>;
+diff --git a/src/core/parser.ts b/src/core/parser.ts
+index 52662f1f65f48dee4cf83453dac920b8e11abd00..3effe45ca63cd0eca05618ef8c86596368003e20 100644
+--- a/src/core/parser.ts
++++ b/src/core/parser.ts
+@@ -179,7 +179,7 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
+   const parentId=el.getAttribute('data-in-reply-to-status-id')||undefined;
+   const replyTo=ownNodes(el,'[data-testid="replying-to"] a',quote)[0];
+   const note=ownNodes(el,'[data-testid="birdwatch-pivot"], [data-testid="communityNote"], [data-testid="birdwatch-pivot-footer"]',quote).map(n=>clean(n.textContent)).filter(Boolean).join('\n')||undefined;
+-  const p:Post={id:id||`visible-quote-${ownerId}-${depth}`,url:url||'',author,blocks,kind:'post',published:time?.getAttribute('datetime')||undefined,displayTime:clean(time?.textContent)||undefined,
++  const p:Post={id:id||`visible-quote-${ownerId}-${depth}`,url:url||'',author,blocks,kind:'post',textStructure:inlineMedia?'interleaved':'text-with-attachments',published:time?.getAttribute('datetime')||undefined,displayTime:clean(time?.textContent)||undefined,
+     metrics,poll:readPoll(el,quote),note,edited:clean(ownNodes(el,'a[href$="/history"], [data-testid="editHistory"]',quote)[0]?.textContent)||undefined,parentId,
+     replyToHandle:replyTo?.textContent?.trim().replace(/^@/,''),relationEvidence:parentId?'dom':'unknown',warnings,capturedAt:new Date().toISOString()};
+   if(quote){const qp=parsePost(quote,true,p.id,depth+1);if(qp&&qp.id!==p.id){p.quote=qp;p.warnings.push(...qp.warnings);}else p.warnings.push('检测到引用卡片，但当前可见内容未能完整读取。');}
+@@ -202,7 +202,7 @@ export function parseArticle(scope:Document|Element=document):Post|undefined{
+   const blocks=richBlocks(body);
+   const cover=container.querySelector('[data-testid="twitterArticleCoverImage"] img') as HTMLImageElement|null;
+   if(cover&&!body.contains(cover))blocks.unshift({kind:'media',media:{...mediaFromImage(cover),mediaRole:'cover'}});
+-  return {id:postID(canonical)!,url:canonical,kind:'article',title,author:header?{name:clean(header.querySelector('a')?.textContent)||handle,handle,avatar:imageSrc([...container.querySelectorAll('img[src*="profile_images"]')].find(n=>!body.contains(n)))}:base?.author||{name:handle==='unknown'?'作者未识别':handle,handle},blocks,metrics:base?.metrics||{},published:base?.published,
++  return {id:postID(canonical)!,url:canonical,kind:'article',textStructure:'interleaved',title,author:header?{name:clean(header.querySelector('a')?.textContent)||handle,handle,avatar:imageSrc([...container.querySelectorAll('img[src*="profile_images"]')].find(n=>!body.contains(n)))}:base?.author||{name:handle==='unknown'?'作者未识别':handle,handle},blocks,metrics:base?.metrics||{},published:base?.published,
+     relationEvidence:'unknown',warnings:blocks.length?[]:['文章正文未加载。'],capturedAt:new Date().toISOString()};
+ }
+ export function collectDOM(scope:Document|Element=document):Post[]{
+diff --git a/src/core/text-expansion.ts b/src/core/text-expansion.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..28d7e1e11e86fcbe7905778adef35431ab55f6f1
+--- /dev/null
++++ b/src/core/text-expansion.ts
+@@ -0,0 +1,40 @@
++import type {Block,Post,Run} from './model';
++const WARNING='正文扩展未合并：媒体位置或文字锚点无法确认，请在原帖展开后重新读取。';
++function compact(raw:string):{text:string;offsets:number[]} {
++  let text='';const offsets:number[]=[];
++  for(let i=0;i<raw.length;i++)if(!/\s/.test(raw[i])){text+=raw[i];offsets.push(i);}
++  return {text,offsets};
++}
++function prefixRuns(runs:Run[],length:number):Run[] {
++  const out:Run[]=[];let remaining=length;
++  for(const r of runs){if(remaining<=0)break;const text=r.text.slice(0,remaining);if(text)out.push({...r,text});remaining-=r.text.length;}
++  return out;
++}
++/** Only extend a uniquely anchored tail. Existing non-text nodes never leave their positions.
++ * Missing interleaved anchors are a partial capture, NOT permission to invent media offsets. */
++export function expandAnchoredText(p:Pick<Post,'blocks'|'warnings'|'textStructure'>,fullText:string):'expanded'|'uncertain'|'unchanged' {
++  if(typeof fullText!=='string'||!fullText||fullText.length>400000)return 'unchanged';
++  const texts=p.blocks.map((b,i)=>b.kind==='text'?{b,i,raw:b.runs.map(r=>r.text).join('')}:undefined).filter((x):x is NonNullable<typeof x>=>!!x);
++  const visible=texts.map(t=>t.raw).join('');if(!texts.length||fullText.length<=visible.length)return 'unchanged';
++  const fail=()=>{if(!p.warnings.includes(WARNING))p.warnings.push(WARNING);return 'uncertain' as const;};
++  if(p.textStructure==='interleaved'&&p.blocks.slice(texts[texts.length-1].i+1).some(b=>b.kind!=='text'))return fail();
++  const full=compact(fullText);let cursor=0,lastStart=0,lastPrefix='';
++  for(let n=0;n<texts.length;n++){
++    const t=texts[n],last=n===texts.length-1;
++    if(!last&&/(?:…|\.{3})\s*$/.test(t.raw))return fail();
++    const prefix=last?t.raw.replace(/(?:…+|\.{3})\s*$/,'').replace(/\s+$/,''):t.raw;
++    const value=compact(prefix).text;if(!value)return fail();
++    // Prefix equality (not search/indexOf) refuses to assign unseen interstitial text to either side of an image.
++    if(!full.text.startsWith(value,cursor))return fail();
++    if(last){lastStart=full.offsets[cursor];lastPrefix=prefix;}cursor+=value.length;
++  }
++  const last=texts[texts.length-1],replacement=fullText.slice(lastStart);
++  const trimmedStart=lastPrefix.length-lastPrefix.trimStart().length;
++  const known=lastPrefix.slice(trimmedStart);
++  let runs:Run[];
++  if(replacement.startsWith(known)&&trimmedStart===0){runs=prefixRuns(last.b.runs,lastPrefix.length);const extra=replacement.slice(known.length);if(extra)runs.push({text:extra});}
++  else runs=[{text:replacement}];
++  const blocks:Block[]=[...p.blocks];blocks[last.i]={...last.b,runs};p.blocks=blocks;
++  p.warnings=p.warnings.filter(w=>w!==WARNING&&!w.includes('正文可能折叠'));
++  return 'expanded';
++}
+diff --git a/src/entry.ts b/src/entry.ts
+index 12a66036830abdde7fd801e20fd489fe4f74f7c3..2a249ec770a2c4fae46d77cdda037d7014c6ec76 100644
+--- a/src/entry.ts
++++ b/src/entry.ts
+@@ -62,15 +62,15 @@ if(__PLATFORM__==='demo'){
+   if(document.documentElement)ready();else document.addEventListener('DOMContentLoaded',ready,{once:true});
+ }else{
+   const runtime=window as any;runtime.__xcRuntimeV2?.dispose?.();
+-  let timer=0,disposed=false;
+-  const refresh=()=>{timer=0;if(disposed)return;try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
++  let timer=0,disposed=false,pageAt=location.href;
++  const refresh=()=>{timer=0;if(disposed)return;if(pageAt!==location.href){active?.close();collector.reset();pageAt=location.href;}try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
+   // Leading deadline, not repeated debounce: a busy X timeline cannot starve reinjection forever.
+   const schedule=()=>{if(!timer&&!disposed)timer=window.setTimeout(refresh,200);};
+   const observer=new MutationObserver(records=>{if(records.every(r=>r.target instanceof Element&&r.target.closest('[data-xcapture-ui]')))return;schedule();});
+   observer.observe(document,{childList:true,subtree:true});
+   const interval=window.setInterval(()=>{if(!document.hidden)schedule();},2000);
+   document.addEventListener('DOMContentLoaded',schedule);document.addEventListener('visibilitychange',schedule);window.addEventListener('pageshow',schedule);
+-  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
++  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;active?.close();clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
+   refresh();
+   if(__PLATFORM__==='extension')try{chrome.runtime.onMessage.addListener((msg:any,_sender:any,respond:any)=>{if(msg?.type==='xc:open'){void open(postID(location.href));respond({ok:true});}return false;});}catch(e){lastError=(e as Error).message;}
+   if(__PLATFORM__==='stay'&&!stayBoot){
+diff --git a/src/media/dash.ts b/src/media/dash.ts
+index c38a36f918e951a4de9448677d0f6d0f068d5539..30cb5a0599e6821b90585fea619be434a1eb4f25 100644
+--- a/src/media/dash.ts
++++ b/src/media/dash.ts
+@@ -39,11 +39,11 @@ export function parseDASH(text:string,address:string):ManifestResult {
+         if(targets.length)isDirect=true;
+         const format=/stpp\.ttml\.im|imsc/.test(codecs+' '+(attrs.profiles||''))?'IMSC1':/ttml|stpp/.test(mime+' '+codecs)?'TTML':/vtt|wvtt/.test(mime+' '+codecs)?'WebVTT':undefined;
+         if(sub||audio){for(const target of isDirect?targets:[undefined])tracks.push({id:`${periodId}:${adaptationId}:${id}:${target||''}`,kind:audio?'audio':c.roles.includes('caption')?'captions':'subtitles',language:attrs.lang,label:children(r,'Label')[0]?.text||children(a,'Label')[0]?.text||id,format:audio?mediaFormat(target||base,mime):format||'DASH 字幕',mime,codecs,
+-          url:target,manifestUrl:base,periodId,adaptationId,representationId:id,default:c.roles.includes('main'),forced:c.roles.some(v=>/forced-subtitle|forced_subtitle/.test(v)),segmented,source:'dash',state:'observed',encrypted:c.protected,sensitive:sensitive||!!target&&sensitiveURL(target)});
++          url:target,manifestUrl:base,periodId,adaptationId,representationId:id,default:c.roles.includes('main'),forced:c.roles.some(v=>/forced-subtitle|forced_subtitle/.test(v)),segmented,evidence:'declared',source:'dash',state:'observed',encrypted:c.protected,sensitive:sensitive||!!target&&sensitiveURL(target)});
+         }
+         for(const target of isDirect?targets:[base]){
+           const kind=sub?'subtitle':audio?'audio':isDirect?'file':'dash';
+-          const v=variant({url:target,kind,format:isDirect?undefined:'dash',mime:isDirect?mime:undefined,codecs,role:sub?'subtitle':audio?'audio':'video',width:num(attrs.width),height:num(attrs.height),bitrate:num(attrs.bandwidth),frameRate:num(attrs.frameRate),language:attrs.lang,
++          const v=variant({url:target,kind,format:isDirect?undefined:'dash',mime:isDirect?mime:undefined,codecs,role:sub?'subtitle':audio?'audio':'video',dimensionSource:'manifest',width:num(attrs.width),height:num(attrs.height),bitrate:num(attrs.bandwidth),frameRate:num(attrs.frameRate),language:attrs.lang,
+             periodId,adaptationId,representationId:id,parentUrl:base,segmented:!isDirect,encrypted:c.protected,drm:c.protected,sensitive},'dash',kind)!;
+           // A representation pointing to a manifest remains a DASH representation, not a video file.
+           v.kind=kind;v.format=isDirect?mediaFormat(target,mime):sub?format||'dash':'dash';variants.push(v);
+diff --git a/src/media/discovery-client.ts b/src/media/discovery-client.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7dc52cc25b100e2b5f03f66d179fc6f1a8f5789e
+--- /dev/null
++++ b/src/media/discovery-client.ts
+@@ -0,0 +1,97 @@
++import type {Capture,Host} from '../core/model';
++import {ObservedResource,DiscoverySummary,attachObservations,performanceMediaEntries,xPageKey,ObservationState,ObservationResult} from './discovery';
++export interface DiscoverySnapshot {capture:Capture;selected:Set<string>;quotes:boolean;private:boolean;}
++export interface DiscoveryStatus {state:ObservationState|'idle'|'starting';expiresAt?:number;observed:number;matched:number;ambiguous:number;unmatched:number;segments:number;limited:boolean;formats:string[];}
++const EMPTY:DiscoveryStatus={state:'idle',observed:0,matched:0,ambiguous:0,unmatched:0,segments:0,limited:false,formats:[]};
++/** Short-lived client session. UI selection/route changes cannot attach late results to a new scope. */
++export class MediaDiscoveryClient {
++  status:DiscoveryStatus={...EMPTY};
++  private generation=0;private sessionId='';private key='';private records=new Map<string,ObservedResource>();
++  private timer:ReturnType<typeof setTimeout>|undefined;private polling=false;private disposed=false;
++  constructor(private host:Host,private snapshot:()=>DiscoverySnapshot,private refresh:()=>Promise<void>,
++    private changed:(status:DiscoveryStatus)=>void,private finished:()=>void,
++    private page=()=>location.href,private entries=()=>performanceMediaEntries(performance),
++    private config={callTimeoutMs:2500}) {}
++  get active(){return this.status.state==='active'||this.status.state==='starting';}
++  private scope():string {
++    const s=this.snapshot();return [xPageKey(this.page())||this.page(),s.capture.rootId,[...s.selected].sort().join(','),s.quotes,s.private].join('|');
++  }
++  private emit(){if(!this.disposed)this.changed({...this.status,formats:[...this.status.formats]});}
++  async start():Promise<void> {
++    await this.stop(false);if(this.disposed)return;
++    const s=this.snapshot();if(s.private||!s.selected.size)return;
++    const generation=++this.generation;this.key=this.scope();this.records.clear();this.status={...EMPTY,state:'starting'};this.emit();
++    this.sessionId=typeof crypto.randomUUID==='function'?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint32Array(4)),v=>v.toString(16)).join('-');
++    const id=this.sessionId;
++    const result=await this.observe('start',id);
++    if(this.disposed||generation!==this.generation||this.key!==this.scope()){
++      void this.observe('stop',id);if(generation===this.generation){this.status.state='scope-changed';this.emit();}return;
++    }
++    this.status.state=result.state;this.status.expiresAt=result.expiresAt;
++    for(const r of this.entries())this.remember(r);
++    await this.refreshSafely();
++    if(generation!==this.generation||this.key!==this.scope()){await this.stop(false,'scope-changed');return;}
++    this.apply();
++    if(result.state==='active'){for(const r of result.records)this.remember(r);this.schedule();}
++    else {if(this.host.observe)void this.observe('stop',id);this.emit();this.finished();}
++  }
++  private async bounded<T>(work:()=>Promise<T>,fallback:T):Promise<T> {
++    return new Promise(resolve=>{let ended=false;const done=(v:T)=>{if(ended)return;ended=true;clearTimeout(timer);resolve(v);};
++      const timer=setTimeout(()=>done(fallback),Math.max(10,Math.min(4000,this.config.callTimeoutMs)));
++      Promise.resolve().then(work).then(done,()=>done(fallback));
++    });
++  }
++  private observe(action:'start'|'poll'|'stop',id:string):Promise<ObservationResult> {
++    const fallback:ObservationResult={state:(this.host.observe?'unavailable':'unsupported') as ObservationState,records:[] as ObservedResource[]};
++    return this.bounded(()=>this.host.observe?this.host.observe(action,id):Promise.resolve(fallback),fallback);
++  }
++  private async refreshSafely():Promise<void> {await this.bounded(()=>this.refresh(),undefined);}
++  invalidateScope():void {if(this.active&&this.key!==this.scope())void this.stop(false,'scope-changed');}
++  private remember(r:ObservedResource):void {
++    const a=this.records.get(r.url);if(!a&&this.records.size>=192)return;
++    if(a?.source==='network'&&r.source==='performance')return;
++    this.records.set(r.url,{...a,...r});
++  }
++  private apply():void {
++    const s=this.snapshot();if(s.private)return;
++    const result:DiscoverySummary=attachObservations(s.capture,s.selected,[...this.records.values()],s.quotes);
++    this.status={...this.status,observed:this.records.size,matched:result.matched,unmatched:result.unmatched,ambiguous:result.ambiguous,
++      segments:Math.max(this.status.segments,result.segments),formats:result.formats};this.emit();
++  }
++  private schedule():void {
++    if(!this.active||this.disposed)return;
++    this.timer=setTimeout(()=>void this.poll(),700);(this.timer as any).unref?.();
++  }
++  async poll():Promise<void> {
++    if(this.polling||!this.active||!this.host.observe||this.disposed)return;
++    if(this.scope()!==this.key){await this.stop(false,'scope-changed');return;}
++    this.polling=true;const generation=this.generation,id=this.sessionId;
++    try{
++      const result=await this.observe('poll',id);
++      if(generation!==this.generation||this.disposed)return;
++      if(this.scope()!==this.key){await this.stop(false,'scope-changed');return;}
++      for(const r of result.records||[])this.remember(r);
++      for(const r of this.entries())this.remember(r);
++      await this.refreshSafely();
++      if(generation!==this.generation||this.scope()!==this.key||this.disposed)return;
++      this.status.limited=!!result.limited;this.status.segments=result.segments||0;this.apply();
++      if(result.state!=='active'||Date.now()>=(this.status.expiresAt||0)-900){
++        await this.stop(false,result.state==='active'?'expired':result.state);this.finished();return;
++      }
++    }catch{if(generation===this.generation){await this.stop(false,'unavailable');this.finished();}}finally{this.polling=false;if(generation===this.generation)this.schedule();}
++  }
++  async stop(collect=false,state:ObservationState='stopped'):Promise<void> {
++    if(this.timer)clearTimeout(this.timer);const id=this.sessionId;
++    // Stop is a cancellation boundary; no awaited old poll may mutate selection afterwards.
++    const same=this.key===this.scope();++this.generation;this.status.state=state;this.sessionId='';
++    if(id&&this.host.observe){
++      try{
++        if(collect&&same&&!this.snapshot().private){const r=await this.observe('poll',id);for(const v of r.records||[])this.remember(v);}
++        await this.observe('stop',id);
++      }catch{/* Browser context may already be gone. */}
++    }
++    if(collect&&same&&!this.disposed){await this.refreshSafely();if(this.key===this.scope())this.apply();}
++    this.records.clear();this.emit();
++  }
++  dispose():void {this.disposed=true;void this.stop(false);}
++}
+diff --git a/src/media/discovery.ts b/src/media/discovery.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a171990befe3d45f7c3305b9036e9481bc37ac4a
+--- /dev/null
++++ b/src/media/discovery.ts
+@@ -0,0 +1,160 @@
++import type {Capture,Media} from '../core/model';
++import type {ResourceVariant} from './types';
++import {resourceURL,variant,existingVariants,mergeVariants,mergeTracks,visitMedia,mediaFormat} from './resources';
++
++export interface ObservedResource {
++  url:string; mime?:string; status?:number; frameId:number; source:'network'|'performance';
++  observedAt:number; requestType?:string; problem?:'request-error';
++}
++export interface ObservationContext {tabId:number;documentId:string;page:string;sessionId:string;}
++export type ObservationState='active'|'expired'|'stopped'|'permission-required'|'unsupported'|'scope-changed'|'unavailable';
++export interface ObservationResult {state:ObservationState;records:ObservedResource[];expiresAt?:number;limited?:boolean;segments?:number;}
++export interface ObservationSession extends ObservationContext {
++  startedAt:number;expiresAt:number;records:ObservedResource[];limited:boolean;segments:number;
++}
++export const OBSERVATION_LIMITS={durationMs:30000,maxSessions:8,maxRecords:96,maxURLLength:4096};
++
++export function xPageKey(value:unknown):string|undefined {
++  if(typeof value!=='string')return;
++  try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password||u.port||! /^(?:www\.|mobile\.)?(?:x\.com|twitter\.com)$/.test(u.hostname))return;
++    return u.origin+u.pathname;
++  }catch{return;}
++}
++/** A small approved media endpoint set, not a browser-history collector. */
++export function observedMediaURL(value:unknown):string|undefined {
++  if(typeof value!=='string'||value.length>OBSERVATION_LIMITS.maxURLLength)return;
++  const url=resourceURL(value);if(!url)return;const u=new URL(url);
++  if(u.protocol!=='https:'||u.port||u.hostname!=='video.twimg.com')return;
++  return url;
++}
++function contextOK(v:ObservationContext):boolean {
++  return Number.isInteger(v.tabId)&&v.tabId>=0&&!!xPageKey(v.page)&&
++    typeof v.documentId==='string'&&v.documentId.length>0&&v.documentId.length<=160&&
++    /^[A-Za-z0-9_-]{8,100}$/.test(v.sessionId);
++}
++function acceptedVariant(url:string,mime=''):ResourceVariant|undefined {
++  const v=variant({url,mime},'network');
++  return v&&['file','hls','dash','audio','subtitle','vmap','segment'].includes(v.kind)?v:undefined;
++}
++export interface MediaEvent {tabId:number;frameId:number;documentId?:string;initiator?:string;url:string;type:string;requestId?:string;mime?:string;statusCode?:number;error?:boolean;}
++/** Pure, bounded session policy. Chrome integration below it never persists arbitrary event objects. */
++export class ObservationLedger {
++  private sessions=new Map<number,ObservationSession>();
++  constructor(saved:unknown=[],now=Date.now()) {
++    if(!Array.isArray(saved))return;
++    for(const raw of saved.slice(0,OBSERVATION_LIMITS.maxSessions)){
++      if(!raw||!contextOK(raw)||!Number.isFinite(raw.startedAt)||!Number.isFinite(raw.expiresAt)||raw.expiresAt<=now||
++         raw.expiresAt-raw.startedAt>OBSERVATION_LIMITS.durationMs||raw.startedAt>now)continue;
++      const session:ObservationSession={tabId:raw.tabId,documentId:raw.documentId,page:xPageKey(raw.page)!,sessionId:raw.sessionId,
++        startedAt:raw.startedAt,expiresAt:raw.expiresAt,records:[],limited:raw.limited===true,segments:Math.min(9999,Math.max(0,Number(raw.segments)||0))};
++      for(const r of (Array.isArray(raw.records)?raw.records:[]).slice(0,OBSERVATION_LIMITS.maxRecords)){
++        const url=observedMediaURL(r?.url);if(!url||!acceptedVariant(url,r.mime)||!Number.isFinite(r.observedAt)||r.observedAt<session.startedAt||r.observedAt>now)continue;
++        session.records.push({url,mime:typeof r.mime==='string'?r.mime.slice(0,120):undefined,status:Number.isInteger(r.status)?r.status:undefined,
++          frameId:0,source:'network',observedAt:r.observedAt,requestType:['media','xmlhttprequest','other'].includes(r.requestType)?r.requestType:undefined,
++          problem:r.problem==='request-error'?'request-error':undefined});
++      }
++      this.sessions.set(raw.tabId,session);
++    }
++  }
++  prune(now=Date.now()):void {for(const [id,s]of this.sessions)if(s.expiresAt<=now)this.sessions.delete(id);}
++  begin(c:ObservationContext,now=Date.now()):boolean {
++    this.prune(now);if(!contextOK(c)||this.sessions.size>=OBSERVATION_LIMITS.maxSessions&&!this.sessions.has(c.tabId))return false;
++    this.sessions.set(c.tabId,{...c,page:xPageKey(c.page)!,startedAt:now,expiresAt:now+OBSERVATION_LIMITS.durationMs,records:[],limited:false,segments:0});return true;
++  }
++  allows(e:MediaEvent,now=Date.now()):boolean {
++    this.prune(now);const s=this.sessions.get(e.tabId);
++    // Only top-document X requests. Foreign and opaque initiators fail closed.
++    if(!s||now<s.startedAt||e.frameId!==0||!xPageKey(e.initiator)||new URL(e.initiator!).origin!==new URL(s.page).origin||
++      e.documentId&&e.documentId!==s.documentId||!['media','xmlhttprequest','other'].includes(e.type)||!observedMediaURL(e.url))return false;
++    return true;
++  }
++  record(e:MediaEvent,now=Date.now()):boolean {
++    if(!this.allows(e,now))return false;const s=this.sessions.get(e.tabId)!;
++    const url=observedMediaURL(e.url)!,v=acceptedVariant(url,e.mime);if(!v)return false;
++    if(v.kind==='segment'){s.segments=Math.min(9999,s.segments+1);return false;}
++    const old=s.records.find(r=>r.url===url);
++    if(!old&&s.records.length>=OBSERVATION_LIMITS.maxRecords){s.limited=true;return false;}
++    const r:ObservedResource={url,source:'network',frameId:e.frameId,observedAt:old?.observedAt??now,
++      mime:e.mime?.split(';')[0].trim().toLowerCase().slice(0,120)||old?.mime,status:e.statusCode??old?.status,
++      requestType:e.type,problem:e.error?'request-error':old?.problem};
++    if(old)s.records[s.records.indexOf(old)]=r;else s.records.push(r);return true;
++  }
++  poll(c:ObservationContext,now=Date.now()):ObservationResult {
++    const s=this.sessions.get(c.tabId);
++    if(!s)return {state:'stopped',records:[]};
++    if(s.sessionId!==c.sessionId||s.documentId!==c.documentId||s.page!==xPageKey(c.page))return {state:'scope-changed',records:[]};
++    if(s.expiresAt<=now){this.sessions.delete(c.tabId);return {state:'expired',records:[]};}
++    return {state:'active',records:s.records.map(r=>({...r})),expiresAt:s.expiresAt,limited:s.limited,segments:s.segments};
++  }
++  stop(tabId:number,sessionId?:string):void {const s=this.sessions.get(tabId);if(s&&(!sessionId||sessionId===s.sessionId))this.sessions.delete(tabId);}
++  session(tabId:number):ObservationSession|undefined {return this.sessions.get(tabId);}
++  dump(now=Date.now()):ObservationSession[] {this.prune(now);return [...this.sessions.values()].map(s=>({...s,records:s.records.map(r=>({...r}))}));}
++}
++
++/** CDN resource identifiers are media IDs, NOT tweet IDs; thumbnails supply identity evidence too. */
++export function mediaFamilies(value:string):string[] {
++  const url=resourceURL(value);if(!url)return [];const u=new URL(url);
++  if(!['video.twimg.com','pbs.twimg.com'].includes(u.hostname))return [];
++  const m=u.pathname.match(/^\/(amplify_video|ext_tw_video)(?:_thumb)?\/(\d+)(?:\/|$)/);
++  if(m)return [m[1]+':'+m[2],'media-id:'+m[2]];
++  const gif=u.pathname.match(/^\/tweet_video(?:_thumb)?\/([A-Za-z0-9_-]+)(?:\.[a-z0-9]+)?$/i);
++  return gif?['tweet-video:'+gif[1]]:[];
++}
++function mediaIdentity(m:Media):Set<string> {
++  const keys=new Set<string>();
++  for(const u of [m.posterUrl,m.src,m.sourceUrl,...existingVariants(m).map(v=>v.url)])if(u)for(const k of mediaFamilies(u))keys.add(k);
++  const id=m.mediaId?.match(/^(?:\d+_)?(\d+)$/)?.[1];if(id)keys.add('media-id:'+id);
++  return keys;
++}
++export interface DiscoverySummary {matched:number;unmatched:number;ambiguous:number;segments:number;ignored:number;formats:string[];pending:ObservedResource[];}
++/** Attach only with exact URL or a unique confirmed media-family identity. Never use time proximity alone. */
++export function attachObservations(c:Capture,selected:Set<string>,records:ObservedResource[],quotes=true):DiscoverySummary {
++  const targets:Media[]=[];visitMedia(c,selected,m=>{if(m.kind!=='image')targets.push(m);},quotes);
++  const identities=targets.map(mediaIdentity),urls=targets.map(m=>new Set(existingVariants(m).map(v=>v.url)));
++  const result:DiscoverySummary={matched:0,unmatched:0,ambiguous:0,segments:0,ignored:0,formats:[],pending:[]};
++  const seen=new Set<string>();
++  for(const r of records.slice(0,192)){
++    const url=observedMediaURL(r.url);if(!url||seen.has(url)){result.ignored++;continue;}seen.add(url);
++    const v=variant({url,mime:r.mime},r.source==='performance'?'performance':'network');
++    if(!v||!['file','hls','dash','vmap','audio','subtitle','segment'].includes(v.kind)){result.ignored++;continue;}
++    if(v.kind==='segment'){result.segments++;continue;}
++    const exact=targets.map((_,i)=>urls[i].has(url)?i:-1).filter(i=>i>=0);
++    const family=mediaFamilies(url);const matches=exact.length?exact:identities.map((id,i)=>family.some(k=>id.has(k))?i:-1).filter(i=>i>=0);
++    if(matches.length!==1){matches.length?result.ambiguous++:result.unmatched++;result.pending.push({...r,url});continue;}
++    const m=targets[matches[0]];
++    v.discoveredAt=new Date(r.observedAt).toISOString();v.httpStatus=r.status;
++    // Successful request observation is not file/manifest validation.
++    if(r.status===404||r.status===410){v.state='unavailable';v.problem='not-found';}
++    else if(r.status&&r.status>=400||r.problem){v.state='unverified';v.problem=r.status===401||r.status===403?'forbidden':'network-or-cors';}
++    m.variants=mergeVariants(m.variants,[v]);
++    if(v.kind==='subtitle')m.tracks=mergeTracks(m.tracks,[{id:'observed-sub:'+url,kind:'subtitles',url,format:mediaFormat(url,r.mime),mime:r.mime,
++      state:'observed',source:v.source,evidence:'url-observed'}]);
++    result.matched++;if(!result.formats.includes(v.kind))result.formats.push(v.kind);
++  }return result;
++}
++/** Read only allowlisted names already in this document's performance timeline. TAO is not bypassed. */
++export function performanceMediaEntries(p:Pick<Performance,'getEntriesByType'|'timeOrigin'>,now=Date.now()):ObservedResource[] {
++  try{
++    const out:ObservedResource[]=[],seen=new Set<string>();
++    for(const e of p.getEntriesByType('resource').slice(-512).reverse()){
++      const url=observedMediaURL(e.name);if(!url||seen.has(url))continue;
++      const observedAt=p.timeOrigin+e.startTime;
++      if(!Number.isFinite(observedAt)||observedAt>now+1000||now-observedAt>120000)continue;
++      const v=acceptedVariant(url);if(!v||v.kind==='segment')continue;
++      seen.add(url);out.push({url,source:'performance',frameId:0,observedAt});if(out.length>=96)break;
++    }return out;
++  }catch{return [];}
++}
++
++/** Diagnostics intentionally contain no URLs, account handles, titles, or signed query parameters. */
++export function resourceDiagnostics(c:Capture,selected:Set<string>,quotes=true):string[] {
++  const lines:string[]=[];let n=0;
++  visitMedia(c,selected,m=>{
++    if(m.kind==='image')return;n++;
++    const vs=existingVariants(m),from=(s:string)=>vs.filter(v=>(v.sources||[v.source]).includes(s as any)).length;
++    const kinds=['file','hls','dash'].map(k=>k.toUpperCase()+':'+vs.filter(v=>v.kind===k&&!v.segmented).length).join(' ');
++    const tracks=m.tracks||[],hints=tracks.filter(t=>t.evidence==='hint'||!t.evidence&&t.source==='track'&&!t.url).length;
++    lines.push(`视频 ${n}｜DOM ${m.domSourceKind||'未记录'}｜页面数据 ${from('page-data')}｜网络 ${from('network')}｜时间线条目 ${from('performance')}｜${kinds}｜已解析清单 ${(m.manifests||[]).length}｜字幕元信息 ${hints} / 轨道 ${tracks.length}`);
++  },quotes);
++  return lines.length?lines:['已选内容中没有视频。'];
++}
+diff --git a/src/media/dom.ts b/src/media/dom.ts
+index fbb0152d23f56ae23dbf63b259f6dc2d197fefd9..cd0ba7873850fe141cfd2d5ded9b3e3f3e7a4163 100644
+--- a/src/media/dom.ts
++++ b/src/media/dom.ts
+@@ -20,21 +20,43 @@ export function imageDOMResources(img:HTMLImageElement):Partial<Media> {
+   }
+   return {mediaId:identifier(img),variants:mergeVariants(vs)};
+ }
++/** Playback dimensions describe the active element, never a manifest's maximum quality. */
+ export function videoDOMResources(video:HTMLVideoElement):Partial<Media> {
+   const vs:ResourceVariant[]=[],tracks:MediaTrack[]=[];
+-  const add=(raw:string,mime='')=>{const url=resourceURL(raw,video.baseURI);if(!url)return;const v=variant({url,mime},'dom');if(v&&['file','hls','dash','vmap','audio','segment'].includes(v.kind)){if(raw===video.currentSrc&&video.videoWidth>0){v.width=video.videoWidth;v.height=video.videoHeight;}vs.push(v);}};
+-  add(video.currentSrc);add(video.getAttribute('src')||'');for(const s of video.querySelectorAll('source'))add(s.getAttribute('src')||'',s.type);
++  const add=(raw:string,mime='')=>{
++    if(!raw?.trim())return;
++    const url=resourceURL(raw,video.baseURI);if(!url)return;
++    const v=variant({url,mime},'dom');
++    if(v&&['file','hls','dash','vmap','audio','segment'].includes(v.kind))vs.push(v);
++  };
++  add(video.currentSrc);add(video.getAttribute('src')||'');
++  for(const s of video.querySelectorAll('source'))add(s.getAttribute('src')||'',s.type);
++  const cues=(t:TextTrack|undefined):number|undefined=>{
++    try {const count=t?.cues?.length;return typeof count==='number'&&count>0?Math.min(count,100000):undefined;}catch{return;}
++  };
++  const domTracks=new Set<TextTrack>();
+   for(const [i,t] of [...video.querySelectorAll('track')].entries()){
+     if(!['subtitles','captions','descriptions'].includes(t.kind))continue;
+-    const url=resourceURL(t.getAttribute('src'),video.baseURI);
+-    tracks.push({id:'dom-track-'+i,kind:t.kind as MediaTrack['kind'],language:t.srclang||undefined,label:t.label||undefined,url,format:url?mediaFormat(url)||'未知字幕格式':undefined,default:t.default,inBand:!url,source:'track',state:'observed'});
++    const src=t.getAttribute('src')?.trim();const url=src?resourceURL(src,video.baseURI):undefined;
++    if(t.track)domTracks.add(t.track);
++    const count=cues(t.track);
++    tracks.push({id:'dom-track-'+i,kind:t.kind as MediaTrack['kind'],language:t.srclang||undefined,
++      label:t.label||undefined,url,format:url?mediaFormat(url)||'未知字幕格式':undefined,
++      default:t.default,evidence:count?'cue-confirmed':url?'url-observed':'declared',cueCount:count,
++      source:'track',state:'observed'});
+   }
+-  try{for(let i=0;i<video.textTracks.length&&i<64;i++){
+-    const t=video.textTracks[i];if(!['subtitles','captions','descriptions'].includes(t.kind))continue;
+-    if(tracks.some(k=>k.kind===t.kind&&(k.language||'')===t.language&&(k.label||'')===t.label))continue;
+-    tracks.push({id:t.id||'inband-'+i,kind:t.kind as MediaTrack['kind'],language:t.language||undefined,label:t.label||undefined,default:t.mode==='showing',inBand:true,format:'内嵌/无独立 URL',source:'track',state:'observed'});
+-  }}catch{/* Some browsers restrict TextTrack access; no invented URL or transcript. */}
+-  return {mediaId:identifier(video),variants:mergeVariants(vs),tracks:mergeTracks(tracks)};
++  try {for(let i=0;i<video.textTracks.length&&i<64;i++){
++    const t=video.textTracks[i];if(domTracks.has(t)||!['subtitles','captions','descriptions'].includes(t.kind))continue;
++    const count=cues(t);
++    // A TextTrack alone does not identify where its cues came from (in-band, DOM, or script).
++    tracks.push({id:t.id||'browser-track-'+i,kind:t.kind as MediaTrack['kind'],language:t.language||undefined,
++      label:t.label||undefined,default:t.mode==='showing',evidence:count?'cue-confirmed':'hint',cueCount:count,
++      source:'track',state:'observed'});
++  }}catch{/* Access may be denied. Do not equate unreadable cues with no captions. */}
++  const width=video.videoWidth,height=video.videoHeight;
++  const playbackDimensions=video.readyState>=1&&width>0&&height>0?
++    {width,height,source:'video-element' as const,observedAt:new Date().toISOString()}:undefined;
++  return {mediaId:identifier(video),variants:mergeVariants(vs),tracks:mergeTracks(tracks),playbackDimensions,domSourceKind:vs.length?'remote':video.currentSrc?.startsWith('blob:')?'blob':'none'};
+ }
+ export function iframeMedia(frame:HTMLIFrameElement):Media|undefined {
+   const url=resourceURL(frame.getAttribute('src'),frame.baseURI);if(!url)return;
+diff --git a/src/media/hls.ts b/src/media/hls.ts
+index c2a841f02053b48bc717306418594e37da9ea6d2..ad3f75d45789508aa20cb9aba0ee9be2a47a3a7c 100644
+--- a/src/media/hls.ts
++++ b/src/media/hls.ts
+@@ -31,7 +31,7 @@ export function parseHLS(text:string,address:string,imports:Record<string,string
+   const add=(url:string|undefined,a:Record<string,string>={},role:ResourceVariant['role']='video',kind:ResourceVariant['kind']='hls')=>{
+     if(!url)return;const size=a.RESOLUTION?.match(/^(\d+)x(\d+)$/i);
+     const v=variant({url,kind,role,playlist:kind==='hls'?'media':undefined,parentUrl:base,bitrate:num(a.BANDWIDTH),averageBitrate:num(a['AVERAGE-BANDWIDTH']),
+-      width:size?num(size[1]):undefined,height:size?num(size[2]):undefined,codecs:a.CODECS,frameRate:num(a['FRAME-RATE']),audioGroup:a.AUDIO,subtitleGroup:a.SUBTITLES,captionGroup:a['CLOSED-CAPTIONS'],
++      dimensionSource:'manifest',width:size?num(size[1]):undefined,height:size?num(size[2]):undefined,codecs:a.CODECS,frameRate:num(a['FRAME-RATE']),audioGroup:a.AUDIO,subtitleGroup:a.SUBTITLES,captionGroup:a['CLOSED-CAPTIONS'],
+       name:a.NAME,language:a.LANGUAGE,sensitive:rootSensitive},'hls',kind)!;
+     if(variants.length<512)variants.push(v);else warnings.push('HLS 变体超过保留上限。');
+   };
+@@ -56,10 +56,12 @@ export function parseHLS(text:string,address:string,imports:Record<string,string
+       if(type==='VIDEO'){add(url,a,'video');continue;}
+       if(!['AUDIO','SUBTITLES','CLOSED-CAPTIONS'].includes(type))continue;
+       const cc=type==='CLOSED-CAPTIONS';const kind=type==='AUDIO'?'audio':cc?'captions':'subtitles';
+-      const format=cc?(a['INSTREAM-ID']?.startsWith('SERVICE')?'CEA-708':'CEA-608'):'HLS';
++      const ccValid=/^(?:CC[1-4]|SERVICE(?:[1-9]|[1-5][0-9]|6[0-3]))$/.test(a['INSTREAM-ID']||'');
++      const format=cc?(ccValid?(a['INSTREAM-ID'].startsWith('SERVICE')?'CEA-708':'CEA-608'):'内嵌格式未确认'):'HLS';
++      if(type==='SUBTITLES'&&!url)warnings.push('字幕组没有有效 URI，仅保留轨道声明。');
+       tracks.push({id:[base,type,a['GROUP-ID'],a.NAME,a.LANGUAGE,a['INSTREAM-ID']].join('|'),kind,url,manifestUrl:base,
+         language:a.LANGUAGE,label:a.NAME,groupId:a['GROUP-ID'],default:a.DEFAULT==='YES',forced:a.FORCED==='YES',autoSelect:a.AUTOSELECT==='YES',
+-        inBand:!url,format,source:'hls',state:'observed',segmented:!!url,sensitive:rootSensitive||!!url&&sensitiveURL(url)});
++        inBand:(cc||type==='AUDIO')&&!url,evidence:'declared',inBandEvidence:(cc||type==='AUDIO')&&!url?'manifest':undefined,format,source:'hls',state:'observed',segmented:!!url,sensitive:rootSensitive||!!url&&sensitiveURL(url)});
+       if(url)add(url,a,type==='AUDIO'?'audio':'subtitle');continue;
+     }
+     if(tag==='#EXT-X-KEY'||tag==='#EXT-X-SESSION-KEY'){
+diff --git a/src/media/resolver.ts b/src/media/resolver.ts
+index c3d2db8c6972fe0ab36e308b36276b23127292e4..c26ed8c8e4f5fd5b1c34c509fe4e617f28c5aa87 100644
+--- a/src/media/resolver.ts
++++ b/src/media/resolver.ts
+@@ -88,8 +88,8 @@ export class MediaResolver {
+       const variants=parsed.variants.map(x=>({...x,parentUrl:x.url===v.url?v.parentUrl:x.parentUrl,sensitive:x.sensitive||v.sensitive}));
+       m.variants=mergeVariants(m.variants,variants);
+       // Root identity (parent/groups) must get the same successful check, not stay as duplicate observed.
+-      m.variants=mergeVariants(m.variants,[{...v,state:'verified',verifiedBy:'manifest-parse',checkedAt:new Date().toISOString(),playlist:parsed.info.type==='hls-master'?'master':v.kind==='hls'?'media':undefined,live:parsed.info.live,encrypted:parsed.info.encrypted,drm:parsed.info.drm}]);
+-      m.tracks=mergeTracks(m.tracks,parsed.tracks.map(t=>({...t,sensitive:t.sensitive||v.sensitive}))).map(t=>t.url===v.url?{...t,state:'verified',encrypted:t.encrypted||parsed!.info.encrypted}:t);
++      m.variants=mergeVariants(m.variants,[{...v,...(parsed.info.type==='hls-master'?{width:undefined,height:undefined,dimensionSource:undefined}:{}),state:'verified',verifiedBy:'manifest-parse',checkedAt:new Date().toISOString(),playlist:parsed.info.type==='hls-master'?'master':v.kind==='hls'?'media':undefined,live:parsed.info.live,encrypted:parsed.info.encrypted,drm:parsed.info.drm}]);
++      m.tracks=mergeTracks(m.tracks,parsed.tracks.map(t=>({...t,sensitive:t.sensitive||v.sensitive}))).map(t=>t.url===v.url?{...t,state:'verified',evidence:t.evidence==='cue-confirmed'?'cue-confirmed':'resource-validated',encrypted:t.encrypted||parsed!.info.encrypted}:t);
+       const infos=new Map((m.manifests||[]).map(i=>[i.url,i]));infos.set(parsed.info.url,parsed.info);m.manifests=[...infos.values()].slice(0,64);
+       if(parsed.info.encrypted)continue;
+       const next=variants.filter(x=>['hls','dash','vmap'].includes(x.kind)&&x.url!==v.url&&!x.representationId&&x.role!=='iframe');
+diff --git a/src/media/resources.ts b/src/media/resources.ts
+index 82300389daaa113bc62507e21337f002f46510ff..e1048a5b8ea486bc0970933aaa223b9b20cb9248 100644
+--- a/src/media/resources.ts
++++ b/src/media/resources.ts
+@@ -1,5 +1,5 @@
+ import type {Media,Post,Block,Capture} from '../core/model';
+-import type {ResourceKind,ResourceSource,ResourceVariant,MediaTrack} from './types';
++import type {ResourceKind,ResourceSource,ResourceVariant,MediaTrack,TrackEvidence} from './types';
+ 
+ export function resourceURL(value:unknown,base?:string):string|undefined {
+   if(typeof value!=='string'||value.length>12000||/[\u0000-\u0020\u007f\\]/.test(value))return;
+@@ -56,19 +56,22 @@ export function variant(value:unknown,source:ResourceSource='dom',hint?:Resource
+   const mime=word(v.mime||v.content_type,100),kind=classifyResource(url,mime,hint||v.kind);
+   if(!['image','file','hls','dash','audio','subtitle','poster','segment','vmap','page','unknown'].includes(kind))return;
+   const out:ResourceVariant={url,kind,format:mediaFormat(url,mime)||word(v.format,32),source,mime,state:'observed',sensitive:sensitiveURL(url)||v.sensitive===true};
++  out.sources=[...new Set([...(Array.isArray(v.sources)?v.sources:[]),source])].filter((x):x is ResourceSource=>['dom','srcset','page-data','image-rule','hls','dash','vmap','legacy','track','network','performance'].includes(x));
+   for(const k of ['width','height','bitrate','averageBitrate','frameRate','descriptorWidth','descriptorDensity'] as const){const n=positive(v[k]??(k==='bitrate'?v.bit_rate:undefined));if(n!==undefined&&n<1e12)out[k]=n;}
+   for(const k of ['codecs','language','name','parentUrl','audioGroup','subtitleGroup','captionGroup','periodId','adaptationId','representationId','discoveredAt','checkedAt'] as const){const t=word(v[k],k==='parentUrl'?12000:180);if(t)out[k]=t;}
+   if(['observed','candidate','verified','unverified','unavailable','blocked'].includes(v.state))out.state=v.state;
+   if(['video','audio','subtitle','iframe'].includes(v.role))out.role=v.role;
+   if(['master','media'].includes(v.playlist))out.playlist=v.playlist;
++  if(['page-data','manifest','file-metadata'].includes(v.dimensionSource))out.dimensionSource=v.dimensionSource;
+   if(v.segmented!==undefined)out.segmented=!!v.segmented;
+   for(const k of ['encrypted','drm','live'] as const)if(typeof v[k]==='boolean')out[k]=v[k];
+   if(v.verifiedBy&&['image-decode','manifest-parse','headers'].includes(v.verifiedBy))out.verifiedBy=v.verifiedBy;
+   if(typeof v.httpStatus==='number')out.httpStatus=v.httpStatus;
+   if(typeof v.problem==='string')out.problem=v.problem;
++  if(out.kind==='hls'&&out.playlist==='master'){delete out.width;delete out.height;delete out.dimensionSource;}
+   return out;
+ }
+-export function variantKey(v:ResourceVariant):string {return [v.kind,v.url,v.role||'',v.periodId||'',v.representationId||'',v.audioGroup||'',v.subtitleGroup||''].join('\u001f');}
++export function variantKey(v:ResourceVariant):string {return [v.kind,v.url,v.role||(['hls','dash','vmap'].includes(v.kind)?'video':''),v.periodId||'',v.representationId||'',v.audioGroup||'',v.subtitleGroup||''].join('\u001f');}
+ export function mergeVariants(...arrays:(ResourceVariant[]|undefined)[]):ResourceVariant[] {
+   const map=new Map<string,ResourceVariant>();
+   for(const arr of arrays)for(const raw of (arr||[]).slice(0,512)){
+@@ -79,21 +82,55 @@ export function mergeVariants(...arrays:(ResourceVariant[]|undefined)[]):Resourc
+     if(!v.checkedAt&&a.checkedAt){out.state=a.state;out.checkedAt=a.checkedAt;out.problem=a.problem;out.verifiedBy=a.verifiedBy;out.width=a.width||v.width;out.height=a.height||v.height;}
+     else if(a.state==='observed'&&v.state==='candidate')out.state='observed';
+     if(a.sensitive||v.sensitive)out.sensitive=true;
++    out.sources=[...new Set([...(a.sources||[a.source]),...(v.sources||[v.source])])];
++    if(out.kind==='hls'&&out.playlist==='master'){delete out.width;delete out.height;delete out.dimensionSource;}
+     map.set(key,out);
+   }return [...map.values()];
+ }
++const trackEvidenceRank:Record<TrackEvidence,number>={hint:0,declared:1,'url-observed':2,'resource-validated':3,'cue-confirmed':4};
++export function trackEvidence(t:MediaTrack):TrackEvidence {
++  if(t.cueCount&&t.cueCount>0)return 'cue-confirmed';
++  if(t.evidence&&t.evidence in trackEvidenceRank)return t.evidence;
++  if(t.url)return t.state==='verified'?'resource-validated':'url-observed';
++  if(['hls','dash','page-data'].includes(t.source))return 'declared';
++  return 'hint';
++}
++function sameTrack(a:MediaTrack,b:MediaTrack):boolean {
++  if(a.kind!==b.kind)return false;
++  for(const k of ['groupId','periodId','representationId','language'] as const)if(a[k]&&b[k]&&a[k]!==b[k])return false;
++  if(a.url&&b.url)return a.url===b.url;
++  if(a.manifestUrl&&b.manifestUrl&&a.manifestUrl!==b.manifestUrl)return false;
++  if(a.inBandEvidence&&b.inBandEvidence&&a.id!==b.id)return false; // e.g. CC1 vs CC2.
++  if(a.id===b.id&&a.source===b.source)return true;
++  // A browser hint may attach to ONE clearly matching named/language-declared track.
++  return !!(a.language&&b.language&&a.language===b.language&&a.label&&a.label===b.label)&&
++    (trackEvidence(a)==='hint'||trackEvidence(b)==='hint'||a.source==='track'||b.source==='track');
++}
+ export function mergeTracks(...arrays:(MediaTrack[]|undefined)[]):MediaTrack[] {
+-  const map=new Map<string,MediaTrack>();
++  const out:MediaTrack[]=[];
+   for(const arr of arrays)for(const t of (arr||[]).slice(0,128)){
+     if(!t||!['audio','subtitles','captions','descriptions'].includes(t.kind))continue;
+-    const url=resourceURL(t.url),manifestUrl=resourceURL(t.manifestUrl);
+-    const key=[t.kind,url||'',t.language||'',t.groupId||'',t.periodId||'',t.representationId||'',t.inBand?'in-band':'',!url?t.id:''].join('|');
+-    const clean:MediaTrack={id:word(t.id,256)||key,kind:t.kind,url,manifestUrl,state:t.state||'observed',source:t.source||'track'};
++    const url=t.url?resourceURL(t.url):undefined,manifestUrl=t.manifestUrl?resourceURL(t.manifestUrl):undefined;
++    const clean:MediaTrack={id:word(t.id,256)||'unknown',kind:t.kind,url,manifestUrl,
++      state:t.state||'observed',source:t.source||'track',evidence:trackEvidence(t)};
+     for(const k of ['language','label','format','mime','codecs','groupId','periodId','adaptationId','representationId'] as const)clean[k]=word(t[k]);
+-    for(const k of ['inBand','default','forced','autoSelect','encrypted','segmented'] as const)if(typeof t[k]==='boolean')clean[k]=t[k];
++    for(const k of ['default','forced','autoSelect','encrypted','segmented'] as const)if(typeof t[k]==='boolean')clean[k]=t[k];
++    // Only a real manifest declaration proves an in-band relationship.
++    if(t.inBand===true&&['hls','dash'].includes(t.source)){clean.inBand=true;clean.inBandEvidence='manifest';}
++    else if(t.inBandEvidence==='manifest'&&t.inBand){clean.inBand=true;clean.inBandEvidence='manifest';}
++    if(t.cueCount&&Number.isFinite(t.cueCount))clean.cueCount=Math.min(100000,Math.max(1,Math.floor(t.cueCount)));
+     clean.sensitive=t.sensitive||!!url&&sensitiveURL(url)||!!manifestUrl&&sensitiveURL(manifestUrl);
+-    if(map.size<128||map.has(key))map.set(key,{...map.get(key),...clean});
+-  }return [...map.values()];
++    const candidates=out.map((v,i)=>sameTrack(v,clean)?i:-1).filter(i=>i>=0);
++    if(candidates.length===1){
++      const i=candidates[0],a=out[i];const merged={...a};
++      for(const [key,value]of Object.entries(clean))if(value!==undefined)(merged as any)[key]=value;
++      merged.evidence=trackEvidenceRank[trackEvidence(a)]>trackEvidenceRank[trackEvidence(clean)]?trackEvidence(a):trackEvidence(clean);
++      if(a.state==='verified'&&clean.state==='observed')merged.state=a.state;
++      if(a.sensitive||clean.sensitive)merged.sensitive=true;
++      if(a.inBandEvidence==='manifest'){merged.inBand=true;merged.inBandEvidence='manifest';}
++      out[i]=merged;
++    }else if(out.length<128)out.push(clean);
++  }return out;
+ }
+ export function sameMediaKey(m:Partial<Media>):string|undefined {
+   if(m.mediaId)return 'id:'+m.mediaId;
+@@ -119,6 +156,8 @@ export function mergeMediaResources(target:Media,incoming:Partial<Media>):void {
+   const info=new Map((target.manifests||[]).map(x=>[x.url,x]));for(const m of incoming.manifests||[])info.set(m.url,m);target.manifests=[...info.values()].slice(0,64);
+   target.resourceNotes=[...new Set([...(target.resourceNotes||[]),...(incoming.resourceNotes||[])])].slice(0,40);
+   if(!target.selectedImageUrl&&incoming.selectedImageUrl)target.selectedImageUrl=incoming.selectedImageUrl;
++  if(incoming.playbackDimensions&&(!target.playbackDimensions||incoming.playbackDimensions.observedAt>=target.playbackDimensions.observedAt))target.playbackDimensions={...incoming.playbackDimensions};
++  if(incoming.domSourceKind)target.domSourceKind=incoming.domSourceKind;
+ }
+ /** Candidate rank is a request strategy, never an assertion about existing originals. */
+ export function imageCandidates(m:Media):ResourceVariant[] {
+diff --git a/src/media/text.ts b/src/media/text.ts
+index 83bd6ae649e279e939f9f7f90209cd2e664d2c00..0720496ccd7cec7afaa977fa1a5a42bc51c83b03 100644
+--- a/src/media/text.ts
++++ b/src/media/text.ts
+@@ -1,14 +1,14 @@
+ import type {Media,Post} from '../core/model';
+ import {sourceURL} from '../core/urls';
+ import {videoPageForMedia} from '../core/media-links';
+-import {preferredImage,recommendedVariants,existingVariants,sensitiveURL,resourceURL,mediaFormat} from './resources';
++import {preferredImage,recommendedVariants,existingVariants,sensitiveURL,resourceURL,mediaFormat,trackEvidence,mergeTracks} from './resources';
+ import type {ResourceVariant,MediaTrack} from './types';
+ export interface MediaTextOptions { all:boolean; images:boolean; subtitles:boolean; sensitive:boolean; markdown:boolean; links:boolean; sources:boolean; }
+ const escape=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/([\\`*_[\]~|])/g,'\\$1');
+ const urlText=(s:string,md:boolean)=>md?'<'+s.replace(/[<>\s]/g,c=>encodeURIComponent(c))+'>':s;
+ function details(v:ResourceVariant,all:boolean):string {
+   const parts:string[]=[];
+-  if(v.width&&v.height)parts.push(`${v.width}×${v.height}`);
++  if(v.width&&v.height&&!(v.kind==='hls'&&v.playlist==='master'))parts.push(`${v.width}×${v.height}`);
+   if(all&&v.bitrate)parts.push(`${Math.round(v.bitrate/1000)} kbps`);
+   if(all&&v.codecs)parts.push(v.codecs);
+   if(v.kind==='hls')parts.push(v.playlist==='master'?'主播放列表':v.playlist==='media'?'子播放列表':'播放列表');
+@@ -52,15 +52,21 @@ export function mediaTextLines(m:Media,p:Post,o:MediaTextOptions):{text:string;w
+       lines.push((lines.length?'':marker+' ')+text(`${title}${o.all||v.kind!=='file'?' · '+format:''}${details(v,o.all)}：`)+a);
+     }
+     if(!lines.length){const original=o.sources?sourceURL(m.href||'')||sourceURL(p.url):undefined;lines.push(`${marker}${original?' 原帖（视频专属地址未获取）：'+urlText(original,o.markdown):'（视频链接未获取）'}`);}
+-    const tracks=(m.tracks||[]).filter(t=>t.kind==='audio'?o.all:o.subtitles);
++    const tracks=mergeTracks(m.tracks).filter(t=>t.kind==='audio'?o.all:o.subtitles);
+     for(const t of tracks){
+       const format=t.format||(t.url?mediaFormat(t.url,t.mime):'')||'未确认格式';
++      const evidence=trackEvidence(t);
++      if(t.kind!=='audio'&&evidence==='hint'){
++        lines.push(text('检测到字幕轨道元信息，内容与独立地址尚未确认。'));continue;
++      }
+       const name=[t.kind==='audio'?'音轨':'字幕',t.language,t.label,format,t.default?'默认':undefined,t.forced?'强制':undefined].filter(Boolean).join('｜');
+       const u=t.url||t.manifestUrl;const a=u?addr(u,t.sensitive):undefined;
+-      if(t.inBand){lines.push(text(name+'：内嵌轨道，无独立文件 URL'));}
++      if(t.inBand&&t.inBandEvidence==='manifest'){lines.push(text(name+'：清单声明内嵌轨道，无独立文件 URL'+(evidence==='cue-confirmed'?'（已确认内容）':'（内容未验证）')));}
+       else if(a){lines.push(text(name+(t.segmented||!t.url?'｜分片/清单':'')+'：')+a);}
+-      else lines.push(text(name+(u?'：受限链接未导出':'：已检测到，独立资源地址未获取')));
++      else lines.push(text(name+(u?'：受限链接未导出':evidence==='cue-confirmed'?'：已确认字幕内容，独立资源地址未获取':'：已声明轨道，内容与独立地址未确认')));
++      if(o.all)lines.push(text('轨道证据：'+evidence));
+     }
++    if(o.all&&m.playbackDimensions)lines.push(text(`当前播放内在尺寸：${m.playbackDimensions.width}×${m.playbackDimensions.height}（不是最高画质声明）`));
+     for(const info of m.manifests||[]){if(info.encrypted)warnings.push('检测到加密/受保护内容，仅记录流和轨道信息，未获取密钥或解密。');
+       if(o.all&&(info.segmentCount||info.initializationCount||info.parts))lines.push(text(`清单结构：${info.segmentCount} 个媒体分片，${info.initializationCount} 个初始化片段${info.parts?'，低延迟片段 '+info.parts:''}（不输出为完整视频）`));
+     }
+diff --git a/src/media/types.ts b/src/media/types.ts
+index b4b783b39780e803f8c5783b60c45c974fe547f5..39fa7414ac99678a9a61b2dadeb3ebb3c473180a 100644
+--- a/src/media/types.ts
++++ b/src/media/types.ts
+@@ -1,10 +1,10 @@
+ /** Resource facts are additive and separate from the screenshot's display src. */
+ export type ResourceKind = 'image'|'file'|'hls'|'dash'|'audio'|'subtitle'|'poster'|'segment'|'vmap'|'page'|'unknown';
+ export type ResourceState = 'observed'|'candidate'|'verified'|'unverified'|'unavailable'|'blocked';
+-export type ResourceSource = 'dom'|'srcset'|'page-data'|'image-rule'|'hls'|'dash'|'vmap'|'legacy'|'track';
++export type ResourceSource = 'dom'|'srcset'|'page-data'|'image-rule'|'hls'|'dash'|'vmap'|'legacy'|'track'|'network'|'performance';
+ export interface ResourceVariant {
+-  url:string; kind:ResourceKind; state:ResourceState; source:ResourceSource;
+-  mime?:string; format?:string; width?:number; height?:number; bitrate?:number; averageBitrate?:number;
++  url:string; kind:ResourceKind; state:ResourceState; source:ResourceSource; sources?:ResourceSource[];
++  mime?:string; format?:string; width?:number; height?:number; dimensionSource?:'page-data'|'manifest'|'file-metadata'; bitrate?:number; averageBitrate?:number;
+   codecs?:string; frameRate?:number; language?:string; name?:string; discoveredAt?:string;
+   descriptorWidth?:number; descriptorDensity?:number; // Declared srcset values, NOT measured image pixels.
+   playlist?:'master'|'media'; parentUrl?:string; role?:'video'|'audio'|'subtitle'|'iframe';
+@@ -14,10 +14,12 @@ export interface ResourceVariant {
+   checkedAt?:string; httpStatus?:number; problem?:ResourceProblem; verifiedBy?:'image-decode'|'manifest-parse'|'headers';
+ }
+ export type ResourceProblem = 'not-found'|'forbidden'|'rate-limit'|'http-error'|'network-or-cors'|'timeout'|'cancelled'|'too-large'|'unsupported'|'invalid-content'|'redirect-blocked'|'domain-blocked'|'budget'|'sensitive'|'encrypted';
++export type TrackEvidence = 'hint'|'declared'|'url-observed'|'resource-validated'|'cue-confirmed';
+ export interface MediaTrack {
+   id:string; kind:'subtitles'|'captions'|'audio'|'descriptions'; language?:string; label?:string;
+   format?:string; mime?:string; codecs?:string; url?:string; manifestUrl?:string;
+   groupId?:string; periodId?:string; adaptationId?:string; representationId?:string;
++  evidence?:TrackEvidence; cueCount?:number; inBandEvidence?:'manifest';
+   inBand?:boolean; default?:boolean; forced?:boolean; autoSelect?:boolean;
+   state:ResourceState; source:ResourceSource; sensitive?:boolean; encrypted?:boolean; segmented?:boolean;
+ }
+@@ -31,6 +33,8 @@ export interface ManifestInfo {
+ export interface MediaResources {
+   mediaId?:string; ownerId?:string; scopeId?:string; mediaRole?:'body'|'cover'|'embed';
+   variants?:ResourceVariant[]; tracks?:MediaTrack[]; manifests?:ManifestInfo[];
++  domSourceKind?:'remote'|'blob'|'none';
++  playbackDimensions?:{width:number;height:number;source:'video-element';observedAt:string};
+   selectedImageUrl?:string; resolutionStatus?:'pending'|'complete'|'partial'; resourceNotes?:string[];
+ }
+ export interface ManifestResult { variants:ResourceVariant[]; tracks:MediaTrack[]; info:ManifestInfo; variables?:Record<string,string>; }
+diff --git a/src/observation-page.ts b/src/observation-page.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..646af8f7f7a1d0c2af0c6b76112ee74f6cafbe2d
+--- /dev/null
++++ b/src/observation-page.ts
+@@ -0,0 +1,18 @@
++export {};
++const status=document.querySelector('#status')!;
++const enable=document.querySelector<HTMLButtonElement>('#enable')!;
++enable.onclick=()=>{
++  // Permission request runs directly inside an extension-page user gesture.
++  void chrome.permissions.request({permissions:['webRequest']}).then((ok:boolean)=>{
++    status.textContent=ok?'已授权。返回原页面，点击“检查高清 / 视频 / 字幕”开始短时观察。':'未授权，基础功能保持可用。';
++    if(ok){enable.textContent='已经授权';enable.disabled=true;}
++  }).catch(()=>status.textContent='浏览器没有完成授权；基础功能保持可用。');
++};
++document.querySelector<HTMLButtonElement>('#back')!.onclick=()=>{
++  const raw=new URL(location.href).searchParams.get('returnTab');if(!raw||!/^\d+$/.test(raw)){status.textContent='请自行返回 X 标签页。';return;}
++  void chrome.tabs.get(Number(raw)).then((tab:any)=>{
++    const url=new URL(tab.url||'');if(url.protocol!=='https:'||!/^(?:www\.|mobile\.)?(?:x\.com|twitter\.com)$/.test(url.hostname))throw Error();
++    return chrome.tabs.update(tab.id,{active:true});
++  }).then(()=>window.close()).catch(()=>status.textContent='原页面已关闭或导航离开，请自行返回 X。');
++};
++void chrome.permissions.contains({permissions:['webRequest']}).then((ok:boolean)=>{if(ok){enable.textContent='已经授权';enable.disabled=true;status.textContent='权限已准备好；只有主动检查时才记录媒体请求。';}});
+diff --git a/src/platform/host.ts b/src/platform/host.ts
+index 26ee947dda831632a4172384a3c2023064f5b33a..d74f31189cb8b8dd3c6f7f6e86bebfbe8b41ea26 100644
+--- a/src/platform/host.ts
++++ b/src/platform/host.ts
+@@ -40,6 +40,8 @@ function storageRead<T>(read:()=>unknown,fallback:T):Promise<T>{return new Promi
+ });}
+ export function createHost(kind:Host['kind']):Host{
+   if(kind==='extension')return {kind,
++    async observe(action,sessionId){try{return await chrome.runtime.sendMessage({type:'xc:observe',action,sessionId})||{state:'unavailable',records:[]};}catch{return {state:'unavailable',records:[]};}},
++    async openObservationPermission(){try{return !!(await chrome.runtime.sendMessage({type:'xc:observe-enable'}))?.ok;}catch{return false;}},
+     async getValue<T>(key:string,fallback:T){const v=await chrome.storage.local.get(key);return v[key]??fallback;},
+     async setValue(key,value){await chrome.storage.local.set({[key]:value});},
+     async readBytes(url,signal){if(!allowedAsset(url))throw new Error('资源域名不在允许列表。');if(signal?.aborted)throw new DOMException('已取消','AbortError');
+diff --git a/src/platform/network-observer.ts b/src/platform/network-observer.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..5d10258a00bf64c7f1dcb335214438a1015d76b2
+--- /dev/null
++++ b/src/platform/network-observer.ts
+@@ -0,0 +1,102 @@
++import {ObservationLedger,ObservationContext,ObservationResult,MediaEvent,xPageKey,OBSERVATION_LIMITS} from '../media/discovery';
++const KEY='xc-media-observation-v1',ALARM='xc-media-observation-expiry';
++const FILTER={urls:['https://video.twimg.com/*'],types:['media','xmlhttprequest','other']};
++
++/** Adapter only: synchronous listener registration, serialized state, memory-only session storage. */
++export class ChromeObservationBridge {
++  private ledger=new ObservationLedger();private queue:Promise<unknown>=Promise.resolve();
++  private bound=false;private expiry:number|undefined;private timer:ReturnType<typeof setTimeout>|undefined;
++  private healthy=false;
++  constructor(private api:any,private now=()=>Date.now()) {
++    this.healthy=!!(api.storage?.session&&api.alarms?.onAlarm);
++    // Register listeners before any await: worker wakes on events even after suspension.
++    this.bind();
++    api.permissions?.onAdded?.addListener((p:any)=>{if(p.permissions?.includes('webRequest'))this.bind();});
++    api.permissions?.onRemoved?.addListener((p:any)=>{if(p.permissions?.includes('webRequest'))void this.run(async()=>{this.ledger=new ObservationLedger();await this.save();});});
++    api.tabs?.onRemoved?.addListener((tabId:number)=>{void this.run(async()=>{this.ledger.stop(tabId);await this.save();});});
++    api.tabs?.onUpdated?.addListener((tabId:number,change:any)=>{
++      if(change.status!=='loading'&&!change.url)return;
++      void this.run(async()=>{const s=this.ledger.session(tabId);if(s&&(change.status==='loading'||xPageKey(change.url)!==s.page)){this.ledger.stop(tabId);await this.save();}});
++    });
++    api.alarms?.onAlarm?.addListener((alarm:any)=>{if(alarm.name===ALARM)void this.run(()=>this.save());});
++    // Events received during hydration are queued AFTER this operation.
++    this.queue=(async()=>{
++      if(!this.healthy)return;
++      try{const data=await api.storage.session.get(KEY);this.ledger=new ObservationLedger(data?.[KEY],this.now());await this.save();}
++      catch{this.healthy=false;this.ledger=new ObservationLedger();}
++    })();
++  }
++  private bind():void {
++    if(this.bound||!this.api.webRequest)return;
++    const api=this.api;
++    const project=(d:any,error=false):MediaEvent=>({tabId:d.tabId,frameId:d.frameId,documentId:d.documentId,initiator:d.initiator,
++      url:d.url,type:d.type,requestId:d.requestId,statusCode:d.statusCode,error,
++      // Immediately discard other header values; never store an event object.
++      mime:typeof d.responseHeaders?.find((h:any)=>h.name?.toLowerCase()==='content-type')?.value==='string'?
++        d.responseHeaders.find((h:any)=>h.name?.toLowerCase()==='content-type').value.split(';')[0].slice(0,120):undefined});
++    const before=(d:any)=>this.event(project(d));
++    const response=(d:any)=>this.event(project(d));
++    const error=(d:any)=>this.event(project(d,true));
++    try{
++      api.webRequest.onBeforeRequest.addListener(before,FILTER);
++      api.webRequest.onResponseStarted.addListener(response,FILTER,['responseHeaders']);
++      api.webRequest.onErrorOccurred.addListener(error,FILTER);
++      this.bound=true;
++    }catch{
++      // Partial registration never counts as availability.
++      api.webRequest.onBeforeRequest?.removeListener?.(before);
++      api.webRequest.onResponseStarted?.removeListener?.(response);
++      api.webRequest.onErrorOccurred?.removeListener?.(error);
++    }
++  }
++  private run<T>(fn:()=>T|Promise<T>):Promise<T> {
++    const next=this.queue.then(fn,fn);this.queue=next.catch(()=>{});return next;
++  }
++  private event(event:MediaEvent):void {
++    const at=this.now();
++    void this.run(async()=>{
++      if(!this.healthy||!this.bound)return;
++      if(this.ledger.record(event,at))await this.save();
++    }).catch(()=>{});
++  }
++  private async save():Promise<void> {
++    const sessions=this.ledger.dump(this.now());
++    if(this.healthy){
++      try{if(sessions.length)await this.api.storage.session.set({[KEY]:sessions});else await this.api.storage.session.remove(KEY);}
++      catch{this.healthy=false;this.ledger=new ObservationLedger();try{await this.api.storage.session.remove(KEY);}catch{} }
++    }
++    const next=this.healthy&&sessions.length?Math.min(...sessions.map(s=>s.expiresAt)):undefined;
++    if(next===this.expiry)return;this.expiry=next;if(this.timer)clearTimeout(this.timer);
++    if(next){
++      try{await this.api.alarms.create(ALARM,{when:next});}catch{this.healthy=false;this.ledger=new ObservationLedger();await this.api.storage.session.remove(KEY).catch(()=>{});}
++      this.timer=setTimeout(()=>void this.run(()=>this.save()),Math.max(1,next-this.now()));
++      (this.timer as any).unref?.();
++    }else try{await this.api.alarms?.clear(ALARM);}catch{}
++  }
++  private context(sender:any,sessionId:unknown):ObservationContext|undefined {
++    if(sender?.id!==this.api.runtime.id||sender.frameId!==0||!Number.isInteger(sender.tab?.id)||!sender.documentId)return;
++    const page=xPageKey(sender.url),tabPage=xPageKey(sender.tab.url);
++    if(!page||page!==tabPage||typeof sessionId!=='string'||!/^[A-Za-z0-9_-]{8,100}$/.test(sessionId))return;
++    return {tabId:sender.tab.id,documentId:sender.documentId,page,sessionId};
++  }
++  async command(action:string,sender:any,sessionId:unknown):Promise<ObservationResult> {
++    const c=this.context(sender,sessionId);if(!c)return {state:'scope-changed',records:[]};
++    return this.run(async()=>{
++      if(action==='stop'){this.ledger.stop(c.tabId,c.sessionId);await this.save();return {state:'stopped',records:[]};}
++      if(!this.healthy)return {state:'unsupported',records:[]};
++      const granted=await this.api.permissions.contains({permissions:['webRequest']}).catch(()=>false);
++      if(!granted)return {state:'permission-required',records:[]};
++      if(!this.bound)return {state:'unsupported',records:[]};
++      if(action==='start'&&!this.ledger.begin(c,this.now()))return {state:'unavailable',records:[]};
++      if(!['start','poll'].includes(action))return {state:'unsupported',records:[]};
++      const result=this.ledger.poll(c,this.now());await this.save();return result;
++    });
++  }
++  /** Called only by the extension's visible button; no consent is inferred from page content. */
++  async openPermissionPage(sender:any):Promise<boolean> {
++    if(!this.context(sender,'permission-page'))return false;
++    await this.api.tabs.create({url:this.api.runtime.getURL('observation.html')+'?returnTab='+sender.tab.id});return true;
++  }
++  /** Test/diagnostic barrier: no raw URLs are logged. */
++  settled():Promise<unknown> {return this.queue;}
++}
+diff --git a/src/ui/studio.ts b/src/ui/studio.ts
+index d98c470278e1e09a4c0e6d06fadeabbd555268c6..364076cb5f9fe7321e162fc07336f690a5df643c 100644
+--- a/src/ui/studio.ts
++++ b/src/ui/studio.ts
+@@ -31,7 +31,7 @@ export class Studio {
+     this.stage=el('div',{class:'xc-stage'});this.preview=el('div',{class:'xc-preview'});this.stage.append(this.preview);
+     this.counter=el('span',{class:'xc-counter'});this.dimensions=el('span');this.quality=el('div',{class:'xc-quality'});this.status=el('div',{class:'xc-status',role:'status','aria-live':'polite',hidden:true});
+     this.controls=el('div',{class:'xc-controls'});
+-    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay()});
++    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay(),refresh:()=>this.refreshForDiscovery(),showPage:done=>this.showPageForObservation(done)});
+     const fit=button('适应预览',()=>{this.autoZoom=true;this.paint();},'xc-textbtn');
+     const zoomOut=el('button',{type:'button',class:'xc-iconbtn','aria-label':'缩小预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.max(.2,this.zoom/1.2);this.paint();}},icon('minus',15));
+     const zoomIn=el('button',{type:'button',class:'xc-iconbtn','aria-label':'放大预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.min(2.5,this.zoom*1.2);this.paint();}},icon('plus',15));
+@@ -83,7 +83,7 @@ export class Studio {
+   private toast(message:string,sticky=false){if(this.closed)return;clearTimeout(this.toastTimer);this.status.textContent=message;this.status.hidden=false;if(!sticky)this.toastTimer=window.setTimeout(()=>this.status.hidden=true,6500);}
+   private schedule(){cancelAnimationFrame(this.repaint);this.repaint=requestAnimationFrame(()=>this.render());}
+   update(patch:Partial<Options>,controls=false){this.options=normalizeOptions({...this.options,...patch});this.schedule();void this.host.setValue('options',this.options).catch(()=>this.toast('设置暂未持久保存。'));if(controls)this.renderControls();}
+-  private render(){if(this.closed)return;this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();}
++  private render(){if(this.closed)return;this.textTools.selectionChanged();this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();}
+   private renderFooter(){
+     const b=exportBudget(this.scene.width,this.scene.height,this.options.scale,mobileDevice());this.dimensions.textContent=`${b.width.toLocaleString()} × ${b.height.toLocaleString()} px${b.ok?'':' · 尺寸超限'}`;
+     this.quality.replaceChildren();for(const v of [1,2,3,4] as const)this.quality.append(button(v+'×',()=>this.update({scale:v}),this.options.scale===v?'is-active':''));
+@@ -171,6 +171,24 @@ export class Studio {
+     this.controls.replaceChildren(...nodes);
+   }
+   private move(id:string,delta:number){const i=this.order.indexOf(id),j=i+delta;if(j<0||j>=this.order.length)return;[this.order[i],this.order[j]]=[this.order[j],this.order[i]];this.render();this.renderControls();}
++  private async refreshForDiscovery():Promise<void> {
++    if(!this.collector||this.closed)return;
++    await this.collector.scan();if(this.closed)return;
++    this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);
++    this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];
++    // Keep the user's selection and active TextTools instance. No control-panel reconstruction here.
++    this.render();
++  }
++  private showPageForObservation(done:()=>void):()=>void {
++    const backdrop=this.shadow.querySelector<HTMLElement>('.xc-backdrop')!;
++    backdrop.classList.add('xc-hidden');this.hostElement.style.pointerEvents='none';document.documentElement.style.overflow=this.overflow;
++    const banner=el('div',{class:'xc-observation-banner',role:'status','data-xcapture-ui':'observation-return'},
++      el('span',{},'X Capture 正在短时观察。请手动播放要保存的视频。'),
++      button('返回结果并完成检查',()=>{restore();done();},'xc-button primary'));
++    this.shadow.append(banner);let restored=false;
++    const restore=()=>{if(restored)return;restored=true;banner.remove();if(!this.closed){this.hostElement.style.pointerEvents='';backdrop.classList.remove('xc-hidden');document.documentElement.style.overflow='hidden';this.studio.focus();}};
++    return restore;
++  }
+   private async rescan(){if(!this.collector)return;await this.collector.scan();this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];this.render();this.renderControls();await this.refreshAssets();this.toast('候选已更新；保留了你本次的勾选与排序。');}
+   private async collectMore(){
+     if(this.abort){this.abort.abort();return;}if(!this.collector)return;
+diff --git a/src/ui/styles.ts b/src/ui/styles.ts
+index e15ab4e09943763e8a81b129eee8bf9c3de63cee..0fa4bc2a7145c111e85da133e5145fa47a11e17f 100644
+--- a/src/ui/styles.ts
++++ b/src/ui/styles.ts
+@@ -19,4 +19,6 @@ export const STYLES=String.raw`
+ .xc-text-tools button:disabled{cursor:not-allowed;}
+ .xc-footer-tools .xc-textbtn{white-space:nowrap;}
+ @media(max-width:620px){.xc-studio.text-active .xc-workspace{height:25%;min-height:140px;}.xc-text-preview{font-size:16px;line-height:1.55;min-height:180px;}.xc-text-tools .xc-button{min-height:44px;}.xc-text-result-card{width:100%;}.xc-text-result-preview{height:40dvh;min-height:160px;}.xc-text-tools .xc-segment button{min-height:38px;}}
++.xc-observation-banner{position:fixed;right:16px;bottom:112px;z-index:2147483647;max-width:min(420px,calc(100vw - 32px));padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:#112334;color:#dcecf8;border:1px solid #318bc0;border-radius:12px;font:13px/1.6 system-ui;box-shadow:0 6px 30px #0005;pointer-events:auto;}
++.xc-resource-diagnostics{white-space:pre-wrap;overflow-wrap:anywhere;color:#9db1c3;font:11px/1.7 ui-monospace,monospace;}
+ `;
+diff --git a/src/ui/text-tools.ts b/src/ui/text-tools.ts
+index a3f410d7b18aaddbdae1f34a2c587f1139a1d0ae..40ee412a655dc2dbf5b3337e76e43240a355aa88 100644
+--- a/src/ui/text-tools.ts
++++ b/src/ui/text-tools.ts
+@@ -1,3 +1,5 @@
++import {resourceDiagnostics} from '../media/discovery';
++import {MediaDiscoveryClient,DiscoveryStatus} from '../media/discovery-client';
+ import {MediaResolver} from '../media/resolver';
+ import {visitMedia} from '../media/resources';
+ import {Capture, Host} from '../core/model';
+@@ -7,7 +9,7 @@ import {el, button, icon} from './dom';
+ import {segment, toggle} from './controls';
+ 
+ type Snapshot = {capture: Capture; selected: Set<string>; order: string[]; privacy: TextPrivacy};
+-type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void;};
++type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void; refresh?():Promise<void>; showPage?(done:()=>void):()=>void;};
+ const formatName = (format: TextFormat) => format === 'text' ? '纯文本' : format === 'ai' ? 'AI 上下文' : 'Markdown';
+ 
+ /** Shares the current selection, but owns text-only options. Visual styling never rewrites text. */
+@@ -18,10 +20,14 @@ export class TextTools {
+   private disposed = false;
+   private resolver?:MediaResolver;private inspection?:Promise<void>;private inspectionAbort?:AbortController;
+   private inspectionKey='';private inspectionLabel='未检查高清/播放清单';private updatePreview?:()=>void;
+-  private resourceStatus?:HTMLElement;
++  private diagnosticNode?:HTMLElement;private resourceStatus?:HTMLElement;private discoveryStatus?:HTMLElement;private discovery:MediaDiscoveryClient;
++  private returnFromPage?:()=>void;private inspectGeneration=0;
+ 
+   constructor(private snapshot: () => Snapshot, private host: Host, private ui: UI) {
+     if(host.readResource)this.resolver=new MediaResolver((request,signal)=>host.readResource!(request,signal));
++    this.discovery=new MediaDiscoveryClient(host,()=>{const s=this.snapshot();return {...s,quotes:this.options.includeQuote,private:!!(s.privacy.anonymize&&!s.privacy.anonymousSources)||!this.options.includeMedia};},
++      ()=>this.ui.refresh?.()||Promise.resolve(),status=>{if(this.discoveryStatus)this.discoveryStatus.textContent=this.discoveryMessage(status);if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}},
++      ()=>{this.returnFromPage?.();this.returnFromPage=undefined;if(!this.disposed)void this.prepareResources(true);});
+   }
+   async load() {
+     const value = await this.host.getValue('text-export-options', TEXT_DEFAULTS).catch(() => TEXT_DEFAULTS);
+@@ -29,11 +35,12 @@ export class TextTools {
+     this.options.includeSensitiveMedia=false; // Per-session, explicit consent only.
+   }
+   dispose() {
+-    this.disposed = true;this.inspectionAbort?.abort();this.resolver?.clear();this.updatePreview=undefined;
++    this.disposed = true;++this.inspectGeneration;this.discovery.dispose();this.returnFromPage?.();this.returnFromPage=undefined;this.inspectionAbort?.abort();this.resolver?.clear();this.updatePreview=undefined;
+     // Allow in-progress native downloads to retain their Blob URLs briefly.
+     const urls = [...this.urls]; this.urls.clear();
+     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
+   }
++  selectionChanged():void {this.discovery.invalidateScope();}
+   result(format: TextFormat = this.format): TextResult {
+     const s = this.snapshot();
+     return serializeText(s.capture, s.selected, s.order, this.options, format, s.privacy);
+@@ -81,16 +88,25 @@ export class TextTools {
+       ['includeCaptureTime', '采集时间']
+     ];
+     for (const [key, label] of fields) details.append(toggle(label, this.options[key], value => {
+-      this.options = {...this.options, [key]: value}; update();
++      this.options = {...this.options, [key]: value}; this.discovery.invalidateScope(); update();
+       void this.host.setValue('text-export-options', {...this.options,includeSensitiveMedia:false}).catch(() => this.ui.notify('文本设置暂未持久保存；本次设置仍然有效。'));
+     }));
+     details.append(el('p', {class: 'xc-sub'}, '这些是文本专用开关，不改变图片 / PDF 外观。匿名设置仍与工作台共享；正文和替代文字中的身份不会自动打码。'));
+     const more=el('details',{class:'xc-details xc-media-options'},el('summary',{},'媒体资源与高清检查'));
+-    const inspect=button('检查高清 / 视频 / 字幕',()=>void this.prepareResources(true),'xc-button');
++    const inspect=button('检查高清 / 视频 / 字幕',()=>void this.inspectMedia(),'xc-button');
+     inspect.dataset.action='inspect-media';
+     this.resourceStatus=el('p',{class:'xc-sub',role:'status'},this.inspectionLabel);
+-    more.append(inspect,button('停止检查',()=>this.inspectionAbort?.abort(),'xc-textbtn'),this.resourceStatus,
++    more.append(inspect,button('停止检查',()=>void this.stopInspection(),'xc-textbtn'),this.resourceStatus,
+       el('p',{class:'xc-sub'},'仅检查已选内容。原图不可用时自动降级；保留 MP4 / HLS / DASH 和字幕。流的可用性、清晰度与文件直链分别标注。不下载视频分片。'));
++    this.discoveryStatus=el('p',{class:'xc-sub',role:'status','data-discovery-status':''},this.discoveryMessage(this.discovery.status));
++    more.append(this.discoveryStatus);
++    if(this.host.kind==='extension')more.append(
++      button('启用桌面视频观察',()=>void this.host.openObservationPermission?.().then(ok=>{if(!ok)this.ui.notify('当前环境无法打开权限页；可继续使用基础取链。');}),'xc-textbtn'),
++      button('返回网页播放视频',()=>{
++        if(!this.discovery.active){this.ui.notify('先点击“检查高清 / 视频 / 字幕”开启约 30 秒观察；未授权时先启用桌面视频观察。');return;}
++        this.returnFromPage?.();this.returnFromPage=this.ui.showPage?.(()=>void this.finishDiscovery());
++      },'xc-button'),
++      el('p',{class:'xc-sub'},'桌面请求观察是可选权限，仅主动检查时开启约 30 秒。返回网页播放后再回到结果；不会自动播放或刷新。归属不明确的资源不会塞进当前视频。'));
+     for(const [key,label] of [['includeAllResources','完整资源：全部质量、音轨和验证状态'],['markdownImages','Markdown 使用可嵌入图片语法'],['includeSubtitles','附带已有字幕轨道与链接'],['includeSensitiveMedia','允许完整受限/签名链接（仅本人使用）']] as const){
+       const control=toggle(label,this.options[key],value=>{
+         if(key==='includeSensitiveMedia'&&value&&!confirm('签名/令牌链接可能授予临时访问权。仅在自己使用、不会公开分享时允许；不会移除或改写签名。是否继续？')){this.options[key]=false;const input=control.querySelector('input');if(input)input.checked=false;update();return;}
+@@ -98,10 +114,35 @@ export class TextTools {
+         void this.host.setValue('text-export-options',{...this.options,includeSensitiveMedia:false}).catch(()=>{});
+       });more.append(control);
+     }
++    this.diagnosticNode=el('pre',{class:'xc-resource-diagnostics'});
++    more.append(el('details',{class:'xc-details'},el('summary',{},'资源诊断（不含链接与账号）'),this.diagnosticNode));
++    this.updateDiagnostics();
+     root.append(details,more);this.updatePreview=update;update();void this.prepareResources();return root;
+   }
++  private updateDiagnostics():void {const s=this.snapshot();if(this.diagnosticNode)this.diagnosticNode.textContent=resourceDiagnostics(s.capture,s.selected,this.options.includeQuote).join('\n');}
++  private discoveryMessage(s:DiscoveryStatus):string {
++    const names:Record<string,string>={idle:'尚未启动资源观察',starting:'正在启动资源观察',active:'短时观察中，可返回网页播放',
++      expired:'观察窗口已结束',stopped:'观察已停止',unsupported:this.host.kind==='stay'?'Stay 使用 DOM 与页面可观察资源，不使用 Chrome 网络接口':'当前浏览器不支持网络观察',
++      'permission-required':'尚未授权桌面请求观察；基础取链继续可用','scope-changed':'页面或选区已变化，旧观察已停止',unavailable:'请求观察未启动，保留基础取链结果'};
++    return `${names[s.state]||s.state} · 已发现 ${s.observed} · 明确关联 ${s.matched} · 待确认 ${s.ambiguous+s.unmatched}${s.formats.length?' · '+s.formats.join(' / ').toUpperCase():''}${s.limited?' · 达到数量上限':''}`;
++  }
++  private async inspectMedia():Promise<void> {
++    const generation=++this.inspectGeneration;
++    this.inspectionAbort?.abort();if(this.inspection)await this.inspection;
++    if(this.disposed||generation!==this.inspectGeneration)return;
++    this.inspectionKey='';await this.discovery.start();
++    if(!this.discovery.active&&!this.disposed)await this.prepareResources(true);
++  }
++  private async stopInspection():Promise<void> {
++    ++this.inspectGeneration;this.inspectionAbort?.abort();await this.discovery.stop(false);
++    this.returnFromPage?.();this.returnFromPage=undefined;
++  }
++  private async finishDiscovery():Promise<void> {
++    await this.discovery.stop(true);this.returnFromPage?.();this.returnFromPage=undefined;
++    if(!this.disposed)await this.prepareResources(true);
++  }
+   prepareResources(force=false):Promise<void> {
+-    if(this.disposed||!this.resolver||!this.options.includeMedia)return Promise.resolve();
++    if(this.disposed||this.discovery.active||!this.resolver||!this.options.includeMedia)return Promise.resolve();
+     const s=this.snapshot();
+     // No verification network traffic for anonymized media unless explicitly allowed.
+     if(s.privacy.anonymize&&!s.privacy.anonymousSources)return Promise.resolve();
+@@ -114,7 +155,7 @@ export class TextTools {
+       this.inspectionLabel=`已检查 ${done}/${total} 项媒体`;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;
+     }).then(r=>{this.inspectionLabel=`媒体检查${r.partial?'部分完成':'完成'} · ${r.requests} 次有界请求 · 未验证项保留原链接`;
+     }).catch(()=>{this.inspectionLabel='检查未完成，保留已发现的资源。';}).finally(()=>{
+-      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed)this.updatePreview?.();
++      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}
+     });return this.inspection;
+   }
+   async copy(format:TextFormat='text') {
+diff --git a/tests/content_world_harness.py b/tests/content_world_harness.py
+index 18a1c73eea67c64d7fc2bdd99533b34722597efb..0dd0d7077db168d6bb1fd31828b205b33cd82887 100644
+--- a/tests/content_world_harness.py
++++ b/tests/content_world_harness.py
+@@ -48,3 +48,45 @@ async def isolated(page, script, gm='normal'):
+     context = (await cdp.send('Page.createIsolatedWorld', {'frameId':frame,'worldName':'stay-public-content-harness'}))['executionContextId']
+     await eval_world(cdp, context, wrap(script, gm))
+     return cdp, context
++
++
++# Reusable synthetic two-post page; no dependency on historical startup-run scripts.
++URL = 'https://x.com/capture_test/status/93001'
++
++CSP = "script-src 'self'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'"
++
++HTML = '''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stay 注入回归 · 本地虚构页面</title>
++<meta http-equiv="Content-Security-Policy" content="__CSP__">
++<style>body{margin:0;background:#f5f7f9;color:#17202a;font:16px -apple-system,Arial,sans-serif}header{padding:24px 18px 12px;font-size:14px;color:#607485}article{background:white;border:1px solid #dde4eb;border-radius:16px;margin:12px;padding:18px;line-height:1.6}a{color:inherit;text-decoration:none}[data-testid="User-Name"]{font-weight:600;display:flex;gap:8px}[data-testid="tweetText"]{margin-top:14px}[role="group"]{display:flex;justify-content:space-between;margin-top:18px}[role="group"]>button{border:0;background:transparent;color:#617282}time{color:#637685;font-size:12px}</style></head><body>
++<header>本地测试页面 · 不是 iPhone / Stay 真机截图</header><main><div data-testid="primaryColumn">
++<article data-testid="tweet" data-post-id="93001">
++<div data-testid="User-Name"><a href="/capture_test">示例作者</a><a href="/capture_test">@capture_test</a></div>
++<a href="/capture_test/status/93001"><time datetime="2026-09-25T04:00:00Z">9月25日</time></a>
++<div data-testid="tweetText">这是一条虚构测试帖。<br>验证 Safari 用户脚本的启动路径：入口、选帖、预览和高清导出。<br>内容与图片只在本地处理。</div>
++<div role="group"><button data-testid="reply">2</button><button data-testid="retweet">1</button><button data-testid="like">6</button></div></article>
++<article data-testid="tweet" data-post-id="93002" data-in-reply-to-status-id="93001">
++<div data-testid="User-Name"><a href="/reader_test">示例读者</a><a href="/reader_test">@reader_test</a></div>
++<a href="/reader_test/status/93002"><time datetime="2026-09-25T04:01:00Z">9月25日</time></a>
++<div data-testid="tweetText">这条回复提供背景信息，可以在内容面板中手动选中。</div>
++<div role="group"><button data-testid="reply">0</button><button data-testid="like">3</button></div></article>
++</div></main></body></html>'''
++
++async def page_fixture(browser, strict=True):
++    page = await browser.new_page(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True)
++    page.set_default_timeout(15000)
++    errors, console, dialogs = [], [], []
++    page.on('pageerror', lambda e: errors.append(str(e)))
++    page.on('console', lambda m: console.append({'type': m.type, 'text': m.text}))
++    async def dialog_handler(d):
++        dialogs.append(d.message)
++        await d.accept()
++    page.on('dialog', dialog_handler)
++    html = HTML.replace('__CSP__', CSP if strict else '').replace('href="/', 'href="https://x.com/')
++    async def route_handler(route):
++        if route.request.url == URL: await route.fulfill(status=200, content_type='text/html', body=html)
++        else: await route.abort()
++    await page.route('**/*', route_handler)
++    # This environment restricts navigating X. Use a local about:blank document,
++    # absolute synthetic source anchors, and no network navigation instead.
++    await page.set_content(html, wait_until='domcontentloaded')
++    return page, errors, console, dialogs
+diff --git a/tests/core-entry.ts b/tests/core-entry.ts
+index 098ae7d696d154bafd7816c4e30e0b6fde29092c..62b0bff090fe247ea104ebe520dc56c448e4aae6 100644
+--- a/tests/core-entry.ts
++++ b/tests/core-entry.ts
+@@ -28,3 +28,7 @@ export * from '../src/media/resolver';
+ export * from '../src/platform/resource-network';
+ export * from '../src/media/text';
+ export * from '../src/media/dom';
++export * from '../src/media/discovery';
++export * from '../src/platform/network-observer';
++export * from '../src/core/text-expansion';
++export * from '../src/media/discovery-client';
+diff --git a/tests/discovery_qa.py b/tests/discovery_qa.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..7bccaa6e22ecdb123fa998958de2524b82fb1ed8
+--- /dev/null
++++ b/tests/discovery_qa.py
+@@ -0,0 +1,139 @@
++"""Production Chromium bundles/Stay userscript with fake Chrome/GM API boundary.
++Synthetic DOM, controlled fetch and webRequest events, not actual X/iOS. No login.
++Browser plugin absent; use Playwright. No private browsing history or credentials.
++"""
++import asyncio,base64,io,json,os,pathlib,importlib.util
++from PIL import Image
++from playwright.async_api import async_playwright
++ROOT=pathlib.Path(__file__).resolve().parents[1]
++OUT=pathlib.Path(os.environ.get('XC_DISCOVERY_QA_DIR','/tmp/xc-discovery-qa'));OUT.mkdir(parents=True,exist_ok=True)
++checks=[]
++def check(name,ok,details=None):
++ row={'name':name,'passed':bool(ok)}
++ if details is not None:row['details']=details
++ checks.append(row);print(('PASS ' if ok else 'FAIL ')+name,flush=True)
++ if not ok:raise AssertionError(name)
++PAGE='https://x.com/discovery_test/status/880010'
++POSTER='https://pbs.twimg.com/amplify_video_thumb/880001/img/test.jpg'
++HLS='https://video.twimg.com/amplify_video/880001/pl/master.m3u8?tag=29'
++MP4='https://video.twimg.com/amplify_video/880001/vid/1280x720/test.mp4'
++OTHER='https://video.twimg.com/amplify_video/880009/pl/other.m3u8'
++MASTER='#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=2400000,RESOLUTION=1280x720,CODECS="avc1.64001f,mp4a.40.2",CLOSED-CAPTIONS=NONE\n720.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=700000,RESOLUTION=640x360,CODECS="avc1.4d001e,mp4a.40.2",CLOSED-CAPTIONS=NONE\n360.m3u8\n'
++CHILD='#EXTM3U\n#EXT-X-TARGETDURATION:7\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXTINF:7,\nseg0.ts\n#EXT-X-ENDLIST\n'
++HTML=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Discovery QA · synthetic post</title><style>body{{font:17px Arial;margin:30px;background:#f0f3f7}}article{{background:white;padding:20px;width:min(560px,85vw)}}video{{width:320px;height:180px}}button{{padding:10px}}[data-testid="User-Name"]{{display:flex;gap:15px}}</style></head><body><main><article data-testid="tweet" data-post-id="880010"><div data-testid="User-Name"><a href="https://x.com/discovery_test">Example author</a><a href="https://x.com/discovery_test">@discovery_test</a></div><a href="{PAGE}"><time datetime="2026-10-16T00:00:00Z">Today</time></a><div data-testid="tweetText"><span>原文 A。视频前的文字。</span><video poster="{POSTER}" muted></video><span>原文 B。视频后的文字。</span></div><div role="group"><button data-testid="like">1</button><button data-testid="reply">0</button></div></article></main><button id="play" onclick="document.dispatchEvent(new Event('qa-play'))">播放本地测试视频</button><button id="cue" onclick="document.dispatchEvent(new Event('qa-cue'))">加载本地字幕 Cue</button></body></html>'''
++buf=io.BytesIO();Image.new('RGB',(80,45),(180,180,180)).save(buf,format='PNG');PIX=base64.b64encode(buf.getvalue()).decode()
++PRELUDE=r'''
++globalThis.__qa={messages:[],requests:[],clipboard:'',memory:{},session:{},events:0,cue:false,permission:true,createdTabs:[],grants:0};
++const ve=document.querySelector('video');
++Object.defineProperties(ve,{currentSrc:{get:()=>__qa.current||'blob:synthetic-only'},videoWidth:{get:()=>320},videoHeight:{get:()=>320},readyState:{get:()=>2},duration:{get:()=>7},textTracks:{get:()=>[{id:'',kind:'captions',language:'',label:'',mode:'disabled',cues:__qa.cue?[{text:'test cue'}]:null}]}});
++document.addEventListener('qa-cue',()=>{__qa.cue=true;});
++const pic=Uint8Array.from(atob('__PIX__'),c=>c.charCodeAt(0));
++globalThis.fetch=async function(url,opt={}){url=String(url);__qa.requests.push({url,method:opt.method||'GET'});
++ if(url.startsWith('https://pbs.twimg.com/'))return new Response(pic,{status:200,headers:{'Content-Type':'image/png'}});
++ if(url==='__HLS__')return new Response(__MASTER__,{status:200,headers:{'Content-Type':'application/vnd.apple.mpegurl'}});
++ if(url.endsWith('/720.m3u8')||url.endsWith('/360.m3u8'))return new Response(__CHILD__,{status:200,headers:{'Content-Type':'application/vnd.apple.mpegurl'}});
++ if(url==='__MP4__')return new Response(null,{status:200,headers:{'Content-Type':'video/mp4'}});
++ throw Error('QA request blocked');
++};
++Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async s=>{__qa.clipboard=s;},write:async items=>{__qa.clipboard=await(await items[0].getType('text/plain')).text();}}});
++function bus(){const fns=[];return {fns,addListener(fn){fns.push(fn);},removeListener(fn){const i=fns.indexOf(fn);if(i>=0)fns.splice(i,1);},emit(...a){for(const f of fns)f(...a);}};}
++'''.replace('__PIX__',PIX).replace('__HLS__',HLS).replace('__MP4__',MP4).replace('__MASTER__',json.dumps(MASTER)).replace('__CHILD__',json.dumps(CHILD))
++CHROME=r'''
++const message=bus();globalThis.chrome={runtime:{id:'synthetic-extension',getURL:p=>'chrome-extension://synthetic-extension/'+p,onMessage:message,
++ sendMessage:m=>new Promise(resolve=>{__qa.messages.push(m.type);let responded=false,async=false;for(const f of message.fns){const a=f(m,{id:'synthetic-extension',frameId:0,documentId:'fixture-doc',url:'__PAGE__',tab:{id:7,url:'__PAGE__'}},r=>{responded=true;resolve(r);});async=async||a===true;}if(!responded&&!async)resolve({ok:false});})},
++ storage:{local:{get:async k=>({[k]:__qa.memory[k]}),set:async o=>Object.assign(__qa.memory,o)},session:{get:async k=>({[k]:__qa.session[k]}),set:async o=>Object.assign(__qa.session,structuredClone(o)),remove:async k=>{delete __qa.session[k];}}},
++ permissions:{contains:async()=>__qa.permission,request:async()=>{__qa.grants++;return __qa.permission;},onAdded:bus(),onRemoved:bus()},
++ webRequest:{onBeforeRequest:bus(),onResponseStarted:bus(),onErrorOccurred:bus()},
++ tabs:{onRemoved:bus(),onUpdated:bus(),create:async o=>{__qa.createdTabs.push(o);},get:async id=>({id,url:'__PAGE__'}),update:async()=>{}},
++ alarms:{onAlarm:bus(),create:async()=>{},clear:async()=>true},
++ scripting:{executeScript:async()=>[{result:[]}]}};
++document.addEventListener('qa-play',()=>{__qa.events++;
++ for(const [url,type,mime] of [['__HLS__','xmlhttprequest','application/vnd.apple.mpegurl'],['__MP4__','media','video/mp4'],['__OTHER__','xmlhttprequest','application/vnd.apple.mpegurl']]){
++  const e={tabId:7,frameId:0,documentId:'fixture-doc',initiator:'https://x.com',url,type,requestId:String(__qa.events),statusCode:200,responseHeaders:[{name:'Content-Type',value:mime},{name:'Set-Cookie',value:'PRIVATE-NOT-TO-RETAIN'}]};chrome.webRequest.onBeforeRequest.emit(e);chrome.webRequest.onResponseStarted.emit(e);
++ }
++});
++'''.replace('__PAGE__',PAGE).replace('__HLS__',HLS).replace('__MP4__',MP4).replace('__OTHER__',OTHER)
++async def world_eval(cdp,w,js):
++ r=await cdp.send('Runtime.evaluate',{'expression':js,'contextId':w,'returnByValue':True,'awaitPromise':True})
++ if 'exceptionDetails' in r:raise RuntimeError(str(r['exceptionDetails']))
++ return r.get('result',{}).get('value')
++async def mode(browser,stay=False):
++ label='Stay' if stay else 'Chromium';ctx=await browser.new_context(viewport={'width':390 if stay else 1480,'height':844 if stay else 1000},is_mobile=stay,has_touch=stay,accept_downloads=True)
++ await ctx.route('**/*',lambda r:r.abort());page=await ctx.new_page();page.set_default_timeout(15000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));await page.set_content(HTML)
++ cdp=await ctx.new_cdp_session(page);frame=(await cdp.send('Page.getFrameTree'))['frameTree']['frame']['id'];w=(await cdp.send('Page.createIsolatedWorld',{'frameId':frame,'worldName':label+'-content-fixture'}))['executionContextId']
++ if stay:
++  spec=importlib.util.spec_from_file_location('stayh',ROOT/'tests/content_world_harness.py');h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
++  script=(ROOT/'dist/X-Capture-Studio.user.js').read_text();check('Stay: output is content-world safe',h.classify(script)['mode']=='content')
++  await world_eval(cdp,w,h.wrap(PRELUDE+'\n__qa.current='+json.dumps(HLS)+';\n'+script))
++ else:
++  await world_eval(cdp,w,PRELUDE+'\n'+CHROME+'\n'+(ROOT/'dist/extension/background.js').read_text()+'\n'+(ROOT/'dist/extension/content.js').read_text())
++ await page.get_by_role('button',name='打开 X Capture',exact=True).click();await page.get_by_role('dialog',name='X Capture 编辑器',exact=True).wait_for()
++ await page.get_by_role('tab',name='文本',exact=True).click();await page.get_by_text('媒体资源与高清检查',exact=True).click();await page.locator('.xc-media-options [role=status]').filter(has_text='次有界请求').wait_for()
++ preview=page.get_by_label('文本预览',exact=True);text=await preview.input_value()
++ check(label+': correct page/title and production UI nonblank',await page.title()=='Discovery QA · synthetic post' and len(text)>50)
++ check(label+': empty TextTrack does not become confirmed embedded captions','检测到字幕轨道元信息' in text and '字幕｜内嵌/无独立 URL' not in text)
++ check(label+': current intrinsic size not fixed master resolution','320×320' not in text)
++ if not stay:
++  check('Chromium: blob/no React initially yields page, not fake stream',HLS not in text and '/video/1' in text)
++  await world_eval(cdp,w,'__qa.permission=false')
++  await page.get_by_role('button',name='检查高清 / 视频 / 字幕',exact=True).click();await page.locator('[data-discovery-status]').filter(has_text='尚未授权').wait_for()
++  check('Chromium: denied optional permission keeps basic content',len(await preview.input_value())>50 and not await world_eval(cdp,w,'Object.keys(__qa.session).length'))
++  await page.get_by_role('button',name='启用桌面视频观察',exact=True).click();await page.wait_for_timeout(100)
++  check('Chromium: opt-in opens real extension permission page',await world_eval(cdp,w,"__qa.createdTabs.some(t=>t.url.includes('/observation.html?returnTab=7'))"))
++  await world_eval(cdp,w,'__qa.permission=true;chrome.permissions.onAdded.emit({permissions:["webRequest"]});')
++  await page.get_by_role('button',name='检查高清 / 视频 / 字幕',exact=True).click();await page.locator('[data-discovery-status]').filter(has_text='短时观察中').wait_for()
++  await page.get_by_role('button',name='返回网页播放视频',exact=True).click()
++  await page.locator('#play').click();check('Chromium: minimized studio allows underlying page interaction',await world_eval(cdp,w,'__qa.events')==1)
++  await page.get_by_role('button',name='返回结果并完成检查',exact=True).click();await page.locator('.xc-media-options [role=status]').filter(has_text='次有界请求').wait_for()
++  await page.wait_for_function("()=>document.querySelector('[data-xcapture-ui=studio]').shadowRoot.querySelector('.xc-text-preview').value.includes('master.m3u8')")
++  text=await preview.input_value()
++  check('Chromium: production background observer discovers HLS through blob/no-React path',HLS in text)
++  check('Chromium: MP4 and HLS retained together',MP4 in text and HLS in text)
++  check('Chromium: unrelated preload never attributed to selected post',OTHER not in text)
++  check('Chromium: raw private response headers never persisted','PRIVATE' not in json.dumps(await world_eval(cdp,w,'__qa.session')))
++  check('Chromium: manual finish clears session',await world_eval(cdp,w,'Object.keys(__qa.session).length')==0)
++  check('Chromium: status reports unassigned resource', '待确认 1' in await page.locator('[data-discovery-status]').inner_text())
++ else:
++  check('Stay: native currentSrc HLS continues to be exported',HLS in text)
++  await page.get_by_role('button',name='检查高清 / 视频 / 字幕',exact=True).click();await page.locator('[data-discovery-status]').filter(has_text='不使用 Chrome 网络接口').wait_for()
++  check('Stay: no Chrome permission controls',await page.get_by_role('button',name='启用桌面视频观察',exact=True).count()==0)
++ # New hint string and master labels checked again AFTER resolver/collector rescan.
++ text=await preview.input_value();check(label+': resolved master has no inherited 320x320 label','HLS · 320×320' not in text)
++ check(label+': inline ordering preserved through observation/resolve',text.index('原文 A')<text.index(HLS)<text.index('原文 B'))
++ await page.get_by_role('button',name='纯文本',exact=True).click();await page.get_by_role('button',name='复制纯文本',exact=True).click();await page.wait_for_timeout(150)
++ check(label+': actual production copy handler retains HLS',HLS in await world_eval(cdp,w,'__qa.clipboard'))
++ await page.get_by_role('button',name='导出 TXT',exact=True).click();await page.get_by_role('heading',name='文本文件已准备好').wait_for()
++ async with page.expect_download() as dl:await page.locator('[data-action=save-text-file]').click()
++ d=await dl.value;target=OUT/(label.lower()+'.txt');await d.save_as(target);saved=target.read_text()
++ check(label+': actual UTF-8 TXT bytes retain resources and order',HLS in saved and saved.index('原文 A')<saved.index(HLS)<saved.index('原文 B'))
++ await page.get_by_role('button',name='关闭文本结果',exact=True).click()
++ await page.get_by_role('button',name='Markdown',exact=True).click();await page.get_by_role('button',name='导出 Markdown',exact=True).click();await page.get_by_role('heading',name='文本文件已准备好').wait_for()
++ async with page.expect_download() as dl:await page.locator('[data-action=save-text-file]').click()
++ d=await dl.value;target=OUT/(label.lower()+'.md');await d.save_as(target)
++ check(label+': actual Markdown export bytes retain HLS',HLS in target.read_text())
++ await page.get_by_role('button',name='关闭文本结果',exact=True).click()
++ await page.get_by_text('资源诊断（不含链接与账号）',exact=True).click();diagnostic=await page.locator('.xc-resource-diagnostics').inner_text()
++ check(label+': diagnostics contain no account, URL or signature','https:' not in diagnostic and 'discovery_test' not in diagnostic and 'tag=' not in diagnostic)
++ if not stay:check('Chromium: source provenance retained after manifest validation','网络 0' not in diagnostic)
++ await page.locator('.xc-media-options').scroll_into_view_if_needed();await page.wait_for_timeout(250);await page.screenshot(path=str(OUT/(label.lower()+'-text.png')))
++ check(label+': no application exceptions/framework overlays',not errors,errors)
++ check(label+': viewport has no horizontal overflow',await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
++ # Close must remove UI and observer session without starting another page operation.
++ await page.get_by_role('button',name='关闭编辑器',exact=True).click();check(label+': close removes the production studio',await page.locator('[data-xcapture-ui=studio]').count()==0)
++ await ctx.close()
++async def permission(browser):
++ page=await browser.new_page();await page.set_content((ROOT/'assets/observation.html').read_text());await page.evaluate('''()=>{globalThis.__q={calls:0,allow:false};globalThis.chrome={permissions:{contains:async()=>false,request:()=>{__q.calls++;return Promise.resolve(__q.allow);}}};}''')
++ await page.add_script_tag(content=(ROOT/'dist/extension/observation.js').read_text())
++ await page.get_by_role('button',name='允许视频请求观察',exact=True).click();check('Permission UI: refusal is handled without claiming success','未授权' in await page.locator('#status').inner_text())
++ await page.evaluate('__q.allow=true');await page.get_by_role('button',name='允许视频请求观察',exact=True).click();check('Permission UI: grant performed by direct extension-page button callback',await page.locator('#enable').is_disabled() and await page.evaluate('__q.calls')==2)
++ await page.close()
++async def main():
++ report={'environment':'Playwright Chromium; actual production bundles; fake Chrome/GM/clipboard APIs, controlled webRequest events and fetch; no real X/iPhone. Browser plugin unavailable.'}
++ try:
++  async with async_playwright() as p:
++   browser=await p.chromium.launch(executable_path=os.environ.get('XC_BROWSER','/usr/bin/chromium'),args=['--no-sandbox'])
++   try:await mode(browser);await mode(browser,True);await permission(browser)
++   finally:await browser.close()
++ finally:
++  report.update(checks=checks,passed=sum(c['passed'] for c in checks),total=len(checks));(OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
++if __name__=='__main__':asyncio.run(main())
+diff --git a/tests/text_export_qa.py b/tests/text_export_qa.py
+index ac1caa457a4a29fd231df08b76bc1c567ffee2c7..1262e55dffcf778e9e16ae13d033ee1f1e301075 100644
+--- a/tests/text_export_qa.py
++++ b/tests/text_export_qa.py
+@@ -134,7 +134,7 @@ async def stay_harness(pw):
+     # This suite only reuses harness helpers; the old-vs-new comparison belongs to stay_startup_qa.py.
+     if not historical.is_file(): historical = ROOT/'dist/X-Capture-Studio.user.js'
+     os.environ.setdefault('XC_OLD_SCRIPT', str(historical))
+-    spec=importlib.util.spec_from_file_location('stayqa',ROOT/'tests/stay_startup_qa.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
++    spec=importlib.util.spec_from_file_location('stayqa',ROOT/'tests/content_world_harness.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+     code=(ROOT/'dist/X-Capture-Studio.user.js').read_text()
+     check('Stay: bundled script keeps isolated mode and no unsafeWindow grant', mod.classify(code)['mode']=='content')
+     browser=await pw.chromium.launch(executable_path=BROWSER,headless=True,args=['--no-sandbox'])

@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-16",
+  "post": "https://x.com/BakkarAbua67929/status/2110598842601337126",
+  "media_id": "2110598821118099457",
+  "logged_in_desktop_chrome": {
+    "installed_extension_version": "1.0.0-rc.8 (user's real Chrome)",
+    "article_testid_tweet": 7,
+    "dom_video_currentSrc": "blob: (MSE) — no file URL in DOM",
+    "dom_video_poster": "https://pbs.twimg.com/amplify_video_thumb/2110598821118099457/img/-ufy4QPbJuV0mDQW.jpg",
+    "performance_timeline_entries_after_load": 2,
+    "performance_timeline_entries_after_scroll": 0,
+    "buffered_PerformanceObserver_saw_video_manifests": true,
+    "tweet_location": "ancestor fiber #11 memoizedProps.tweet (flattened: id_str/full_text/extended_entities, no legacy, user.screen_name)",
+    "rc8_baseline_probe_result": "no tweet found -> export falls back to /video/1",
+    "fixed_probe_result": {
+      "posts_found": 7, "ms": 6, "token_or_cookie_in_output": false,
+      "variants": [
+        "hls https://video.twimg.com/amplify_video/2110598821118099457/pl/2mAqGNvsshEs6gQ6.m3u8?tag=29",
+        "file 320x320 https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/320x320/bVAuaGMGzAe4VRUF.mp4?tag=29",
+        "file 540x540 https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/540x540/EvDSOSPpBDBb5Ujm.mp4?tag=29",
+        "file 720x720 https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/720x720/KtC5Mw6j4_B7g8Bj.mp4?tag=29"
+      ],
+      "sourceUrl": "https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/720x720/KtC5Mw6j4_B7g8Bj.mp4?tag=29"
+    },
+    "note": "dimensions were blank in the first real run (codec-prefixed /vid/avc1/WxH/ path); regex fixed and covered by test-rc8-video"
+  },
+  "logged_out_chrome_for_testing_153": {
+    "article_testid_tweet": 0,
+    "markup": "new logged-out web UI (<article class=\"flex flex-col gap-1\">), parser does not recognise posts",
+    "timeline_names": [
+      "https://video.twimg.com/amplify_video/2110598821118099457/pl/2mAqGNvsshEs6gQ6.m3u8?tag=29",
+      "https://video.twimg.com/amplify_video/2110598821118099457/pl/avc1/720x720/ZEHsONteDRFXDAqX.m3u8",
+      "https://video.twimg.com/amplify_video/2110598821118099457/pl/mp4a/128000/OPO4lDLQr2YeyNHI.m3u8",
+      "https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/0/0/720x720/mfITx85Mp6olIj5T.mp4 (fMP4 init -> segment)",
+      "https://video.twimg.com/amplify_video/2110598821118099457/aud/mp4a/0/0/128000/xgVDAx9yzc7Dge2h.mp4 (fMP4 init -> segment)"
+    ],
+    "safari_stay_reported_url": "https://video.twimg.com/amplify_video/2110598821118099457/pl/2mAqGNvsshEs6gQ6.m3u8?tag=29&variant_version=1",
+    "comparison": "same media ID and playlist path; Chrome omits variant_version=1"
+  },
+  "webRequest_test_build_only": {
+    "how": "copy of the release with webRequest pre-declared (native consent dialog cannot be automated); not shipped",
+    "start": "active", "poll_records": 0, "segments_counted": 1, "stop": "stopped", "session_storage_after_stop": [],
+    "finding": "listener receives real X top-document requests, but replaying an already-loaded video re-requests only segments; manifests are not re-fetched, so a 30 s window started after load yields no manifest"
+  }
+}

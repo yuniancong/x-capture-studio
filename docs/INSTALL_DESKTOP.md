@@ -2,7 +2,7 @@
 
 [X Capture Studio 首页](../README.md) · [iPhone / iPad 图文教程](INSTALL_STAY.md)
 
-无需 Node.js、npm 或开发环境。提供**手动安装**与**交给 Codex / Claude Code 自动准备**两种方式，使用同一份已确认的 `v1.0.0-rc.5` 安装包。
+无需 Node.js、npm 或开发环境。提供**手动安装**与**交给 Codex / Claude Code 自动准备**两种方式，使用同一份已确认的 `v1.0.0-rc.8` 安装包。
 
 > **安全边界：** 自动化可以下载、验证文件、解压、保留旧版备份并打开安装说明；普通 Chrome / Edge 正式加载未上架扩展，仍需要使用者在浏览器的扩展管理页确认。脚本不修改系统策略、不关闭安全防护、不接管个人浏览器资料。
 
@@ -14,10 +14,10 @@
 请协助我在当前这台电脑上安装 X Capture Studio 的 Chromium 浏览器扩展。
 
 官方仓库：https://github.com/yuniancong/x-capture-studio
-目标：Chrome 或 Microsoft Edge，版本 v1.0.0-rc.5。
-安装包必须来自仓库提交：7c119e79f764d27cc98aeeb81595cf1dfffc9f98
-文件路径：releases/X-Capture-Studio-Chrome-v1.0.0-rc.5.zip
-预期 SHA-256：da3a2db2d0c4902bc5033c08e04bc9977edd0e7437a3539bd37ea356451dcc20
+目标：Chrome 或 Microsoft Edge，版本 v1.0.0-rc.8。
+安装包必须来自 GitHub main 分支（下载后必须按下方 SHA-256 严格核对）
+文件路径：releases/X-Capture-Studio-Chrome-v1.0.0-rc.8.zip
+预期 SHA-256：47715b0ff6e24f5d88c26ad355817817893672fee6398518af5bae1eaa4f5824
 
 请直接执行你能够安全执行的步骤，而不只是给我一段操作说明：
 1. 检查本机操作系统、Python 3 和 Chrome / Edge 是否已安装；优先使用现有浏览器，不新建浏览器资料目录。
@@ -41,7 +41,7 @@ Windows 上可使用 `py -3 scripts/prepare_chromium.py`。该脚本只下载固
 
 ## 方式 B：自己安装（约 1 分钟）
 
-1. 下载 [Chrome / Edge rc.5 ZIP](../releases/X-Capture-Studio-Chrome-v1.0.0-rc.5.zip)，解压到一个**以后不会移动或删除**的文件夹。
+1. 下载 [Chrome / Edge rc.8 ZIP](../releases/X-Capture-Studio-Chrome-v1.0.0-rc.8.zip)，解压到一个**以后不会移动或删除**的文件夹。
 2. Chrome 地址栏输入 `chrome://extensions`；Edge 输入 `edge://extensions`。
 3. 开启**开发者模式**，点**加载已解压的扩展程序**，选择直接包含 `manifest.json` 的目录。
 4. 根据浏览器提示确认扩展的站点访问权限，刷新一个 `https://x.com/.../status/...` 帖子详情页。

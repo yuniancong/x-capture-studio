@@ -1,0 +1,82 @@
+{
+  "artifactVersion": "1.0.0-rc.7",
+  "remoteBase": "026378947da2753f3f3dc2b3e9a84edf261619b8",
+  "sourceSnapshot": "validated runtime subtrees + rc.6 limited-path patch",
+  "tests": [
+    {
+      "suite": "PNG/PDF 与基础工作台",
+      "passed": 50,
+      "failed": 0,
+      "report": "final-browser-browser-results.json",
+      "reportSHA256": "23c2539164c3ec165e7888171d026a2859557b73eea07c37e3b316c366d21efc"
+    },
+    {
+      "suite": "引用、背景、隐私和 macOS 属性模拟",
+      "passed": 54,
+      "failed": 0,
+      "report": "final-rc2-rc2-results.json",
+      "reportSHA256": "8abd9afccbe5f75ae223460786f12ce832a319b53ea3cdf2e8099bfb9625967f"
+    },
+    {
+      "suite": "文本/复制回退/UTF-8 文件",
+      "passed": 34,
+      "failed": 0,
+      "report": "final-text-text-qa.json",
+      "reportSHA256": "09a379cc004447424dd27cf684f9d9eacd8bfb845b01608eec1184ae0dcfc65b"
+    },
+    {
+      "suite": "新多媒体集成/网络/桌面手机界面",
+      "passed": 53,
+      "failed": 0,
+      "report": "final-media-report.json",
+      "reportSHA256": "93605e76c161db4969ad208d955b672b4d513e5ed85b7a204fd59773d689aa0f"
+    },
+    {
+      "suite": "既有媒体链接/顺序",
+      "passed": 24,
+      "failed": 0,
+      "report": "final-links-results.json",
+      "reportSHA256": "e4394b07a4e73c65b9c3511f9ebc22779d1b39002c06332fa21eb938a6a0a8c6"
+    },
+    {
+      "suite": "rc.6 高清与视频播放页兼容",
+      "passed": 28,
+      "failed": 0,
+      "report": "final-hd-results.json",
+      "reportSHA256": "2604265f9ba439a0a6b90cc39da96d09f3c8a8c0e549bbac23c3283b77bf064b"
+    }
+  ],
+  "limitations": [
+    "No live X / current device verification",
+    "MV3 startup service worker timeout; not counted PASS",
+    "Historical suite metadata contains its original test version/date; execution used current rc.7 build; see this index and build hashes."
+  ],
+  "redEvidence": [
+    "red-01.log",
+    "red-02.log",
+    "red-03.log",
+    "red-08.log",
+    "red-14.log",
+    "red-15.log",
+    "red-16.log"
+  ],
+  "buildSHA256": {
+    "X-Capture-Studio-Demo.html": "6dde5a8047b3bb0cfbec378a213573cf9c581e18a3df4697d3cdc32639be2e70",
+    "X-Capture-Studio.user.js": "30cad14fa4ca46043e5d113e2581a20aac831d3791e7abd5ec2279af52a40cb0",
+    "build-info.json": "771a7c8edf821051c70876ac18ba40ad6a24393cdb81ca4b400ef73e29883e1c",
+    "core-test.cjs": "0f4901b7e784b48aaa6462f1bee6622aa4290437c5196317fc951f80e0ec5ca8",
+    "extension/LICENSE": "a96945158bf8714b0571b8150c535586b0d90ec4561b26e1a7931d22651f73a8",
+    "extension/THIRD_PARTY_NOTICES.md": "c1c217e3ff750ed0b66083ab093a2624d29933efccddfbb429610935b25e793d",
+    "extension/background.js": "501abb632fd2d8e5bb893c73e0a4ac9f2a21d01c99c57cb872f16b18fd92d73a",
+    "extension/content.js": "b4482c8795c73dc345b4da2d1fac87817dee6b86b454c6ee04e0dbbab48d3cb0",
+    "extension/demo.html": "aec12a753e5f6e3c5b6d5fbb0e22caea00362f92f777e36910f98645782c5aae",
+    "extension/demo.js": "a1a6f940fd052f22de8af0877ee63a9180994973f106eb950ef3077a08be905b",
+    "extension/icons/128.png": "896cee72aae33da52bd5c14d45681f425bd79ee375ebb29a44a3da401ff96792",
+    "extension/icons/16.png": "5c9415284d049a84f94b0a61b6e23820a23a688181a302d2ccd66b6f613f564e",
+    "extension/icons/32.png": "e292ba1d2095980d931480d449be3909994498beb396ab3408ff6b557fc43d28",
+    "extension/icons/48.png": "93c63915450d7e43a1e33c1331f393ec820632a9b26baf7636aac852296f8dda",
+    "extension/manifest.json": "3731a80891c498cf60d9c1bd9e009df2feff5ceafac6ff029653068fe890887c",
+    "extension/popup.html": "dbf2ecab67e6d38c01d5e63182bb7c8066d39090e62dd9fe7875172cb330cac6",
+    "extension/popup.js": "b0af7f920d1ce5335d59e7cae40f91d4262845d306a05b2cbdb80f78a8283f52"
+  }
+}

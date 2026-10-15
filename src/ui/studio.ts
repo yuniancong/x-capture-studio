@@ -6,7 +6,10 @@ import {layoutCapture} from '../core/layout';
 import {drawScene,exportBudget} from '../core/canvas';
 import {plainText} from '../core/urls';
 import {TextTools} from './text-tools';
-import {cacheFont,clearFont,loadAssets,loadPdfFont,useMemoryFont,decodeData} from '../platform/assets';
+import {cacheFont,clearFont,loadAssets,loadAsset,loadPdfFont,useMemoryFont,decodeData} from '../platform/assets';
+import {MediaQuality,QUALITY_DEFAULTS,normalizeQuality,imageQualityOptions,videoQualityOptions,imageLevelChain,LevelOption} from '../media/quality';
+import {visitMedia,mergeVariants} from '../media/resources';
+import type {Media} from '../core/model';
 import {exportPNG,mobileDevice} from '../export/png';
 import {provenance} from '../export/metadata';
 import {exportPDF} from '../export/pdf';
@@ -20,7 +23,8 @@ export class Studio {
   private hostElement:HTMLDivElement;private shadow:ShadowRoot;private studio:HTMLDivElement;private controls:HTMLDivElement;
   private stage:HTMLDivElement;private preview:HTMLDivElement;private counter:HTMLSpanElement;private dimensions:HTMLSpanElement;
   private tabs!:HTMLDivElement;private textTools:TextTools;
-  private quality:HTMLDivElement;private status:HTMLDivElement;private tab='style';private saved:Record<string,Options>={};
+  private quality:HTMLDivElement;private mediaQualityRow:HTMLDivElement;private mediaQuality:MediaQuality={...QUALITY_DEFAULTS};
+  private qualityAbort?:AbortController;private qualityDone=new WeakMap<Media,string>();private status:HTMLDivElement;private tab='style';private saved:Record<string,Options>={};
   private zoom=1;private autoZoom=true;private observer?:IntersectionObserver;private resize?:ResizeObserver;private repaint=0;private toastTimer=0;
   private busy=false;private closed=false;private abort?:AbortController;private assetAbort=new AbortController();private overlay?:HTMLElement;
   private overflow='';private previousFocus:Element|null=null;private onClose?:()=>void;private keyboard:(e:KeyboardEvent)=>void;
@@ -29,9 +33,9 @@ export class Studio {
   constructor(capture:Capture,private host:Host,private collector?:Collector,onClose?:()=>void){
     this.capture=capture;this.onClose=onClose;this.hostElement=el('div',{'data-xcapture-ui':'studio'});this.shadow=this.hostElement.attachShadow({mode:'open'});
     this.stage=el('div',{class:'xc-stage'});this.preview=el('div',{class:'xc-preview'});this.stage.append(this.preview);
-    this.counter=el('span',{class:'xc-counter'});this.dimensions=el('span');this.quality=el('div',{class:'xc-quality'});this.status=el('div',{class:'xc-status',role:'status','aria-live':'polite',hidden:true});
+    this.counter=el('span',{class:'xc-counter'});this.dimensions=el('span');this.quality=el('div',{class:'xc-quality'});this.mediaQualityRow=el('div',{class:'xc-media-quality'});this.status=el('div',{class:'xc-status',role:'status','aria-live':'polite',hidden:true});
     this.controls=el('div',{class:'xc-controls'});
-    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay()});
+    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options,quality:this.mediaQuality}),host,{mediaChanged:()=>{if(!this.closed)this.renderFooter();},notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay(),refresh:()=>this.refreshForDiscovery(),showPage:done=>this.showPageForObservation(done)});
     const fit=button('适应预览',()=>{this.autoZoom=true;this.paint();},'xc-textbtn');
     const zoomOut=el('button',{type:'button',class:'xc-iconbtn','aria-label':'缩小预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.max(.2,this.zoom/1.2);this.paint();}},icon('minus',15));
     const zoomIn=el('button',{type:'button',class:'xc-iconbtn','aria-label':'放大预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.min(2.5,this.zoom*1.2);this.paint();}},icon('plus',15));
@@ -45,7 +49,7 @@ export class Studio {
     const texts=button('复制文本',()=>void this.textTools.copy('text'),'xc-textbtn');
     texts.dataset.action='copy-text';
     const textExport=button('文本导出',()=>this.switchTab('text'),'xc-textbtn');
-    const footer=el('div',{class:'xc-footer'},el('div',{class:'xc-dimensions'},this.dimensions,this.quality),el('div',{class:'xc-export-row'},png,pdf),el('div',{class:'xc-footer-tools'},copy,texts,textExport),el('div',{class:'xc-shortcut'},'⌘ / Ctrl + S 导出 · Esc 关闭'));
+    const footer=el('div',{class:'xc-footer'},this.mediaQualityRow,el('div',{class:'xc-dimensions'},this.dimensions,this.quality),el('div',{class:'xc-export-row'},png,pdf),el('div',{class:'xc-footer-tools'},copy,texts,textExport),el('div',{class:'xc-shortcut'},'⌘ / Ctrl + S 导出 · Esc 关闭'));
     const panel=el('aside',{class:'xc-panel'},header,tabs,this.controls,footer);
     this.studio=el('div',{class:'xc-studio',role:'dialog','aria-modal':'true','aria-label':'X Capture 编辑器',tabindex:'-1'},workspace,panel,this.status);
     this.shadow.append(el('style',{},STYLES),el('div',{class:'xc-backdrop'},this.studio));
@@ -69,23 +73,69 @@ export class Studio {
     this.options=normalizeOptions(await this.host.getValue('options',DEFAULTS).catch(()=>DEFAULTS));
     const saved=await this.host.getValue<Record<string,unknown>>('presets',{}).catch(()=>({}));for(const[k,v]of Object.entries(saved||{}).slice(0,50))this.saved[k]=normalizeOptions(v);
     await textOptionsReady;
+    this.mediaQuality=normalizeQuality(await this.host.getValue('media-quality',QUALITY_DEFAULTS).catch(()=>QUALITY_DEFAULTS));
     this.order=this.capture.posts.map(p=>p.id);
     this.selected=selectByRule(this.capture,this.options.defaultReplies==='all'?'all':this.options.defaultReplies==='direct'?'direct':'thread');
     if(!this.selected.size&&this.capture.posts[0])this.selected.add(this.capture.posts[0].id);
     this.previousFocus=document.activeElement;this.overflow=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';document.documentElement.append(this.hostElement);document.addEventListener('keydown',this.keyboard,true);
     this.renderControls();this.render();this.studio.focus();
     if(typeof ResizeObserver!=='undefined'){this.resize=new ResizeObserver(()=>{if(this.autoZoom)this.schedule();});this.resize.observe(this.stage);}
+    void this.textTools.prepareResources();
     await this.refreshAssets();
   }
-  close(){if(this.closed)return;this.closed=true;this.textTools.dispose();this.abort?.abort();this.assetAbort.abort();this.observer?.disconnect();this.resize?.disconnect();cancelAnimationFrame(this.repaint);clearTimeout(this.toastTimer);document.removeEventListener('keydown',this.keyboard,true);document.documentElement.style.overflow=this.overflow;
+  close(){if(this.closed)return;this.closed=true;this.qualityAbort?.abort();this.textTools.dispose();this.abort?.abort();this.assetAbort.abort();this.observer?.disconnect();this.resize?.disconnect();cancelAnimationFrame(this.repaint);clearTimeout(this.toastTimer);document.removeEventListener('keydown',this.keyboard,true);document.documentElement.style.overflow=this.overflow;
     if(this.lastResult){const url=this.lastResult.url;setTimeout(()=>URL.revokeObjectURL(url),60000);}this.hostElement.remove();if(this.previousFocus instanceof HTMLElement)this.previousFocus.focus();this.onClose?.();}
   private toast(message:string,sticky=false){if(this.closed)return;clearTimeout(this.toastTimer);this.status.textContent=message;this.status.hidden=false;if(!sticky)this.toastTimer=window.setTimeout(()=>this.status.hidden=true,6500);}
   private schedule(){cancelAnimationFrame(this.repaint);this.repaint=requestAnimationFrame(()=>this.render());}
   update(patch:Partial<Options>,controls=false){this.options=normalizeOptions({...this.options,...patch});this.schedule();void this.host.setValue('options',this.options).catch(()=>this.toast('设置暂未持久保存。'));if(controls)this.renderControls();}
-  private render(){if(this.closed)return;this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();}
+  private render(){if(this.closed)return;this.textTools.selectionChanged();this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();if(this.mediaQuality.image!=='default')void this.applyImageQuality();}
   private renderFooter(){
     const b=exportBudget(this.scene.width,this.scene.height,this.options.scale,mobileDevice());this.dimensions.textContent=`${b.width.toLocaleString()} × ${b.height.toLocaleString()} px${b.ok?'':' · 尺寸超限'}`;
     this.quality.replaceChildren();for(const v of [1,2,3,4] as const)this.quality.append(button(v+'×',()=>this.update({scale:v}),this.options.scale===v?'is-active':''));
+    this.renderMediaQuality();
+  }
+  /** Options come from the selected media's real renditions; rebuilt when resources change, not while one is open. */
+  private renderMediaQuality(){
+    if(this.mediaQualityRow.contains(this.shadow.activeElement))return;
+    const quotes=this.options.showQuote,images=imageQualityOptions(this.capture,this.selected,quotes),videos=videoQualityOptions(this.capture,this.selected,quotes);
+    const pick=(label:string,title:string,options:LevelOption[],value:string,change:(v:string)=>void)=>{
+      const node=el('select',{class:'xc-select','aria-label':label,title,onChange:(e:Event)=>change((e.target as HTMLSelectElement).value)});
+      if(!options.some(o=>o.value===value))options=[...options,{value,label:value.replace(/^p/,'')+'p · 当前选择无此清晰度'}];
+      for(const o of options)node.append(el('option',{value:o.value,selected:o.value===value,disabled:!!o.disabled&&o.value!==value},o.label));
+      node.disabled=options.length<2&&!!options[0]?.disabled;
+      return el('label',{class:'xc-media-quality-item'},el('span',{},label),node);
+    };
+    this.mediaQualityRow.replaceChildren(
+      pick('图片素质','影响 PNG / PDF 中的图片和文本中的图片链接；所选级别不可用时逐张降级',images,this.mediaQuality.image,v=>this.setMediaQuality({image:v as MediaQuality['image']})),
+      pick('视频素质','只影响复制文本中的视频链接（MP4 与对应 HLS 播放流）',videos,this.mediaQuality.video,v=>this.setMediaQuality({video:v as MediaQuality['video']})));
+  }
+  private setMediaQuality(patch:Partial<MediaQuality>){
+    this.mediaQuality=normalizeQuality({...this.mediaQuality,...patch});
+    void this.host.setValue('media-quality',this.mediaQuality).catch(()=>this.toast('素质设置暂未持久保存；本次设置仍然有效。'));
+    if(patch.image!==undefined){this.qualityAbort?.abort();this.qualityDone=new WeakMap();if(patch.image==='default')this.clearImageQuality();else void this.applyImageQuality(true);}
+    this.textTools.qualityChanged();(this.shadow.activeElement as HTMLElement|null)?.blur?.();this.renderFooter();
+  }
+  private clearImageQuality(){visitMedia(this.capture,new Set(this.capture.posts.map(p=>p.id)),m=>{m.renderSrc=undefined;},true);this.render();}
+  /** Load the chosen rendition per image (falling back lower), record its real decoded size, then re-render. */
+  private async applyImageQuality(announce=false){
+    const level=this.mediaQuality.image;if(level==='default')return;
+    const items:Media[]=[];visitMedia(this.capture,this.selected,m=>{if(m.kind==='image'&&this.qualityDone.get(m)!==level)items.push(m);},this.options.showQuote);
+    if(!items.length)return;
+    for(const m of items)this.qualityDone.set(m,level);
+    const ctrl=this.qualityAbort=new AbortController();let cursor=0,exact=0,lower=0,kept=0;
+    if(announce)this.toast(`正在载入所选图片素质（${items.length} 张）…`,true);
+    const worker=async()=>{while(cursor<items.length&&!ctrl.signal.aborted){const m=items[cursor++];let chosen:string|undefined;
+      for(const [i,v] of imageLevelChain(m,level).entries()){if(ctrl.signal.aborted)return;
+        try{const a=await loadAsset(v.url,this.host,this.assets,ctrl.signal);
+          m.variants=mergeVariants(m.variants,[{...v,state:'verified',verifiedBy:'image-decode',width:a.width,height:a.height,checkedAt:new Date().toISOString(),problem:undefined}]);
+          chosen=v.url;if(i===0)exact++;else lower++;break;
+        }catch{if(ctrl.signal.aborted)return;m.variants=mergeVariants(m.variants,[{...v,state:'unverified',problem:'network-or-cors',checkedAt:new Date().toISOString()}]);}
+      }
+      if(!chosen)kept++;m.renderSrc=chosen;}};
+    await Promise.all([worker(),worker()]);
+    if(ctrl.signal.aborted||this.closed)return;
+    this.render();this.textTools.qualityChanged();
+    if(announce||lower||kept)this.toast(`图片素质已应用：${exact} 张为所选级别${lower?`，${lower} 张降级`:''}${kept?`，${kept} 张保留页面图`:''}。`);
   }
   private paint(){
     if(this.closed)return;this.observer?.disconnect();const {scene}=this;const avail=this.stage.clientWidth-(mobileDevice()?36:68);
@@ -170,6 +220,24 @@ export class Studio {
     this.controls.replaceChildren(...nodes);
   }
   private move(id:string,delta:number){const i=this.order.indexOf(id),j=i+delta;if(j<0||j>=this.order.length)return;[this.order[i],this.order[j]]=[this.order[j],this.order[i]];this.render();this.renderControls();}
+  private async refreshForDiscovery():Promise<void> {
+    if(!this.collector||this.closed)return;
+    await this.collector.scan();if(this.closed)return;
+    this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);
+    this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];
+    // Keep the user's selection and active TextTools instance. No control-panel reconstruction here.
+    this.render();
+  }
+  private showPageForObservation(done:()=>void):()=>void {
+    const backdrop=this.shadow.querySelector<HTMLElement>('.xc-backdrop')!;
+    backdrop.classList.add('xc-hidden');this.hostElement.style.pointerEvents='none';document.documentElement.style.overflow=this.overflow;
+    const banner=el('div',{class:'xc-observation-banner',role:'status','data-xcapture-ui':'observation-return'},
+      el('span',{},'X Capture 正在短时观察。请手动播放要保存的视频。'),
+      button('返回结果并完成检查',()=>{restore();done();},'xc-button primary'));
+    this.shadow.append(banner);let restored=false;
+    const restore=()=>{if(restored)return;restored=true;banner.remove();if(!this.closed){this.hostElement.style.pointerEvents='';backdrop.classList.remove('xc-hidden');document.documentElement.style.overflow='hidden';this.studio.focus();}};
+    return restore;
+  }
   private async rescan(){if(!this.collector)return;await this.collector.scan();this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];this.render();this.renderControls();await this.refreshAssets();this.toast('候选已更新；保留了你本次的勾选与排序。');}
   private async collectMore(){
     if(this.abort){this.abort.abort();return;}if(!this.collector)return;

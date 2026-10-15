@@ -1,13 +1,15 @@
 import {Block, Capture, Media, Post, Run} from '../core/model';
 import {authorChain} from '../core/selection';
 import {safeLink, sourceURL} from '../core/urls';
-import {httpMediaURL, videoMediaURL} from '../core/media-links';
+import {mediaTextLines} from '../media/text';
+import {MediaQuality,QUALITY_DEFAULTS,normalizeQuality} from '../media/quality';
 
 export type TextFormat = 'text' | 'markdown' | 'ai';
 export interface TextOptions {
   includeAuthor: boolean; includeTime: boolean; includeSources: boolean;
   includeRelations: boolean; includeQuote: boolean; includeNotes: boolean;
   includeMedia: boolean; includeStats: boolean; includeCaptureTime: boolean;
+  includeAllResources: boolean; markdownImages: boolean; includeSubtitles: boolean; includeSensitiveMedia: boolean;
 }
 export interface TextPrivacy { anonymize?: boolean; anonymousSources?: boolean; }
 export interface TextResult {
@@ -17,7 +19,8 @@ export interface TextResult {
 export const TEXT_DEFAULTS: TextOptions = {
   includeAuthor: true, includeTime: true, includeSources: true,
   includeRelations: true, includeQuote: true, includeNotes: true,
-  includeMedia: true, includeStats: false, includeCaptureTime: false
+  includeMedia: true, includeStats: false, includeCaptureTime: false,
+  includeAllResources: false, markdownImages: false, includeSubtitles: true, includeSensitiveMedia: false
 };
 export function normalizeTextOptions(value: unknown): TextOptions {
   const result = {...TEXT_DEFAULTS};
@@ -55,9 +58,9 @@ const validHandle = (s: string | undefined): s is string => !!s && s !== 'unknow
  * Embedded posts remain nested; missing information is explicitly marked rather than fabricated. */
 export function serializeText(
   capture: Capture, selected: Set<string>, order: string[], rawOptions: TextOptions,
-  format: TextFormat = 'text', privacy: TextPrivacy = {}
+  format: TextFormat = 'text', privacy: TextPrivacy = {}, rawQuality: MediaQuality = QUALITY_DEFAULTS
 ): TextResult {
-  const o = normalizeTextOptions(rawOptions), md = format !== 'text';
+  const o = normalizeTextOptions(rawOptions), md = format !== 'text', quality = normalizeQuality(rawQuality);
   const byId = new Map(capture.posts.map(p => [p.id, p]));
   const posts = [...new Set(order)].filter(id => selected.has(id)).map(id => byId.get(id)).filter((p): p is Post => !!p);
   const index = new Map(posts.map((p, i) => [p.id, i + 1]));
@@ -129,25 +132,11 @@ export function serializeText(
     if (o.includeTime && p.edited) out.push(txt('编辑状态：' + p.edited));
     const rel = relation(p); if (rel) out.push(txt(rel));
     if (p.title) out.push(heading(level + 1, p.title));
-    function mediaText(m: Media): string {
-      if (!o.includeMedia) return '';
-      const label = m.kind === 'image' ? '图片' : m.kind === 'gif' ? 'GIF' : '视频';
-      const alt = m.alt?.trim();
-      const marker = txt(`[${label}${m.duration ? ' · ' + m.duration : ''}${alt && !['帖子图片', '视频封面', '文章内视频', '引用帖媒体'].includes(alt) ? '：' + alt : ''}]`);
-      // Same block, same position. Links never point at an avatar, backdrop or
-      // video poster. Anonymization continues to suppress automatic backlinks.
-      if (!linkAllowed) return marker;
-      const url = m.kind === 'image' ? httpMediaURL(m.sourceUrl) || httpMediaURL(m.src) : videoMediaURL(m.sourceUrl) || videoMediaURL(m.href);
-      const address = (value: string) => md ? `<${markdownURL(value)}>` : value;
-      if (url && !sourceURL(url)) {
-        const stream = m.kind !== 'image' && /\.(?:m3u8|mpd)$/i.test(new URL(url).pathname);
-        return `${marker}${stream ? '（播放流）' : ''} ${address(url)}`;
-      }
-      if (m.kind !== 'image') {
-        const original = sourceAllowed ? sourceURL(m.href || '') || sourceURL(p.url) : undefined;
-        if (original) return `${marker} 原帖播放链接：${address(original)}`;
-      }
-      return `${marker}（${label}链接未获取）`;
+    function mediaText(m:Media):string {
+      if(!o.includeMedia)return '';
+      const result=mediaTextLines(m,p,{all:o.includeAllResources,images:o.markdownImages,subtitles:o.includeSubtitles,sensitive:o.includeSensitiveMedia,
+        markdown:md,links:linkAllowed,sources:sourceAllowed,imageLevel:quality.image,videoLevel:quality.video});
+      result.warnings.forEach(w=>warnings.add(w));return result.text;
     }
     function block(b: Block): string {
       if (b.kind === 'divider') return md ? '---' : '────────';
@@ -185,7 +174,7 @@ export function serializeText(
     if (p.quote && o.includeQuote) out.push(renderPost(p.quote, level + 1, '引用帖子', seen));
     if (p.linkCard) {
       const c = p.linkCard, url = linkAllowed ? safeLink(c.url) : undefined;
-      const image = c.image ? mediaText({kind:'image', src:c.image, alt:''}) : '';
+      const image = c.media ? mediaText(c.media) : c.image ? mediaText({kind:'image', src:c.image, alt:''}) : '';
       out.push(txt('链接卡片：' + c.title) + (c.description ? '\n' + txt(c.description) : '') + (image ? '\n' + image : '') + (url ? '\n' + (md ? `<${markdownURL(url)}>` : url) : ''));
     }
     if (p.poll) out.push(heading(level + 1, '投票') + '\n\n' + p.poll.options.map(v => `${md ? '- ' : '• '}${txt(v.text)}${v.percent !== undefined ? ` ${v.percent}%` : ''}`).join('\n') + (p.poll.summary ? '\n\n' + txt(p.poll.summary) : ''));
