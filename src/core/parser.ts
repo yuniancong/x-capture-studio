@@ -1,6 +1,7 @@
 import {Author,Badge,Block,Media,Post,Run,Poll} from './model';
 import {postID,safeLink,sourceURL} from './urls';
 import {absolutePath,hexColor} from './svg';
+import {observedVideoURL} from './media-links';
 const clean=(s:string|null|undefined)=>(s||'').replace(/\u200b/g,'').trim();
 const richSelectors='[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"], [data-testid="articleRichTextView"]';
 const authorSelector='[data-testid="User-Name"], [data-testid="UserName"]';
@@ -100,7 +101,7 @@ function richBlocks(el:Element):Block[]{
     if(node.matches('[data-xcapture-ui],script,style,button'))return;
     if(node.matches('article[data-testid="tweet"], [data-testid="tweet"]')){const post=parsePost(node);if(post)blocks.push({kind:'embed',post});return;}
     if(node.matches('img')){const img=node as HTMLImageElement;if(!/emoji|profile_images/.test(img.src))blocks.push({kind:'media',media:mediaFromImage(img)});return;}
-    if(node.matches('video')){const v=node as HTMLVideoElement;blocks.push({kind:'media',media:{kind:'video',src:v.poster,alt:'文章内视频',duration:Number.isFinite(v.duration)?`${Math.floor(v.duration/60)}:${String(Math.floor(v.duration%60)).padStart(2,'0')}`:undefined}});return;}
+    if(node.matches('video')){const v=node as HTMLVideoElement;blocks.push({kind:'media',media:{kind:'video',src:v.poster,sourceUrl:observedVideoURL(v),posterUrl:v.poster||undefined,alt:'文章内视频',duration:Number.isFinite(v.duration)?`${Math.floor(v.duration/60)}:${String(Math.floor(v.duration%60)).padStart(2,'0')}`:undefined}});return;}
     if(node.matches('hr')){blocks.push({kind:'divider'});return;}
     if(node.matches('h1,h2,h3,h4,h5,h6,p,li,blockquote,pre')||node.matches('[data-block="true"]')){
       const runs=inlineRuns(node);if(runs.some(r=>r.text.trim())){
@@ -139,13 +140,15 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
   if(!url&&id)url=author.handle!=='unknown'?sourceURL(`/${author.handle}/status/${id}`):sourceURL(`/i/web/status/${id}`);
   const txt=ownNodes(el,'[data-testid="tweetText"]',quote)[0];
   const blocks:Block[]=txt?[{kind:'text',runs:inlineRuns(txt)}]:[];
+  // Text export can retain mixed photo/video DOM order without changing visual layout.
+  const mediaOrder=ownNodes(el,'[data-testid="tweetPhoto"] img, video',quote);
   const images=ownNodes(el,'[data-testid="tweetPhoto"] img',quote) as HTMLImageElement[];
   const seen=new Set<string>();
-  for(const img of images){const m=mediaFromImage(img);if(m.src&&!seen.has(m.src)){seen.add(m.src);blocks.push({kind:'media',media:m});}}
+  for(const img of images){const m=mediaFromImage(img);m.textOrder=mediaOrder.indexOf(img);if(m.src&&!seen.has(m.src)){seen.add(m.src);blocks.push({kind:'media',media:m});}}
   for(const video of ownNodes(el,'video',quote) as HTMLVideoElement[]){
     const box=video.closest('[data-testid="videoComponent"]')||video.parentElement;
     const poster=visibleVideoFrame(video)||video.poster||imageSrc(box?.querySelector('img'))||'';
-    const m:Media={src:poster,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
+    const m:Media={src:poster,textOrder:mediaOrder.indexOf(video),sourceUrl:observedVideoURL(video),posterUrl:video.poster||undefined,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
       display:displayBox(video),duration:Number.isFinite(video.duration)?`${Math.floor(video.duration/60)}:${String(Math.floor(video.duration%60)).padStart(2,'0')}`:clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent)||undefined};
     blocks.push({kind:'media',media:m});
   }

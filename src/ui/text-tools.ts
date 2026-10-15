@@ -59,7 +59,7 @@ export class TextTools {
       meta,
       el('div', {class: 'xc-button-row xc-text-actions'}, copy, download),
       ai,
-      el('p', {class: 'xc-sub'}, '「复制给 AI」使用 Markdown，并附简短范围说明。默认不包含互动数字或媒体文件地址。'),
+      el('p', {class: 'xc-sub'}, '「复制给 AI」使用 Markdown，并附简短范围说明。默认不含互动数字；图片与视频链接保留在原位置。'),
       warning, preview,
       button('全选预览文本', () => { preview.focus(); preview.select(); preview.setSelectionRange(0, preview.value.length); }, 'xc-textbtn')
     );
@@ -68,7 +68,7 @@ export class TextTools {
       ['includeAuthor', '作者昵称与账号'], ['includeTime', '发布时间与编辑状态'],
       ['includeSources', '每条帖子的来源链接'], ['includeRelations', '回复关系'],
       ['includeQuote', '引用与嵌入帖'], ['includeNotes', '社区注释 / 补充背景'],
-      ['includeMedia', '图片 / 视频占位说明'], ['includeStats', '互动数据'],
+      ['includeMedia', '图片 / 视频标注与链接'], ['includeStats', '互动数据'],
       ['includeCaptureTime', '采集时间']
     ];
     for (const [key, label] of fields) details.append(toggle(label, this.options[key], value => {
@@ -123,7 +123,7 @@ export class TextTools {
       el('p', {class: 'xc-result-meta'}, `${formatName(result.format)} · ${result.postCount} 条 · UTF-8 · ${Math.ceil(blob.size / 1024)} KB`),
       message ? el('p', {class: 'xc-warning', role: 'status'}, message) : null,
       preview, actions,
-      el('p', {class: 'xc-sub'}, result.filename + ' · 仅含本次已选内容。图片 / 视频使用原有替代文字或类型占位，不下载媒体。')
+      el('p', {class: 'xc-sub'}, result.filename + ' · 仅含本次已选内容。图片 / 视频在原位置附上标注与可获取的链接，不下载媒体。')
     );
     this.ui.show(card); return download;
   }

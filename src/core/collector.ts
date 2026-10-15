@@ -1,6 +1,7 @@
 import {Capture,Host,Post} from './model';
 import {collectDOM} from './parser';
 import {mergePosts} from './selection';
+import {enrichMediaLinks} from './media-links';
 import {postID,sourceURL,plainText} from './urls';
 /** Enrich an observed quote without overwriting translated/currently-visible text. */
 export function enrichQuote(visible:Post|undefined,raw:any,capturedAt:string,depth=0):Post|undefined {
@@ -13,6 +14,7 @@ export function enrichQuote(visible:Post|undefined,raw:any,capturedAt:string,dep
   if(!q.published&&typeof raw.published==='string')q.published=raw.published;
   if(!q.blocks.some(b=>b.kind==='text')&&typeof raw.fullText==='string')q.blocks.unshift({kind:'text',runs:[{text:raw.fullText.slice(0,400000)}]});
   if(!q.blocks.some(b=>b.kind==='media')&&Array.isArray(raw.media))for(const m of raw.media.slice(0,8))if(m&&['image','video','gif'].includes(m.kind)&&typeof m.src==='string')q.blocks.push({kind:'media',media:m});
+  enrichMediaLinks(q.blocks,raw.media);
   q.warnings=q.warnings.filter(w=>!w.includes('引用原帖链接未识别'));q.quote=enrichQuote(q.quote,raw.quote,capturedAt,depth+1);
   return q;
 }
@@ -25,6 +27,7 @@ export class Collector {
     if(this.host.probe&&fresh.length){
       try{const data=await this.host.probe(fresh.map(p=>p.id));for(const raw of data as any[]){
         const p=fresh.find(p=>p.id===raw.id);if(!p)continue;
+        enrichMediaLinks(p.blocks,raw.media);
         if(raw.parentId&&/^\d+$/.test(raw.parentId))p.parentId=raw.parentId;
         if(raw.conversationId&&/^\d+$/.test(raw.conversationId))p.conversationId=raw.conversationId;
         if(p.parentId)p.relationEvidence='data';

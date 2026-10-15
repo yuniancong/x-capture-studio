@@ -1,6 +1,7 @@
-import {Block, Capture, Post, Run} from '../core/model';
+import {Block, Capture, Media, Post, Run} from '../core/model';
 import {authorChain} from '../core/selection';
 import {safeLink, sourceURL} from '../core/urls';
+import {httpMediaURL, videoMediaURL} from '../core/media-links';
 
 export type TextFormat = 'text' | 'markdown' | 'ai';
 export interface TextOptions {
@@ -128,16 +129,30 @@ export function serializeText(
     if (o.includeTime && p.edited) out.push(txt('编辑状态：' + p.edited));
     const rel = relation(p); if (rel) out.push(txt(rel));
     if (p.title) out.push(heading(level + 1, p.title));
+    function mediaText(m: Media): string {
+      if (!o.includeMedia) return '';
+      const label = m.kind === 'image' ? '图片' : m.kind === 'gif' ? 'GIF' : '视频';
+      const alt = m.alt?.trim();
+      const marker = txt(`[${label}${m.duration ? ' · ' + m.duration : ''}${alt && !['帖子图片', '视频封面', '文章内视频', '引用帖媒体'].includes(alt) ? '：' + alt : ''}]`);
+      // Same block, same position. Links never point at an avatar, backdrop or
+      // video poster. Anonymization continues to suppress automatic backlinks.
+      if (!linkAllowed) return marker;
+      const url = m.kind === 'image' ? httpMediaURL(m.sourceUrl) || httpMediaURL(m.src) : videoMediaURL(m.sourceUrl) || videoMediaURL(m.href);
+      const address = (value: string) => md ? `<${markdownURL(value)}>` : value;
+      if (url && !sourceURL(url)) {
+        const stream = m.kind !== 'image' && /\.(?:m3u8|mpd)$/i.test(new URL(url).pathname);
+        return `${marker}${stream ? '（播放流）' : ''} ${address(url)}`;
+      }
+      if (m.kind !== 'image') {
+        const original = sourceAllowed ? sourceURL(m.href || '') || sourceURL(p.url) : undefined;
+        if (original) return `${marker} 原帖播放链接：${address(original)}`;
+      }
+      return `${marker}（${label}链接未获取）`;
+    }
     function block(b: Block): string {
       if (b.kind === 'divider') return md ? '---' : '────────';
       if (b.kind === 'embed') return o.includeQuote ? renderPost(b.post, level + 1, '嵌入帖子', seen) : '';
-      if (b.kind === 'media') {
-        if (!o.includeMedia) return '';
-        const m = b.media, label = m.kind === 'image' ? '图片' : m.kind === 'gif' ? 'GIF' : '视频';
-        // Alt text is the observed value. Do not infer image contents or append resource URLs.
-        const alt = m.alt?.trim();
-        return txt(`[${label}${m.duration ? ' · ' + m.duration : ''}${alt && !['帖子图片', '视频封面', '文章内视频', '引用帖媒体'].includes(alt) ? '：' + alt : ''}]`);
-      }
+      if (b.kind === 'media') return mediaText(b.media);
       const raw = normalize(b.runs.map(r => r.text).join(''));
       if (b.code) {
         if (!md) return raw;
@@ -154,11 +169,24 @@ export function serializeText(
       if (b.quote) value = value.split('\n').map(line => '> ' + line).join('\n');
       return value;
     }
-    for (const b of p.blocks) { const value = block(b); if (value) out.push(value); }
+    // Only sort an uninterrupted attachment group with complete, observed DOM
+    // positions. Never move a media link across a paragraph or mutate the model.
+    const textBlocks = [...p.blocks];
+    for (let i = 0; i < textBlocks.length;) {
+      if (textBlocks[i].kind !== 'media') { i++; continue; }
+      let end = i + 1; while (end < textBlocks.length && textBlocks[end].kind === 'media') end++;
+      const group = textBlocks.slice(i, end) as {kind:'media';media:Media}[];
+      const positions = group.map(b => b.media.textOrder);
+      if (group.length > 1 && positions.every(v => Number.isInteger(v) && v! >= 0) && new Set(positions).size === group.length)
+        textBlocks.splice(i, group.length, ...group.sort((a, b) => a.media.textOrder! - b.media.textOrder!));
+      i = end;
+    }
+    for (const b of textBlocks) { const value = block(b); if (value) out.push(value); }
     if (p.quote && o.includeQuote) out.push(renderPost(p.quote, level + 1, '引用帖子', seen));
     if (p.linkCard) {
       const c = p.linkCard, url = linkAllowed ? safeLink(c.url) : undefined;
-      out.push(txt('链接卡片：' + c.title) + (c.description ? '\n' + txt(c.description) : '') + (url ? '\n' + (md ? `<${markdownURL(url)}>` : url) : ''));
+      const image = c.image ? mediaText({kind:'image', src:c.image, alt:''}) : '';
+      out.push(txt('链接卡片：' + c.title) + (c.description ? '\n' + txt(c.description) : '') + (image ? '\n' + image : '') + (url ? '\n' + (md ? `<${markdownURL(url)}>` : url) : ''));
     }
     if (p.poll) out.push(heading(level + 1, '投票') + '\n\n' + p.poll.options.map(v => `${md ? '- ' : '• '}${txt(v.text)}${v.percent !== undefined ? ` ${v.percent}%` : ''}`).join('\n') + (p.poll.summary ? '\n\n' + txt(p.poll.summary) : ''));
     if (p.note && o.includeNotes) out.push(heading(level + 1, '社区注释 / 补充背景') + '\n\n' + txt(p.note));

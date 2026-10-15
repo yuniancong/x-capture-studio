@@ -3,6 +3,29 @@
  * Function is self-contained because Chromium executes it in MAIN world. */
 export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
   const win=suppliedWindow||window, wanted=new Set(ids.slice(0,250));const found=new Map<string,any>();
+  // Self-contained for MAIN-world execution. Read only variants already present
+  // in the page; do not call an X endpoint or request video bytes.
+  const publicMedia=(legacy:any,href:string)=>{
+    const valid=(s:any,video=false):string|undefined=>{
+      if(typeof s!=='string'||!/^https?:\/\//i.test(s)||/[\u0000-\u0020\u007f]/.test(s))return;
+      try{const u=new URL(s);if(u.username||u.password||!/(^|\.)twimg\.com$/i.test(u.hostname))return;
+        if(video&&!/\.(?:mp4|m4v|mov|webm|ogv|ogg|m3u8|mpd)$/i.test(u.pathname))return;
+        return u.href;
+      }catch{return;}
+    };
+    const media=legacy?.extended_entities?.media;
+    return (Array.isArray(media)?media:[]).slice(0,8).filter((m:any)=>m&&valid(m.media_url_https)).map((m:any)=>{
+      const kind=m.type==='photo'?'image':m.type==='animated_gif'?'gif':'video';
+      const variants=Array.isArray(m.video_info?.variants)?m.video_info.variants:[];
+      const choices=variants.slice(0,32).map((v:any)=>({url:valid(v?.url,true),bitrate:Number(v?.bitrate)||0}))
+        .filter((v:any)=>v.url).sort((a:any,b:any)=>{
+          const rank=(u:string)=>/\.mp4$/i.test(new URL(u).pathname)?2:/\.(?:m3u8|mpd)$/i.test(new URL(u).pathname)?0:1;
+          return rank(b.url)-rank(a.url)||b.bitrate-a.bitrate;
+        });
+      return {src:m.media_url_https,kind,alt:m.ext_alt_text||'引用帖媒体',href,
+        ...(kind!=='image'?{posterUrl:m.media_url_https,sourceUrl:choices[0]?.url}: {})};
+    });
+  };
   const publicQuote=(item:any,depth=0):any=>{
     if(depth>3||!item||typeof item!=='object')return;
     const q=item.tweet||item,legacy=q.legacy||{},id=String(q.rest_id||legacy.id_str||'');
@@ -13,7 +36,7 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
     if(typeof name==='string'&&typeof handle==='string')result.author={name:name.slice(0,200),handle:handle.slice(0,40),avatar:user?.avatar?.image_url||userLegacy.profile_image_url_https,verified:!!(user?.is_blue_verified||userLegacy.verified)};
     if(typeof fullText==='string')result.fullText=fullText.slice(0,400000);
     const date=new Date(legacy.created_at);if(!isNaN(+date))result.published=date.toISOString();
-    result.media=(legacy.extended_entities?.media||[]).slice(0,8).filter((m:any)=>typeof m.media_url_https==='string'&&/^https:\/\/[^/]*twimg\.com\//.test(m.media_url_https)).map((m:any)=>({src:m.media_url_https,kind:m.type==='photo'?'image':m.type==='animated_gif'?'gif':'video',alt:m.ext_alt_text||'引用帖媒体',href:result.url}));
+    result.media=publicMedia(legacy,result.url);
     const nested=publicQuote(q.quoted_status_result?.result,depth+1);if(nested)result.quote=nested;
     return result;
   };
@@ -28,7 +51,7 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
       if(id&&wanted.has(id)&&obj.legacy&&(obj.legacy.full_text!==undefined||obj.note_tweet)){
         const l=obj.legacy,n=obj.note_tweet?.note_tweet_results?.result;
         const text=typeof n?.text==='string'?n.text:typeof l.full_text==='string'?l.full_text:undefined;
-        const data:any={id,relationEvidence:'data'};
+        const data:any={id,relationEvidence:'data',media:publicMedia(l,`https://x.com/i/web/status/${id}`)};
         if(/^\d+$/.test(l.in_reply_to_status_id_str||''))data.parentId=l.in_reply_to_status_id_str;
         if(/^\d+$/.test(l.conversation_id_str||''))data.conversationId=l.conversation_id_str;
         if(text&&text.length<400000){

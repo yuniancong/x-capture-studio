@@ -1,6 +1,6 @@
 {
   "name": "x-capture-studio",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "private": true,
   "description": "Local-first X capture: Chromium extension and Stay userscript",
   "scripts": {

@@ -15,3 +15,5 @@ export * from '../src/export/pdf';
 export * from '../src/core/svg';
 export * from '../src/core/image';
 export * from '../src/export/text';
+
+export * from '../src/core/media-links';
