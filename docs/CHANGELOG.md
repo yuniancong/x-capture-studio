@@ -4,7 +4,7 @@
 
 文本媒体标注后附可复用链接，图片、视频、引用与 Article 沿用原文位置。图文混排仅在文本投影中使用观察到的 DOM 顺序，不更改 PNG/PDF 视觉排列。图片保留实际地址与查询参数；视频优先使用观察到的媒体文件地址，播放流与原帖播放回退均明确标注，不将封面或临时 Blob 地址冒充媒体链接。
 
-所有复制 / TXT / Markdown / Copy for AI 共用序列化结果。保留原有匿名和字段开关。只同步调整三处媒体说明文案；不改界面布局、样式、选帖、PNG/PDF 或 Stay 注入方式。110 项单元/契约、24 项媒体专项及既有分组回归通过，详见 VERIFY_MEDIA_RC5.md。rc.5 尚未真机复测；源码及安装文件随本次 GitHub 更新提交。
+所有复制 / TXT / Markdown / Copy for AI 共用序列化结果。保留原有匿名和字段开关。只同步调整三处媒体说明文案；不改界面布局、样式、选帖、PNG/PDF 或 Stay 注入方式。110 项单元/契约、24 项媒体专项及既有分组回归通过，详见 VERIFY_MEDIA_RC5.md。rc.5 尚未真机复测或写入 GitHub。
 
 ## 1.0.0-rc.4 · 2026-09-26
 
@@ -41,3 +41,12 @@ Finder 的来源属性由下载浏览器 / macOS 管理，不在网页脚本权�
 ### 验证与剩余限制
 
 59 项单元 / 契约、50 项既有浏览器 / 文件回读、54 项本轮专项检查通过。合成页面的生产 userscript 已实际执行；不代表真实 X 各布局、已安装 Chrome 扩展或 iOS Stay 真机验收。完整逐项结果见 QA。
+
+## 2026-10-15 · Open-source / onboarding docs (runtime remains rc.5)
+
+- Add project MIT License and preserve third-party notices.
+- Add verified and bounded Python 3 Chromium extension preparation helper; pinned rc.5 archive and SHA-256.
+- Add copyable Codex / Claude Code installation prompt and a manual installation guide.
+- Add screenshot-assisted Safari + Stay user guide using developer-published App Store **historical** image links (not re-licensed).
+- Add responsive standalone installation center `docs/install.html`, with copy-prompt and guided steps.
+- No browser extension runtime, Stay userscript runtime, or rc.5 release-archive changes in this documentation update.
