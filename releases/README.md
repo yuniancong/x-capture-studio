@@ -1,6 +1,6 @@
 # 安装包与回退版本
 
-当前候选：**v1.0.0-rc.8**（分支 `feat/rc8-video-discovery`，iPhone/Stay 真机尚待验收）。
+当前版本：**v1.0.0-rc.8**（已并入 `main`；桌面已实测，iPhone/Stay 由用户真机验收）。
 
 - Chromium: [`X-Capture-Studio-Chrome-v1.0.0-rc.8.zip`](X-Capture-Studio-Chrome-v1.0.0-rc.8.zip)
 - Safari + Stay: [`X-Capture-Studio-Stay-v1.0.0-rc.8.user.js`](X-Capture-Studio-Stay-v1.0.0-rc.8.user.js)

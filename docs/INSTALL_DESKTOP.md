@@ -15,7 +15,7 @@
 
 官方仓库：https://github.com/yuniancong/x-capture-studio
 目标：Chrome 或 Microsoft Edge，版本 v1.0.0-rc.8。
-安装包必须来自已提交的 GitHub 分支：feat/rc8-video-discovery（候选版，下载后必须按下方 SHA-256 严格核对）
+安装包必须来自 GitHub main 分支（下载后必须按下方 SHA-256 严格核对）
 文件路径：releases/X-Capture-Studio-Chrome-v1.0.0-rc.8.zip
 预期 SHA-256：47715b0ff6e24f5d88c26ad355817817893672fee6398518af5bae1eaa4f5824
 

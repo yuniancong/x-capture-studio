@@ -1,6 +1,6 @@
 # X Capture Studio
 
-> **v1.0.0-rc.8 候选（分支 `feat/rc8-video-discovery`）**：修复已登录桌面 X 只得到 `/video/1` 的问题——直接读取页面已有的 M3U8/MP4 变体，无需额外授权；另含可选短时桌面媒体观察、字幕证据、HLS 画质与折叠长文修正。安装与权限见 [INSTALL_RC8.md](INSTALL_RC8.md)，真实环境验证见 [VERIFY_VIDEO_RC8.md](docs/VERIFY_VIDEO_RC8.md)。iPhone/Stay 真机尚待验收；rc.7 / rc.5 安装包保留用于回退。
+> **v1.0.0-rc.8（main）**：修复已登录桌面 X 只得到 `/video/1` 的问题——直接读取页面已有的 M3U8/MP4 变体，无需额外授权；新增图片 / 视频素质选择、未登录 X 页面支持；另含可选短时桌面媒体观察、字幕证据、HLS 画质与折叠长文修正。安装与权限见 [INSTALL_RC8.md](INSTALL_RC8.md)，验证记录见 [VERIFY_VIDEO_RC8.md](docs/VERIFY_VIDEO_RC8.md)。rc.7 / rc.5 安装包保留用于回退。
 
 > rc.7 多媒体候选的说明保留在 [INSTALL_RC7.md](INSTALL_RC7.md)。
 
