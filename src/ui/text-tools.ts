@@ -1,3 +1,5 @@
+import {MediaResolver} from '../media/resolver';
+import {visitMedia} from '../media/resources';
 import {Capture, Host} from '../core/model';
 import {TextFormat, TextOptions, TextPrivacy, TextResult, TEXT_DEFAULTS, normalizeTextOptions, serializeText} from '../export/text';
 import {mobileDevice} from '../export/png';
@@ -14,13 +16,20 @@ export class TextTools {
   private format: 'text' | 'markdown' = 'markdown';
   private urls = new Set<string>();
   private disposed = false;
-  constructor(private snapshot: () => Snapshot, private host: Host, private ui: UI) {}
+  private resolver?:MediaResolver;private inspection?:Promise<void>;private inspectionAbort?:AbortController;
+  private inspectionKey='';private inspectionLabel='未检查高清/播放清单';private updatePreview?:()=>void;
+  private resourceStatus?:HTMLElement;
+
+  constructor(private snapshot: () => Snapshot, private host: Host, private ui: UI) {
+    if(host.readResource)this.resolver=new MediaResolver((request,signal)=>host.readResource!(request,signal));
+  }
   async load() {
     const value = await this.host.getValue('text-export-options', TEXT_DEFAULTS).catch(() => TEXT_DEFAULTS);
     this.options = normalizeTextOptions(value);
+    this.options.includeSensitiveMedia=false; // Per-session, explicit consent only.
   }
   dispose() {
-    this.disposed = true;
+    this.disposed = true;this.inspectionAbort?.abort();this.resolver?.clear();this.updatePreview=undefined;
     // Allow in-progress native downloads to retain their Blob URLs briefly.
     const urls = [...this.urls]; this.urls.clear();
     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
@@ -73,30 +82,66 @@ export class TextTools {
     ];
     for (const [key, label] of fields) details.append(toggle(label, this.options[key], value => {
       this.options = {...this.options, [key]: value}; update();
-      void this.host.setValue('text-export-options', this.options).catch(() => this.ui.notify('文本设置暂未持久保存；本次设置仍然有效。'));
+      void this.host.setValue('text-export-options', {...this.options,includeSensitiveMedia:false}).catch(() => this.ui.notify('文本设置暂未持久保存；本次设置仍然有效。'));
     }));
     details.append(el('p', {class: 'xc-sub'}, '这些是文本专用开关，不改变图片 / PDF 外观。匿名设置仍与工作台共享；正文和替代文字中的身份不会自动打码。'));
-    root.append(details); update(); return root;
-  }
-  async copy(format: TextFormat = 'text') {
-    if (this.disposed) return;
-    const result = this.result(format);
-    if (!result.postCount) { this.ui.notify('尚未选择帖子，剪贴板未更改。'); return; }
-    try {
-      if (typeof navigator.clipboard?.writeText !== 'function') throw new Error('clipboard unavailable');
-      // This call happens directly inside the click handler, before any await/storage/network operation.
-      await navigator.clipboard.writeText(result.text);
-      if (!this.disposed) this.ui.notify(`已复制${formatName(format)} · ${result.postCount} 条。`);
-    } catch {
-      if (!this.disposed) this.openResult(result, '浏览器未允许写入剪贴板。正文已保留在下方，可全选后手动复制，或保存为文件。');
+    const more=el('details',{class:'xc-details xc-media-options'},el('summary',{},'媒体资源与高清检查'));
+    const inspect=button('检查高清 / 视频 / 字幕',()=>void this.prepareResources(true),'xc-button');
+    inspect.dataset.action='inspect-media';
+    this.resourceStatus=el('p',{class:'xc-sub',role:'status'},this.inspectionLabel);
+    more.append(inspect,button('停止检查',()=>this.inspectionAbort?.abort(),'xc-textbtn'),this.resourceStatus,
+      el('p',{class:'xc-sub'},'仅检查已选内容。原图不可用时自动降级；保留 MP4 / HLS / DASH 和字幕。流的可用性、清晰度与文件直链分别标注。不下载视频分片。'));
+    for(const [key,label] of [['includeAllResources','完整资源：全部质量、音轨和验证状态'],['markdownImages','Markdown 使用可嵌入图片语法'],['includeSubtitles','附带已有字幕轨道与链接'],['includeSensitiveMedia','允许完整受限/签名链接（仅本人使用）']] as const){
+      const control=toggle(label,this.options[key],value=>{
+        if(key==='includeSensitiveMedia'&&value&&!confirm('签名/令牌链接可能授予临时访问权。仅在自己使用、不会公开分享时允许；不会移除或改写签名。是否继续？')){this.options[key]=false;const input=control.querySelector('input');if(input)input.checked=false;update();return;}
+        this.options={...this.options,[key]:value};update();
+        void this.host.setValue('text-export-options',{...this.options,includeSensitiveMedia:false}).catch(()=>{});
+      });more.append(control);
     }
+    root.append(details,more);this.updatePreview=update;update();void this.prepareResources();return root;
   }
-  exportFile(format: TextFormat = 'markdown') {
-    if (this.disposed) return;
-    const result = this.result(format);
-    if (!result.postCount) { this.ui.notify('尚未选择帖子，请先在「内容」中勾选。'); return; }
-    const download = this.openResult(result);
-    if (!mobileDevice()) download.click();
+  prepareResources(force=false):Promise<void> {
+    if(this.disposed||!this.resolver||!this.options.includeMedia)return Promise.resolve();
+    const s=this.snapshot();
+    // No verification network traffic for anonymized media unless explicitly allowed.
+    if(s.privacy.anonymize&&!s.privacy.anonymousSources)return Promise.resolve();
+    const keys:string[]=[];visitMedia(s.capture,s.selected,m=>keys.push([m.scopeId,m.src,m.sourceUrl].join('|')),this.options.includeQuote);
+    const key=keys.join('\n')+'|'+this.options.includeSensitiveMedia;
+    if(this.inspection)return this.inspection;if(!force&&this.inspectionKey===key)return Promise.resolve();
+    if(!keys.length)return Promise.resolve();if(force)this.resolver.clear();this.inspectionKey=key;this.inspectionAbort=new AbortController();
+    this.inspectionLabel='正在检查媒体；可以停止，失败将保留页面已提供的地址。';if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;
+    this.inspection=this.resolver.resolveCapture(s.capture,new Set(s.selected),this.inspectionAbort.signal,this.options.includeSensitiveMedia,this.options.includeQuote,(done,total)=>{
+      this.inspectionLabel=`已检查 ${done}/${total} 项媒体`;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;
+    }).then(r=>{this.inspectionLabel=`媒体检查${r.partial?'部分完成':'完成'} · ${r.requests} 次有界请求 · 未验证项保留原链接`;
+    }).catch(()=>{this.inspectionLabel='检查未完成，保留已发现的资源。';}).finally(()=>{
+      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed)this.updatePreview?.();
+    });return this.inspection;
+  }
+  async copy(format:TextFormat='text') {
+    if(this.disposed)return;
+    const current=this.result(format);if(!current.postCount){this.ui.notify('尚未选择帖子，剪贴板未更改。');return;}
+    const ready=this.prepareResources();
+    // Capture the requested selection now. A later selection change cannot change an in-flight copy.
+    const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy};
+    const result=()=>serializeText(snapshot.capture,selected,order,options,format,privacy);
+    try{
+      if(this.inspection&&typeof navigator.clipboard?.write==='function'&&typeof ClipboardItem!=='undefined'){
+        // Promise-valued ClipboardItem keeps iOS's trusted user-gesture boundary.
+        const data=ready.then(()=>new Blob([result().text],{type:'text/plain'}));
+        await navigator.clipboard.write([new ClipboardItem({'text/plain':data})]);
+      }else{
+        if(this.inspection)await ready;
+        if(typeof navigator.clipboard?.writeText!=='function')throw new Error('clipboard unavailable');
+        await navigator.clipboard.writeText(result().text);
+      }
+      if(!this.disposed)this.ui.notify(`已复制${formatName(format)} · ${current.postCount} 条。`);
+    }catch{await ready;if(!this.disposed)this.openResult(result(),'浏览器未允许写入剪贴板。完整正文在下方，可全选复制或保存文件。');}
+  }
+  async exportFile(format:TextFormat='markdown') {
+    if(this.disposed)return;const snapshot=this.snapshot(),selected=new Set(snapshot.selected),order=[...snapshot.order],options={...this.options},privacy={...snapshot.privacy};
+    if(!selected.size){this.ui.notify('尚未选择帖子，请先在「内容」中勾选。');return;}
+    await this.prepareResources();if(this.disposed)return;
+    const result=serializeText(snapshot.capture,selected,order,options,format,privacy);const download=this.openResult(result);if(!mobileDevice())download.click();
   }
   private openResult(result: TextResult, message?: string): HTMLAnchorElement {
     const blob = new Blob([result.text], {type: result.mimeType}), url = URL.createObjectURL(blob);

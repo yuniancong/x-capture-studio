@@ -1,0 +1,274 @@
+{
+  "version": "1.0.0-rc.7",
+  "checks": [
+    {
+      "name": "DOM: actual inline text/image/text/video/text block order",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: all source elements retained without choosing just MP4",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: track language, resource and own video association",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: display-sized HTML attributes not used as proven original pixels",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: no generated orig address is claimed before validation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Probe: standalone MAIN-world function recognizes v2 id and explicit media keys",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Probe: all video formats and bit_rate retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Probe: unattached other media cannot contaminate post",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: repeated resource observations merge rather than replace HLS",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: cover role distinct from body image",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: multiple videos stay between correct surrounding paragraphs",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: no invented /article/id/video/1",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Card: visible poster associates VMAP resources without loading ads",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Card: text presents VMAP as media description, not a complete video",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: real production editor finishes validated image fallback",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: MP4 and HLS and DASH coexist in default copy",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: HTML, HLS and DASH subtitles all belong to inline video",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: inline positions preserved after asynchronous media verification",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: actual request history confirms orig then 4096 then large",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: no segment, initialization or encryption-key request",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: resource fetch omits credentials and blocks redirects",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: direct video headers HEAD fallback GET implemented",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: Markdown clipboard receives exact resolved preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: AI copy retains all formats and data-only safety note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: TXT copy exact with no Markdown substitution",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: actual txt file roundtrip matches preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: actual md file roundtrip matches preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: full resources exposes resolutions, audio groups, verification status",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: optional Markdown embedding uses actual selected large image",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: cancelling sensitive link consent resets control",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: no page horizontal overflow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: anonymity removes every media/player/subtitle URL",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chromium: no uncaught production errors in tested interactions",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay: production artifact remains isolated with no unsafeWindow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: real production editor finishes validated image fallback",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: MP4 and HLS and DASH coexist in default copy",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: HTML, HLS and DASH subtitles all belong to inline video",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: inline positions preserved after asynchronous media verification",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: actual request history confirms orig then 4096 then large",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: no segment, initialization or encryption-key request",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: resource fetch omits credentials and blocks redirects",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: direct video headers HEAD fallback GET implemented",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: Markdown clipboard receives exact resolved preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: AI copy retains all formats and data-only safety note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: TXT copy exact with no Markdown substitution",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: actual txt file roundtrip matches preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: actual md file roundtrip matches preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: full resources exposes resolutions, audio groups, verification status",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: optional Markdown embedding uses actual selected large image",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: cancelling sensitive link consent resets control",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: no page horizontal overflow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: anonymity removes every media/player/subtitle URL",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: no uncaught production errors in tested interactions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "environment": "Playwright Chromium; production bundles, recording native/resource runtime and clipboard boundary adapters; no Safari/Stay native or live X claims",
+  "complete": true,
+  "passed": 53,
+  "failed": 0
+}

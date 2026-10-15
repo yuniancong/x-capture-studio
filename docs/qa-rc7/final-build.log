@@ -1,0 +1,5 @@
+
+> x-capture-studio@1.0.0-rc.7 build
+> node scripts/build.cjs
+
+Built extension, standalone userscript and offline demo in dist/

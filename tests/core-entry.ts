@@ -17,3 +17,14 @@ export * from '../src/core/image';
 export * from '../src/export/text';
 
 export * from '../src/core/media-links';
+
+export * from '../src/media/resources';
+export * from '../src/media/types';
+export * from '../src/media/hls';
+export * from '../src/media/dash';
+export * from '../src/media/xml';
+export * from '../src/media/vmap';
+export * from '../src/media/resolver';
+export * from '../src/platform/resource-network';
+export * from '../src/media/text';
+export * from '../src/media/dom';

@@ -18,11 +18,11 @@ import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
 
-VERSION = '1.0.0-rc.5'
-SOURCE_REF = '7c119e79f764d27cc98aeeb81595cf1dfffc9f98'
+VERSION = '1.0.0-rc.7'
+SOURCE_REF = 'feature/multimedia-rc7'  # Candidate branch, SHA-256 pinned below; switch to main after merge
 ARCHIVE = f'X-Capture-Studio-Chrome-v{VERSION}.zip'
 URL = f'https://raw.githubusercontent.com/yuniancong/x-capture-studio/{SOURCE_REF}/releases/{ARCHIVE}'
-SHA256 = 'da3a2db2d0c4902bc5033c08e04bc9977edd0e7437a3539bd37ea356451dcc20'
+SHA256 = 'bdad62a983b5072f69e0640a9195f27b9dcd13c5ac85956c1eceaa2fc473a65b'
 LIMIT_BYTES = 25 * 1024 * 1024
 
 

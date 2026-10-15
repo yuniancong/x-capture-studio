@@ -1,0 +1,129 @@
+{
+  "version": "1.0.0-rc.7",
+  "browser": "Playwright Chromium desktop / mobile touch viewport, synthetic DOM + Stay lexical GM adapter; Browser plugin absent",
+  "complete": true,
+  "checks": [
+    {
+      "name": "DOM: video-before-image order retained in text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: render block order not changed by text-only source order metadata",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: media and quote links are not replaced by a screenshot/poster address",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: actual source element is used when currentSrc is a local blob",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Page data: MP4 variant selected over HLS without a network/API call",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: observed poster association enriches only its own video URL",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: visible original text and quote remain unchanged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Chrome MAIN-world probe remains self-contained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: paragraph/image/paragraph/video/paragraph position is exact",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop copy: all original media URLs retained in position",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop Markdown copy: exact preview bytes",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop AI copy: same media links and scope note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop Markdown file: exact preview, UTF-8 with media URLs",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop TXT file: exact copied text with media URLs",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Desktop: no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay: existing launcher still opens editor/text tab",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: same image/video/quote order without unsafeWindow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: copy uses reusable direct URLs rather than image pixels",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: Markdown copied bytes equal its preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: AI copy includes links at the same positions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: 390 CSS-pixel responsive layout and touch controls",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: generated Markdown Blob preserves actual URLs/UTF-8",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: generated TXT Blob equals copied plain text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: no uncaught runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "passed": 24,
+  "failed": 0
+}

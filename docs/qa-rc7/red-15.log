@@ -1,0 +1,458 @@
+TAP version 13
+# Subtest: image candidates exist without pretending name=orig was verified
+ok 1 - image candidates exist without pretending name=orig was verified
+  ---
+  duration_ms: 4.589646
+  type: 'test'
+  ...
+# Subtest: same video retains MP4 and HLS rather than overwrite
+ok 2 - same video retains MP4 and HLS rather than overwrite
+  ---
+  duration_ms: 0.581106
+  type: 'test'
+  ...
+# Subtest: HLS multivariant keeps quality groups, subtitle and captions
+ok 3 - HLS multivariant keeps quality groups, subtitle and captions
+  ---
+  duration_ms: 1.544407
+  type: 'test'
+  ...
+# Subtest: DASH segmented representations never become standalone MP4 files
+ok 4 - DASH segmented representations never become standalone MP4 files
+  ---
+  duration_ms: 1.636436
+  type: 'test'
+  ...
+# Subtest: orig 404 falls back to next real image and does not change display src
+ok 5 - orig 404 falls back to next real image and does not change display src
+  ---
+  duration_ms: 3.235175
+  type: 'test'
+  ...
+# Subtest: verification failure retains observed HLS URL
+ok 6 - verification failure retains observed HLS URL
+  ---
+  duration_ms: 1.032306
+  type: 'test'
+  ...
+# Subtest: HLS dimensions, bitrate, average bitrate, codec commas and fps
+ok 7 - HLS dimensions, bitrate, average bitrate, codec commas and fps
+  ---
+  duration_ms: 0.840397
+  type: 'test'
+  ...
+# Subtest: HLS in-band CEA-708 is a track without downloadable URL
+ok 8 - HLS in-band CEA-708 is a track without downloadable URL
+  ---
+  duration_ms: 0.74301
+  type: 'test'
+  ...
+# Subtest: HLS relative audio/subtitle paths and default/forced metadata
+ok 9 - HLS relative audio/subtitle paths and default/forced metadata
+  ---
+  duration_ms: 0.600455
+  type: 'test'
+  ...
+# Subtest: HLS iframe playlists are not recommended full-video streams
+ok 10 - HLS iframe playlists are not recommended full-video streams
+  ---
+  duration_ms: 0.788918
+  type: 'test'
+  ...
+# Subtest: HLS media MP4 init and segments are never file resources
+ok 11 - HLS media MP4 init and segments are never file resources
+  ---
+  duration_ms: 0.332982
+  type: 'test'
+  ...
+# Subtest: HLS live EVENT differs from ended EVENT and static VOD
+ok 12 - HLS live EVENT differs from ended EVENT and static VOD
+  ---
+  duration_ms: 1.129452
+  type: 'test'
+  ...
+# Subtest: HLS low latency parts counted, preload/steering not fetched
+ok 13 - HLS low latency parts counted, preload/steering not fetched
+  ---
+  duration_ms: 0.21842
+  type: 'test'
+  ...
+# Subtest: HLS variables resolve named VALUE and imported parent values
+ok 14 - HLS variables resolve named VALUE and imported parent values
+  ---
+  duration_ms: 0.410609
+  type: 'test'
+  ...
+# Subtest: HLS missing variable is recorded, not turned into a fabricated URL
+ok 15 - HLS missing variable is recorded, not turned into a fabricated URL
+  ---
+  duration_ms: 0.1531
+  type: 'test'
+  ...
+# Subtest: HLS encryption excludes key URI from exported model
+ok 16 - HLS encryption excludes key URI from exported model
+  ---
+  duration_ms: 0.193171
+  type: 'test'
+  ...
+# Subtest: HLS AES-128 encryption is not necessarily DRM
+ok 17 - HLS AES-128 encryption is not necessarily DRM
+  ---
+  duration_ms: 0.164368
+  type: 'test'
+  ...
+# Subtest: HLS malformed lists, duplicate attrs, too much input fail closed
+ok 18 - HLS malformed lists, duplicate attrs, too much input fail closed
+  ---
+  duration_ms: 0.398601
+  type: 'test'
+  ...
+# Subtest: HLS signed master propagates privacy to relative child URLs
+ok 19 - HLS signed master propagates privacy to relative child URLs
+  ---
+  duration_ms: 0.519102
+  type: 'test'
+  ...
+# Subtest: DASH periods, dimensions, codecs, frame rate, dynamic state
+ok 20 - DASH periods, dimensions, codecs, frame rate, dynamic state
+  ---
+  duration_ms: 1.392038
+  type: 'test'
+  ...
+# Subtest: DASH subtitle and audio are not selectable as complete video
+ok 21 - DASH subtitle and audio are not selectable as complete video
+  ---
+  duration_ms: 0.735689
+  type: 'test'
+  ...
+# Subtest: DASH TTML vs IMSC1 segmentation and forced subtitles
+ok 22 - DASH TTML vs IMSC1 segmentation and forced subtitles
+  ---
+  duration_ms: 0.532212
+  type: 'test'
+  ...
+# Subtest: DASH BaseURL inheritance and alternatives preserve actual resources
+ok 23 - DASH BaseURL inheritance and alternatives preserve actual resources
+  ---
+  duration_ms: 0.349026
+  type: 'test'
+  ...
+# Subtest: DASH inherited templates survive representation overrides
+ok 24 - DASH inherited templates survive representation overrides
+  ---
+  duration_ms: 0.203096
+  type: 'test'
+  ...
+# Subtest: DASH ContentProtection marked, no KID/pssh/key data exported
+ok 25 - DASH ContentProtection marked, no KID/pssh/key data exported
+  ---
+  duration_ms: 0.247123
+  type: 'test'
+  ...
+# Subtest: DASH embedded CEA-608 tracks have no standalone URL
+ok 26 - DASH embedded CEA-608 tracks have no standalone URL
+  ---
+  duration_ms: 0.459353
+  type: 'test'
+  ...
+# Subtest: DASH identical representation IDs in different periods never merge
+ok 27 - DASH identical representation IDs in different periods never merge
+  ---
+  duration_ms: 0.370298
+  type: 'test'
+  ...
+# Subtest: XML DTD, external entities, malformed nesting and attributes are rejected
+ok 28 - XML DTD, external entities, malformed nesting and attributes are rejected
+  ---
+  duration_ms: 0.268364
+  type: 'test'
+  ...
+# Subtest: XML namespace, CDATA and built-in/numeric entities safely decode
+ok 29 - XML namespace, CDATA and built-in/numeric entities safely decode
+  ---
+  duration_ms: 0.151639
+  type: 'test'
+  ...
+# Subtest: VMAP preserves MP4/HLS variants and ignores tracker URLs
+ok 30 - VMAP preserves MP4/HLS variants and ignores tracker URLs
+  ---
+  duration_ms: 0.553895
+  type: 'test'
+  ...
+# Subtest: format classification recognizes MIME-only extensionless media
+ok 31 - format classification recognizes MIME-only extensionless media
+  ---
+  duration_ms: 0.096896
+  type: 'test'
+  ...
+# Subtest: video partitions and init.mp4 do not become whole files
+ok 32 - video partitions and init.mp4 do not become whole files
+  ---
+  duration_ms: 0.103636
+  type: 'test'
+  ...
+# Subtest: unsupported but observed video formats classified without claiming X universally emits them
+ok 33 - unsupported but observed video formats classified without claiming X universally emits them
+  ---
+  duration_ms: 0.096555
+  type: 'test'
+  ...
+# Subtest: subtitle formats mapped separately from video
+ok 34 - subtitle formats mapped separately from video
+  ---
+  duration_ms: 0.090046
+  type: 'test'
+  ...
+# Subtest: poster/image/page cannot be mistaken for MP4
+ok 35 - poster/image/page cannot be mistaken for MP4
+  ---
+  duration_ms: 0.080932
+  type: 'test'
+  ...
+# Subtest: network policy rejects localhost, IP literals, user-info, redirects target domains
+ok 36 - network policy rejects localhost, IP literals, user-info, redirects target domains
+  ---
+  duration_ms: 0.641036
+  type: 'test'
+  ...
+# Subtest: network policy allows only three current resource hosts
+ok 37 - network policy allows only three current resource hosts
+  ---
+  duration_ms: 0.140602
+  type: 'test'
+  ...
+# Subtest: signature detection preserves signed URL, benign tag remains public
+ok 38 - signature detection preserves signed URL, benign tag remains public
+  ---
+  duration_ms: 0.171548
+  type: 'test'
+  ...
+# Subtest: image rules do not invent jpg from WebP and do not rewrite foreign CDN
+ok 39 - image rules do not invent jpg from WebP and do not rewrite foreign CDN
+  ---
+  duration_ms: 0.914288
+  type: 'test'
+  ...
+# Subtest: signed images have only the original unchanged URL
+ok 40 - signed images have only the original unchanged URL
+  ---
+  duration_ms: 0.702328
+  type: 'test'
+  ...
+# Subtest: candidate is not a verified original in text without a request
+ok 41 - candidate is not a verified original in text without a request
+  ---
+  duration_ms: 2.5017
+  type: 'test'
+  ...
+# Subtest: no mutation by pure text serializer
+ok 42 - no mutation by pure text serializer
+  ---
+  duration_ms: 0.370418
+  type: 'test'
+  ...
+# Subtest: three video formats retained in default copy, all quality variants available on request
+ok 43 - three video formats retained in default copy, all quality variants available on request
+  ---
+  duration_ms: 1.176243
+  type: 'test'
+  ...
+# Subtest: Animated GIF retains semantic marker and MP4 container
+ok 44 - Animated GIF retains semantic marker and MP4 container
+  ---
+  duration_ms: 0.474355
+  type: 'test'
+  ...
+# Subtest: media paragraph positions preserved across txt markdown and AI
+ok 45 - media paragraph positions preserved across txt markdown and AI
+  ---
+  duration_ms: 1.222873
+  type: 'test'
+  ...
+# Subtest: Markdown image embedding remains opt-in with escaped alt text
+ok 46 - Markdown image embedding remains opt-in with escaped alt text
+  ---
+  duration_ms: 0.287423
+  type: 'test'
+  ...
+# Subtest: all media, tracks, signed URL suppression obey anonymous mode
+ok 47 - all media, tracks, signed URL suppression obey anonymous mode
+  ---
+  duration_ms: 0.17897
+  type: 'test'
+  ...
+# Subtest: signed resources hidden by default, explicit opt-in preserves exact query
+ok 48 - signed resources hidden by default, explicit opt-in preserves exact query
+  ---
+  duration_ms: 0.394214
+  type: 'test'
+  ...
+# Subtest: subtitle language, default, in-band, formats are exported at same media position
+ok 49 - subtitle language, default, in-band, formats are exported at same media position
+  ---
+  duration_ms: 0.282896
+  type: 'test'
+  ...
+# Subtest: caption absence is not fabricated
+ok 50 - caption absence is not fabricated
+  ---
+  duration_ms: 0.138759
+  type: 'test'
+  ...
+# Subtest: all resources output still excludes segment and key links
+ok 51 - all resources output still excludes segment and key links
+  ---
+  duration_ms: 0.27163
+  type: 'test'
+  ...
+# Subtest: incremental merges keep resources without duplicates
+ok 52 - incremental merges keep resources without duplicates
+  ---
+  duration_ms: 0.288985
+  type: 'test'
+  ...
+# Subtest: merge rejects known different owner and media ID
+ok 53 - merge rejects known different owner and media ID
+  ---
+  duration_ms: 0.076375
+  type: 'test'
+  ...
+# Subtest: scan updates never erase prior verification or dimensions
+ok 54 - scan updates never erase prior verification or dimensions
+  ---
+  duration_ms: 0.187532
+  type: 'test'
+  ...
+# Subtest: image orig permission failure falls back without blocking entire export
+ok 55 - image orig permission failure falls back without blocking entire export
+  ---
+  duration_ms: 1.411427
+  type: 'test'
+  ...
+# Subtest: all HD requests fail; observed image survives and is not called verified
+ok 56 - all HD requests fail; observed image survives and is not called verified
+  ---
+  duration_ms: 3.561276
+  type: 'test'
+  ...
+# Subtest: HTML returned for image never counts as a valid bitmap
+ok 57 - HTML returned for image never counts as a valid bitmap
+  ---
+  duration_ms: 2.064891
+  type: 'test'
+  ...
+# Subtest: same image uses successful small cache across repeated inspections
+ok 58 - same image uses successful small cache across repeated inspections
+  ---
+  duration_ms: 3.400545
+  type: 'test'
+  ...
+# Subtest: playlist recursion and request budgets are bounded; segments never fetched
+ok 59 - playlist recursion and request budgets are bounded; segments never fetched
+  ---
+  duration_ms: 2.343512
+  type: 'test'
+  ...
+# Subtest: circular master playlists terminate without rerequesting root
+ok 60 - circular master playlists terminate without rerequesting root
+  ---
+  duration_ms: 0.54396
+  type: 'test'
+  ...
+# Subtest: encrypted root records tracks without fetching children or keys
+ok 61 - encrypted root records tracks without fetching children or keys
+  ---
+  duration_ms: 0.5773
+  type: 'test'
+  ...
+# Subtest: foreign and signed links are retained but no network request by default
+ok 62 - foreign and signed links are retained but no network request by default
+  ---
+  duration_ms: 0.281985
+  type: 'test'
+  ...
+# Subtest: cancel before request leaves observed resources intact
+ok 63 - cancel before request leaves observed resources intact
+  ---
+  duration_ms: 0.279061
+  type: 'test'
+  ...
+# Subtest: host rejects HEAD support failures only after bounded GET fallback
+ok 64 - host rejects HEAD support failures only after bounded GET fallback
+  ---
+  duration_ms: 16.720346
+  type: 'test'
+  ...
+# Subtest: host forbids redirects and omits credentials and referrer
+ok 65 - host forbids redirects and omits credentials and referrer
+  ---
+  duration_ms: 0.478822
+  type: 'test'
+  ...
+# Subtest: host cancels oversized stream rather than accept truncated manifest
+ok 66 - host cancels oversized stream rather than accept truncated manifest
+  ---
+  duration_ms: 0.893497
+  type: 'test'
+  ...
+# Subtest: unrelated posts never get their media inspected by selected capture
+ok 67 - unrelated posts never get their media inspected by selected capture
+  ---
+  duration_ms: 0.367554
+  type: 'test'
+  ...
+# Subtest: resolver deadline also terminates an unresponsive host bridge
+ok 68 - resolver deadline also terminates an unresponsive host bridge
+  ---
+  duration_ms: 40.467442
+  type: 'test'
+  ...
+# Subtest: JPEG dimensions are guarded before bitmap decoding allocation
+ok 69 - JPEG dimensions are guarded before bitmap decoding allocation
+  ---
+  duration_ms: 0.827907
+  type: 'test'
+  ...
+# Subtest: an orig response smaller than an observed srcset rendition is not chosen blindly
+ok 70 - an orig response smaller than an observed srcset rendition is not chosen blindly
+  ---
+  duration_ms: 2.240286
+  type: 'test'
+  ...
+# Subtest: failed generated candidates never become observed fallback URLs
+not ok 71 - failed generated candidates never become observed fallback URLs
+  ---
+  duration_ms: 1.915657
+  type: 'test'
+  location: '/mnt/data/xc-recovery/project/scripts/test-multimedia.cjs:114:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'https://pbs.twimg.com/media/fixture?name=orig&format=jpg'
+    - 'https://pbs.twimg.com/media/fixture.jpg?name=small'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'https://pbs.twimg.com/media/fixture.jpg?name=small'
+  actual: 'https://pbs.twimg.com/media/fixture?name=orig&format=jpg'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/mnt/data/xc-recovery/project/scripts/test-multimedia.cjs:117:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 70
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 574.815524

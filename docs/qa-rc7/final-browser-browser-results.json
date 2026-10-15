@@ -1,0 +1,301 @@
+{
+  "version": "1.0.0-rc.2",
+  "testDate": "2026-09-25",
+  "method": "Local Chromium set_content + synthetic fixtures. No live X, installed-extension, Safari or Stay device verification.",
+  "checks": [
+    {
+      "name": "DOM: four outer posts, quoted post not duplicated",
+      "passed": true,
+      "detail": 4
+    },
+    {
+      "name": "DOM: main identity is not quoted author",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: own rich body excludes quote body",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: quote body and source recovered",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: rich emphasis retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: poll percentages and community note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: stats retained, not guessed",
+      "passed": true,
+      "detail": {
+        "replies": "12",
+        "reposts": "4",
+        "likes": "45",
+        "views": "2,100"
+      }
+    },
+    {
+      "name": "DOM: folded text explicitly flagged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Probe: explicit parent and full text read",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Probe: unrelated sensitive prop excluded",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: full text replaces visible truncation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: folded warning cleared only after replacement",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Collector: actual relation connects author continuation",
+      "passed": true,
+      "detail": [
+        "90001",
+        "90002",
+        "90004"
+      ]
+    },
+    {
+      "name": "DOM parser: no engagement action performed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: title, source and body detected",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: author is not an embedded-post author",
+      "passed": true,
+      "detail": {
+        "name": "文章作者",
+        "handle": "article_author",
+        "avatar": null
+      }
+    },
+    {
+      "name": "Article: embedded post not duplicated as outer candidate",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: headings, list, code and embed retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: final paragraph retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Studio: live cards render with three author posts",
+      "passed": true,
+      "detail": {
+        "width": 760,
+        "height": 1025,
+        "selected": [
+          "1000000000000000001",
+          "1000000000000000002",
+          "1000000000000000003"
+        ],
+        "cards": 3
+      }
+    },
+    {
+      "name": "Studio: no white browser focus outline",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Studio: background changes actual scene",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Studio: resolution multiplier updates",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Selection: include nonauthor contextual reply",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Selection: manual order changes scene",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Selection: author rule excludes nonauthor again",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "sample.png pixel dimensions",
+      "passed": true,
+      "detail": [
+        1520,
+        2050
+      ]
+    },
+    {
+      "name": "sample.png chunk CRCs and pHYs placement",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG: selected original URLs embedded",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PDF: single page, real extracted Chinese text",
+      "passed": true,
+      "detail": {
+        "pages": 1,
+        "characters": 352
+      }
+    },
+    {
+      "name": "PDF: embedded CID font, selectable text not page bitmap",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PDF: metadata and clickable original links",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG: transparent canvas preserved",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PNG: anonymous file omits original source URLs",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "PDF: anonymous export has no backlink annotations",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article PDF: final paragraph, code, embed and media label survive",
+      "passed": true,
+      "detail": " 视频 · 1:23\n1.第一个步骤\n2.第二个步骤\nconst message = \"中文文本\";\\nconsole.log(message);\n来\n来源作者@source_author · 昨天\n嵌入帖子内容应保留作者与来源。\nhttps://x.com/source_author/status/92999\n文章最后一段不能被截断。\nhttps://x.com/i/article/92001\n"
+    },
+    {
+      "name": "Article PDF: displays media and retains links",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Long PDF: one page with last post preserved",
+      "passed": true,
+      "detail": {
+        "width": 569.9999389648438,
+        "height": 49268.2421875,
+        "textChars": 20927
+      }
+    },
+    {
+      "name": "Long PDF: UserUnit used for beyond-standard page height",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Browser: no JavaScript exceptions",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Mobile: editor fits phone width",
+      "passed": true,
+      "detail": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "name": "Mobile: export is reachable in viewport",
+      "passed": true,
+      "detail": {
+        "x": 16,
+        "y": 761.5,
+        "width": 174.5,
+        "height": 41
+      }
+    },
+    {
+      "name": "Mobile: touch selection changes content",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Mobile: exact numeric style control updates layout",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Mobile: close restores document scrolling",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Userscript: camera injected into each outer post",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Userscript: production entry opens studio and reads props",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Userscript: preferences use GM storage",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Userscript: production code actually exports PNG",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Userscript: no runtime exceptions",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "passed": 50,
+  "failed": 0
+}

@@ -1,12 +1,12 @@
 {
   "name": "x-capture-studio",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.7",
   "private": true,
   "description": "Local-first X capture: Chromium extension and Stay userscript",
   "scripts": {
     "build": "node scripts/build.cjs",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test.cjs && node scripts/test-text.cjs"
+    "test": "node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs"
   },
   "devDependencies": {
     "typescript": "5.8.3"

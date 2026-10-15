@@ -1,7 +1,8 @@
 import {Author,Badge,Block,Media,Post,Run,Poll} from './model';
 import {postID,safeLink,sourceURL} from './urls';
 import {absolutePath,hexColor} from './svg';
-import {observedVideoURL} from './media-links';
+import {observedVideoURL,observedVideoPageURL,observedImageURL} from './media-links';
+import {imageDOMResources,videoDOMResources,iframeMedia} from '../media/dom';
 const clean=(s:string|null|undefined)=>(s||'').replace(/\u200b/g,'').trim();
 const richSelectors='[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"], [data-testid="articleRichTextView"]';
 const authorSelector='[data-testid="User-Name"], [data-testid="UserName"]';
@@ -88,34 +89,42 @@ function displayBox(el:Element){
   const fit=getComputedStyle(el).objectFit==='contain'?'contain' as const:'cover' as const;
   return {x:r.x,y:r.y,width:r.width,height:r.height,fit};
 }
-function mediaFromImage(img:HTMLImageElement):Media{const display=displayBox(img.closest('[data-testid="tweetPhoto"]')||img);if(display)display.fit=getComputedStyle(img).objectFit==='contain'?'contain':'cover';return {kind:'image',src:img.currentSrc||img.src,alt:img.alt||'帖子图片',width:img.naturalWidth||Number(img.getAttribute('width'))||undefined,height:img.naturalHeight||Number(img.getAttribute('height'))||undefined,display};}
+function mediaFromImage(img:HTMLImageElement):Media{const display=displayBox(img.closest('[data-testid="tweetPhoto"]')||img);if(display)display.fit=getComputedStyle(img).objectFit==='contain'?'contain':'cover';return {...imageDOMResources(img),kind:'image',src:img.currentSrc||img.src,sourceUrl:observedImageURL(img),alt:img.alt||'帖子图片',width:img.naturalWidth||Number(img.getAttribute('width'))||undefined,height:img.naturalHeight||Number(img.getAttribute('height'))||undefined,display};}
 function visibleVideoFrame(v:HTMLVideoElement):string|undefined {
   if(v.readyState<2||!v.videoWidth||!v.videoHeight||v.videoWidth*v.videoHeight>50000000)return;
   const c=document.createElement('canvas'),k=Math.min(1,1600/Math.max(v.videoWidth,v.videoHeight));
   c.width=Math.max(1,Math.round(v.videoWidth*k));c.height=Math.max(1,Math.round(v.videoHeight*k));
   try{const g=c.getContext('2d');if(!g)return;g.drawImage(v,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.9);}catch{return;}finally{c.width=c.height=1;}
 }
-function richBlocks(el:Element):Block[]{
+export function richBlocks(el:Element):Block[]{
   const blocks:Block[]=[];
+  const mediaSelector='img,video,iframe,article[data-testid="tweet"],[data-testid="quoteTweet"]';
+  const validMedia=(n:Element)=>n.tagName!=='IMG'||!/emoji|profile_images|default_profile/.test((n as HTMLImageElement).src);
   const walk=(node:Element)=>{
     if(node.matches('[data-xcapture-ui],script,style,button'))return;
-    if(node.matches('article[data-testid="tweet"], [data-testid="tweet"]')){const post=parsePost(node);if(post)blocks.push({kind:'embed',post});return;}
-    if(node.matches('img')){const img=node as HTMLImageElement;if(!/emoji|profile_images/.test(img.src))blocks.push({kind:'media',media:mediaFromImage(img)});return;}
-    if(node.matches('video')){const v=node as HTMLVideoElement;blocks.push({kind:'media',media:{kind:'video',src:v.poster,sourceUrl:observedVideoURL(v),posterUrl:v.poster||undefined,alt:'文章内视频',duration:Number.isFinite(v.duration)?`${Math.floor(v.duration/60)}:${String(Math.floor(v.duration%60)).padStart(2,'0')}`:undefined}});return;}
-    if(node.matches('hr')){blocks.push({kind:'divider'});return;}
-    if(node.matches('h1,h2,h3,h4,h5,h6,p,li,blockquote,pre')||node.matches('[data-block="true"]')){
-      const runs=inlineRuns(node);if(runs.some(r=>r.text.trim())){
-        const style=node.closest('[data-block="true"]')?.getAttribute('class')||'';
+    if(node.matches('article[data-testid="tweet"], [data-testid="quoteTweet"]')){const post=parsePost(node,true);if(post)blocks.push({kind:'embed',post});return;}
+    if(node.tagName==='IMG'){if(validMedia(node))blocks.push({kind:'media',media:mediaFromImage(node as HTMLImageElement)});return;}
+    if(node.tagName==='VIDEO'){const v=node as HTMLVideoElement;blocks.push({kind:'media',media:{...videoDOMResources(v),kind:'video',src:v.poster,sourceUrl:observedVideoURL(v),playbackUrl:observedVideoPageURL(v),posterUrl:v.poster||undefined,alt:'文章内视频',duration:Number.isFinite(v.duration)?`${Math.floor(v.duration/60)}:${String(Math.floor(v.duration%60)).padStart(2,'0')}`:undefined}});return;}
+    if(node.tagName==='IFRAME'){const m=iframeMedia(node as HTMLIFrameElement);if(m)blocks.push({kind:'media',media:m});return;}
+    if(node.tagName==='HR'){blocks.push({kind:'divider'});return;}
+    const paragraph=node.matches('h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,[data-block="true"],[data-testid="tweetText"]');
+    if(paragraph){
+      const style=node.closest('[data-block="true"]')?.getAttribute('class')||'';
+      let first=true;
+      const text=(root:Node)=>{const runs=inlineRuns(root);if(!runs.some(r=>r.text.trim()))return;
         blocks.push({kind:'text',runs,level:/^H[1-6]$/.test(node.tagName)?Number(node.tagName[1]):undefined,
-          quote:node.tagName==='BLOCKQUOTE'||/blockquote/.test(style),list:node.tagName==='LI'?(node.parentElement?.tagName==='OL'?String([...node.parentElement.children].indexOf(node)+1)+'.':'•'):undefined,code:node.tagName==='PRE'});
-      }
-      for(const img of node.querySelectorAll('img:not([alt^="http"])')){const m=img as HTMLImageElement;if(!/emoji|profile_images/.test(m.src))blocks.push({kind:'media',media:mediaFromImage(m)});}
-      return;
+          quote:node.tagName==='BLOCKQUOTE'||/blockquote/.test(style),list:first&&node.tagName==='LI'?(node.parentElement?.tagName==='OL'?String([...node.parentElement.children].indexOf(node)+1)+'.':'•'):undefined,code:node.tagName==='PRE'});first=false;};
+      const media=[...node.querySelectorAll(mediaSelector)].filter(validMedia).filter(n=>{const ancestor=n.parentElement?.closest(mediaSelector);return !ancestor||ancestor===node||!node.contains(ancestor);});
+      if(!media.length){text(node);return;}
+      // Range preserves inline markup and exact position. Never move an image past following text.
+      let previous:Element|undefined;
+      for(const m of media){const range=node.ownerDocument.createRange();range.selectNodeContents(node);if(previous)range.setStartAfter(previous);range.setEndBefore(m);text(range.cloneContents());walk(m);previous=m;}
+      const tail=node.ownerDocument.createRange();tail.selectNodeContents(node);if(previous)tail.setStartAfter(previous);text(tail.cloneContents());return;
     }
     if(node.children.length){for(const child of node.children)walk(child);}
     else if(clean(node.textContent))blocks.push({kind:'text',runs:inlineRuns(node)});
   };
-  for(const child of el.children)walk(child);
+  if(el.matches('[data-testid="tweetText"]'))walk(el);else for(const child of el.children)walk(child);
   if(!blocks.length&&clean(el.textContent))blocks.push({kind:'text',runs:inlineRuns(el)});
   return blocks;
 }
@@ -139,19 +148,23 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
   if(!id&&!quoted)return;
   if(!url&&id)url=author.handle!=='unknown'?sourceURL(`/${author.handle}/status/${id}`):sourceURL(`/i/web/status/${id}`);
   const txt=ownNodes(el,'[data-testid="tweetText"]',quote)[0];
-  const blocks:Block[]=txt?[{kind:'text',runs:inlineRuns(txt)}]:[];
+  const inlineMedia=!!txt&&!![...txt.querySelectorAll('img,video,iframe')].find(n=>n.tagName!=='IMG'||!/emoji/.test((n as HTMLImageElement).src));
+  const blocks:Block[]=txt?(inlineMedia?richBlocks(txt):[{kind:'text',runs:inlineRuns(txt)}]):[];
   // Text export can retain mixed photo/video DOM order without changing visual layout.
   const mediaOrder=ownNodes(el,'[data-testid="tweetPhoto"] img, video',quote);
+  const attachmentNodes=mediaOrder.filter(n=>n.tagName==='VIDEO'||!n.closest('[data-testid="videoComponent"]')?.querySelector('video'));
   const images=ownNodes(el,'[data-testid="tweetPhoto"] img',quote) as HTMLImageElement[];
   const seen=new Set<string>();
-  for(const img of images){const m=mediaFromImage(img);m.textOrder=mediaOrder.indexOf(img);if(m.src&&!seen.has(m.src)){seen.add(m.src);blocks.push({kind:'media',media:m});}}
+  for(const img of images){if(inlineMedia&&txt?.contains(img)||img.closest('[data-testid="videoComponent"]')?.querySelector('video'))continue;const m=mediaFromImage(img);m.textOrder=mediaOrder.indexOf(img);if(m.src&&!seen.has(m.src)){seen.add(m.src);blocks.push({kind:'media',media:m});}}
   for(const video of ownNodes(el,'video',quote) as HTMLVideoElement[]){
+    if(inlineMedia&&txt?.contains(video))continue;
     const box=video.closest('[data-testid="videoComponent"]')||video.parentElement;
     const poster=visibleVideoFrame(video)||video.poster||imageSrc(box?.querySelector('img'))||'';
-    const m:Media={src:poster,textOrder:mediaOrder.indexOf(video),sourceUrl:observedVideoURL(video),posterUrl:video.poster||undefined,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
+    const m:Media={...videoDOMResources(video),src:poster,textOrder:mediaOrder.indexOf(video),sourceUrl:observedVideoURL(video),playbackUrl:observedVideoPageURL(video),attachmentIndex:attachmentNodes.indexOf(video)>=0?attachmentNodes.indexOf(video)+1:undefined,posterUrl:video.poster||undefined,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
       display:displayBox(video),duration:Number.isFinite(video.duration)?`${Math.floor(video.duration/60)}:${String(Math.floor(video.duration%60)).padStart(2,'0')}`:clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent)||undefined};
     blocks.push({kind:'media',media:m});
   }
+  for(const f of ownNodes(el,'iframe',quote) as HTMLIFrameElement[]){if(inlineMedia&&txt?.contains(f))continue;const m=iframeMedia(f);if(m)blocks.push({kind:'media',media:m});}
   const metrics:Record<string,string>={};
   for(const [key,selector] of Object.entries({replies:'[data-testid="reply"]',reposts:'[data-testid="retweet"], [data-testid="unretweet"]',likes:'[data-testid="like"], [data-testid="unlike"]',bookmarks:'[data-testid="bookmark"], [data-testid="removeBookmark"]',views:'a[href$="/analytics"]'})){
     const n=ownNodes(el,selector,quote).find(n=>n.closest('[role="group"]'))||ownNodes(el,selector,quote)[0];
@@ -171,8 +184,9 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
     replyToHandle:replyTo?.textContent?.trim().replace(/^@/,''),relationEvidence:parentId?'dom':'unknown',warnings,capturedAt:new Date().toISOString()};
   if(quote){const qp=parsePost(quote,true,p.id,depth+1);if(qp&&qp.id!==p.id){p.quote=qp;p.warnings.push(...qp.warnings);}else p.warnings.push('检测到引用卡片，但当前可见内容未能完整读取。');}
   const card=ownNodes(el,'[data-testid="card.wrapper"], [data-testid="card.layoutLarge.media"], [data-testid="card.layoutSmall.media"]',quote)[0];
-  if(card){const a=card.closest('a')||card.querySelector('a'); const href=safeLink(a?.getAttribute('href')||'');if(href)p.linkCard={url:href,title:clean(card.textContent)||href,image:imageSrc(card.querySelector('img'))};}
+  if(card){const a=card.closest('a')||card.querySelector('a'); const href=safeLink(a?.getAttribute('href')||'');if(href)p.linkCard={url:href,title:clean(card.textContent)||href,image:imageSrc(card.querySelector('img'))};if(p.linkCard?.image)p.linkCard.media={...mediaFromImage(card.querySelector('img') as HTMLImageElement),ownerId:p.id,mediaRole:'embed'};}
   if(!blocks.length&&fullText&&!p.quote&&!p.linkCard)p.warnings.push('未识别到正文内容；请确认帖子已加载。');
+  for(const b of p.blocks)if(b.kind==='media')b.media.ownerId=p.id;
   return p;
 }
 export function parseArticle(scope:Document|Element=document):Post|undefined{
@@ -187,7 +201,7 @@ export function parseArticle(scope:Document|Element=document):Post|undefined{
   const title=clean(container.querySelector('[data-testid="twitter-article-title"], [data-testid="twitterArticleTitle"], h1')?.textContent)||'X Article';
   const blocks=richBlocks(body);
   const cover=container.querySelector('[data-testid="twitterArticleCoverImage"] img') as HTMLImageElement|null;
-  if(cover&&!body.contains(cover))blocks.unshift({kind:'media',media:mediaFromImage(cover)});
+  if(cover&&!body.contains(cover))blocks.unshift({kind:'media',media:{...mediaFromImage(cover),mediaRole:'cover'}});
   return {id:postID(canonical)!,url:canonical,kind:'article',title,author:header?{name:clean(header.querySelector('a')?.textContent)||handle,handle,avatar:imageSrc([...container.querySelectorAll('img[src*="profile_images"]')].find(n=>!body.contains(n)))}:base?.author||{name:handle==='unknown'?'作者未识别':handle,handle},blocks,metrics:base?.metrics||{},published:base?.published,
     relationEvidence:'unknown',warnings:blocks.length?[]:['文章正文未加载。'],capturedAt:new Date().toISOString()};
 }

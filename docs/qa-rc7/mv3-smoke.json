@@ -1,0 +1,6 @@
+{
+  "environment": "Headless Chromium, fresh temporary profile, actual unpacked MV3 extension; no user profile or account",
+  "status": "BLOCKED",
+  "checks": [],
+  "reason": "Timeout 10000ms exceeded while waiting for event \"serviceworker\""
+}

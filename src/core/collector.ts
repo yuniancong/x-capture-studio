@@ -2,6 +2,15 @@ import {Capture,Host,Post} from './model';
 import {collectDOM} from './parser';
 import {mergePosts} from './selection';
 import {enrichMediaLinks} from './media-links';
+import {sameMediaKey,mergeMediaResources} from '../media/resources';
+/** A visible card poster is identity evidence; an unrelated card never inherits video variants. */
+function enrichCard(p:Post,raw:unknown){
+ if(!p.linkCard?.image||!Array.isArray(raw))return;const key=sameMediaKey({src:p.linkCard.image});
+ const matches=raw.filter(m=>m&&m.kind!=='image'&&key&&sameMediaKey(m)===key);
+ if(matches.length!==1)return;const source=matches[0];
+ const m={...source,src:p.linkCard.image,ownerId:p.id,mediaRole:'embed' as const};
+ if(p.linkCard.media)mergeMediaResources(m,p.linkCard.media);p.linkCard.media=m;
+}
 import {postID,sourceURL,plainText} from './urls';
 /** Enrich an observed quote without overwriting translated/currently-visible text. */
 export function enrichQuote(visible:Post|undefined,raw:any,capturedAt:string,depth=0):Post|undefined {
@@ -14,7 +23,7 @@ export function enrichQuote(visible:Post|undefined,raw:any,capturedAt:string,dep
   if(!q.published&&typeof raw.published==='string')q.published=raw.published;
   if(!q.blocks.some(b=>b.kind==='text')&&typeof raw.fullText==='string')q.blocks.unshift({kind:'text',runs:[{text:raw.fullText.slice(0,400000)}]});
   if(!q.blocks.some(b=>b.kind==='media')&&Array.isArray(raw.media))for(const m of raw.media.slice(0,8))if(m&&['image','video','gif'].includes(m.kind)&&typeof m.src==='string')q.blocks.push({kind:'media',media:m});
-  enrichMediaLinks(q.blocks,raw.media);
+  enrichMediaLinks(q.blocks,raw.media);enrichCard(q,raw.media);
   q.warnings=q.warnings.filter(w=>!w.includes('引用原帖链接未识别'));q.quote=enrichQuote(q.quote,raw.quote,capturedAt,depth+1);
   return q;
 }
@@ -27,7 +36,7 @@ export class Collector {
     if(this.host.probe&&fresh.length){
       try{const data=await this.host.probe(fresh.map(p=>p.id));for(const raw of data as any[]){
         const p=fresh.find(p=>p.id===raw.id);if(!p)continue;
-        enrichMediaLinks(p.blocks,raw.media);
+        enrichMediaLinks(p.blocks,raw.media);enrichCard(p,raw.media);
         if(raw.parentId&&/^\d+$/.test(raw.parentId))p.parentId=raw.parentId;
         if(raw.conversationId&&/^\d+$/.test(raw.conversationId))p.conversationId=raw.conversationId;
         if(p.parentId)p.relationEvidence='data';

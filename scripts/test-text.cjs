@@ -59,7 +59,7 @@ test('text: quote and embedded posts keep independent author/body/source', () =>
 });
 test('text: media keeps observed alt text with its image URL; video never uses its poster', () => {
   const p = post(1, '正文'); p.blocks.push({ kind: 'media', media: { kind: 'image', src: 'https://pbs.twimg.com/secret.jpg', alt: '原有替代文字' } }, { kind: 'media', media: { kind: 'video', src: 'cdn', alt: '', duration: '02:31' } });
-  const x = run([p]); assert(x.text.includes('[图片：原有替代文字]')); assert(x.text.includes('[视频 · 02:31]')); assert(x.text.includes('[图片：原有替代文字] https://pbs.twimg.com/secret.jpg')); assert(x.text.includes('原帖播放链接：https://x.com/alice/status/1'));
+  const x = run([p]); assert(x.text.includes('[图片：原有替代文字]')); assert(x.text.includes('[视频 · 02:31]')); assert(x.text.includes('[图片：原有替代文字] https://pbs.twimg.com/secret.jpg')); assert(x.text.includes('原帖（视频专属地址未获取）：https://x.com/alice/status/1'));
 });
 test('text: poll, note, edit state and link cards are retained', () => {
   const p = post(1, '正文'); p.poll = { options: [{ text: '甲', percent: 67 }, { text: '乙' }], summary: '3 票 · 已结束' }; p.note = '页面可见的补充'; p.edited = '已编辑'; p.linkCard = { title: '官方页面', description: '描述', url: 'https://example.com/docs', image: 'cdn-secret' };
@@ -141,7 +141,7 @@ test('video links: keep video URL separate from poster and between the same surr
   const p = post(1, '视频之前');
   p.blocks.push({kind:'media',media:{kind:'video',src:'https://pbs.twimg.com/media/poster.jpg',sourceUrl:'https://video.twimg.com/ext_tw_video/fixture/pu/vid/720x1280/movie.mp4?tag=12',alt:'视频封面',duration:'00:15'}},{kind:'text',runs:[{text:'视频之后'}]});
   const x=run([p]).text;
-  assert(x.includes('[视频 · 00:15] https://video.twimg.com/ext_tw_video/fixture/pu/vid/720x1280/movie.mp4?tag=12'));
+  assert(x.includes('视频文件直链：https://video.twimg.com/ext_tw_video/fixture/pu/vid/720x1280/movie.mp4?tag=12'));
   assert(x.indexOf('视频之前')<x.indexOf('[视频'));assert(x.indexOf('[视频')<x.indexOf('视频之后'));
   assert(!x.includes('poster.jpg'));
 });
@@ -150,6 +150,8 @@ const media = (kind, src, extras={}) => ({kind:'media',media:{kind,src,alt:'',..
 const para = text => ({kind:'text',runs:[{text}]});
 const IMAGE_1='https://pbs.twimg.com/media/one?format=jpg&name=large';
 const IMAGE_2='https://pbs.twimg.com/media/two.png?name=small';
+const HD_IMAGE_1=IMAGE_1; // Text-only serialization must not pretend unverified orig candidates exist.
+const HD_IMAGE_2=IMAGE_2;
 const VIDEO='https://video.twimg.com/amplify_video/fixture/vid/640x360/video.mp4?tag=16';
 for (const format of ['text','markdown','ai']) {
   test(`media links: ${format} preserves image/video positions, query strings, quote and Article order`,()=>{
@@ -157,10 +159,10 @@ for (const format of ['text','markdown','ai']) {
     p.blocks=[para('段落A'),media('image',IMAGE_1),para('段落B'),media('video','https://pbs.twimg.com/poster.jpg',{sourceUrl:VIDEO}),media('image',IMAGE_2),para('段落C')];
     p.quote=post(9,'引用独立正文','bob');p.quote.blocks.push(media('image','https://pbs.twimg.com/media/quote.jpg'));
     const before=JSON.stringify(p); const t=run([p],{format}).text;
-    const expected=['段落A',IMAGE_1,'段落B',VIDEO,IMAGE_2,'段落C','引用独立正文','https://pbs.twimg.com/media/quote.jpg'];
+    const expected=['段落A',HD_IMAGE_1,'段落B',VIDEO,HD_IMAGE_2,'段落C','引用独立正文','https://pbs.twimg.com/media/quote.jpg'];
     let last=-1;for(const token of expected){const i=t.indexOf(token);assert(i>last,token);last=i;}
     assert(!t.includes('poster.jpg'));assert(!t.includes('!['));assert.equal(JSON.stringify(p),before);
-    if(format!=='text')assert(t.includes(`<${IMAGE_1}>`));
+    if(format!=='text')assert(t.includes(`<${HD_IMAGE_1}>`));
   });
 }
 test('media links: no changes at all to non-media text across formats',()=>{
@@ -173,12 +175,12 @@ test('media links: no changes at all to non-media text across formats',()=>{
 test('media links: a Blob video falls back to its OWN original post, not its poster or outer quote',()=>{
   const p=post(1,'主帖');p.quote=post(9,'被引用正文','bob');
   p.quote.blocks.push(media('video','https://pbs.twimg.com/video-poster.jpg',{sourceUrl:'blob:https://x.com/ephemeral',duration:'0:31'}));
-  const t=run([p]).text;assert(t.includes('[视频 · 0:31] 原帖播放链接：https://x.com/bob/status/9'));
+  const t=run([p]).text;assert(t.includes('[视频 · 0:31] 视频播放页：https://x.com/bob/status/9/video/1'));
   assert(!t.includes('ephemeral'));assert(!t.includes('video-poster.jpg'));
 });
 test('media links: HLS is labeled as a playback stream, never an MP4 download',()=>{
-  const p=post(1,'');p.blocks=[media('video','poster',{sourceUrl:'https://video.twimg.com/path/live.m3u8?token=fixture'})];
-  assert(run([p]).text.includes('[视频]（播放流） https://video.twimg.com/path/live.m3u8?token=fixture'));
+  const p=post(1,'');p.blocks=[media('video','poster',{sourceUrl:'https://video.twimg.com/path/live.m3u8?variant=fixture'})];
+  const t=run([p]).text;assert(t.includes('HLS')&&t.includes('视频播放流')&&t.includes('https://video.twimg.com/path/live.m3u8?variant=fixture'));assert(!t.includes('视频文件直链'));
 });
 test('media links: missing, relative, local and credential URLs are not fabricated or leaked',()=>{
   for(const u of ['', 'relative.jpg', 'data:image/png;base64,AQID', 'blob:https://x.com/x', 'javascript:alert(1)', 'https://u:pass@pbs.twimg.com/x.jpg', 'https://pbs.twimg.com/\nprivate.jpg']) {
@@ -196,12 +198,12 @@ test('media links: empty video identity remains missing, never guess an outer so
 });
 test('media links: independent sources option hides post fallback but not original media',()=>{
   const p=post(1,'');p.blocks=[media('image',IMAGE_1),media('video','poster')];const t=run([p],{opts:{includeSources:false}}).text;
-  assert(t.includes(IMAGE_1));assert(!t.includes('x.com/'));assert(!t.includes('原帖播放链接'));
+  assert(t.includes(HD_IMAGE_1));assert(!t.includes('x.com/'));assert(!t.includes('原帖播放链接'));
 });
 test('media links: anonymity suppresses all automatic image/video URLs in quote and Article',()=>{
   const p=post(1,'');p.blocks=[media('image',IMAGE_1),media('video','poster',{sourceUrl:VIDEO})];p.quote=post(9,'','bob');p.quote.blocks=[media('image',IMAGE_2)];
   for(const format of ['text','markdown','ai']){const t=run([p],{format,privacy:{anonymize:true}}).text;assert(!t.includes('https://'));assert(t.includes('图片'));assert(t.includes('视频'));}
-  const t=run([p],{privacy:{anonymize:true,anonymousSources:true}}).text;assert(t.includes(IMAGE_1));assert(t.includes(VIDEO));assert(!t.includes('作者甲'));
+  const t=run([p],{privacy:{anonymize:true,anonymousSources:true}}).text;assert(t.includes(HD_IMAGE_1));assert(t.includes(VIDEO));assert(!t.includes('作者甲'));
 });
 test('media links: media toggle suppresses both marker and URL without touching text',()=>{
   const p=post(1,'只保留正文');p.blocks.push(media('image',IMAGE_1),media('video','poster',{sourceUrl:VIDEO}));
@@ -209,13 +211,13 @@ test('media links: media toggle suppresses both marker and URL without touching 
 });
 test('media links: all link-card images remain with their card, not appended after source notes',()=>{
   const p=post(1,'');p.linkCard={title:'卡片标题',description:'卡片介绍',image:IMAGE_1,url:'https://example.com/'};
-  const t=run([p]).text;assert(t.indexOf('卡片标题')<t.indexOf(IMAGE_1));assert(t.indexOf(IMAGE_1)<t.indexOf('https://example.com/'));
-  assert(!run([p],{opts:{includeMedia:false}}).text.includes(IMAGE_1));
+  const t=run([p]).text;assert(t.indexOf('卡片标题')<t.indexOf(HD_IMAGE_1));assert(t.indexOf(HD_IMAGE_1)<t.indexOf('https://example.com/'));
+  assert(!run([p],{opts:{includeMedia:false}}).text.includes(HD_IMAGE_1));
 });
-test('media links: enrichment only changes sourceUrl, preserving display data and block order',()=>{
+test('media links: enrichment changes resource metadata only, preserving display data and block order',()=>{
   const blocks=[para('先'),media('video','data:image/jpeg;base64,AQID',{posterUrl:'https://pbs.twimg.com/media/key.jpg?name=small'}),para('后')];
   const before=JSON.stringify(blocks);C.enrichMediaLinks(blocks,[{kind:'video',src:'https://pbs.twimg.com/media/key?format=jpg&name=large',sourceUrl:VIDEO}]);
-  assert.equal(blocks[1].media.sourceUrl,VIDEO);delete blocks[1].media.sourceUrl;assert.equal(JSON.stringify(blocks),before);
+  assert.equal(blocks[1].media.sourceUrl,VIDEO);for(const key of ['sourceUrl','variants','tracks','manifests','resourceNotes'])delete blocks[1].media[key];assert.equal(JSON.stringify(blocks),before);
 });
 test('media links: multiple videos are matched by observed poster identity, not array index',()=>{
   const blocks=[media('video',IMAGE_1),media('video',IMAGE_2)];
@@ -238,11 +240,11 @@ test('media links: quote enrichment preserves visible translation and captured p
 test('media links: observed mixed-media order affects text only, never capture blocks',()=>{
   const p=post(1,'');p.blocks=[para('段落前'),media('image',IMAGE_1,{textOrder:1}),media('video','poster',{sourceUrl:VIDEO,textOrder:0}),para('段落后'),media('image',IMAGE_2,{textOrder:0})];
   const before=JSON.stringify(p);const t=run([p]).text;
-  assert(t.indexOf('段落前')<t.indexOf(VIDEO));assert(t.indexOf(VIDEO)<t.indexOf(IMAGE_1));assert(t.indexOf(IMAGE_1)<t.indexOf('段落后'));assert(t.indexOf('段落后')<t.indexOf(IMAGE_2));assert.equal(JSON.stringify(p),before);
+  assert(t.indexOf('段落前')<t.indexOf(VIDEO));assert(t.indexOf(VIDEO)<t.indexOf(HD_IMAGE_1));assert(t.indexOf(HD_IMAGE_1)<t.indexOf('段落后'));assert(t.indexOf('段落后')<t.indexOf(HD_IMAGE_2));assert.equal(JSON.stringify(p),before);
 });
 test('media links: incomplete or duplicate source positions retain the captured order',()=>{
   for(const orders of [[0,0],[undefined,0],[-1,1]]){
     const p=post(1,'');p.blocks=[media('image',IMAGE_1,{textOrder:orders[0]}),media('video','poster',{sourceUrl:VIDEO,textOrder:orders[1]})];
-    const t=run([p]).text;assert(t.indexOf(IMAGE_1)<t.indexOf(VIDEO));
+    const t=run([p]).text;assert(t.indexOf(HD_IMAGE_1)<t.indexOf(VIDEO));
   }
 });

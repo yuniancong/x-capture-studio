@@ -75,6 +75,7 @@ export class Studio {
     this.previousFocus=document.activeElement;this.overflow=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';document.documentElement.append(this.hostElement);document.addEventListener('keydown',this.keyboard,true);
     this.renderControls();this.render();this.studio.focus();
     if(typeof ResizeObserver!=='undefined'){this.resize=new ResizeObserver(()=>{if(this.autoZoom)this.schedule();});this.resize.observe(this.stage);}
+    void this.textTools.prepareResources();
     await this.refreshAssets();
   }
   close(){if(this.closed)return;this.closed=true;this.textTools.dispose();this.abort?.abort();this.assetAbort.abort();this.observer?.disconnect();this.resize?.disconnect();cancelAnimationFrame(this.repaint);clearTimeout(this.toastTimer);document.removeEventListener('keydown',this.keyboard,true);document.documentElement.style.overflow=this.overflow;

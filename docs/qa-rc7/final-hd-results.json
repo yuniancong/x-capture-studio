@@ -1,0 +1,149 @@
+{
+  "version": "1.0.0-rc.7",
+  "complete": true,
+  "checks": [
+    {
+      "name": "DOM: observed thumbnail remains until verification and explicit video/2 is retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: visible order and independent quote are unchanged",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: video uses page not Blob or poster in text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: image used for screenshot stays at the observed small rendition",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article image: highest explicitly observed srcset rendition is exported",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Reported symptom: a lone Blob video now gets the post /video/1 page",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "DOM: reused video retains actual observed owner/slot",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Page data: native PNG preserved as observed candidate without false quality ranking",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Page data: player URL and observed MP4 are separately labeled",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Page data: source enrichment never replaces text or display pixels",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "MAIN-world probe remains standalone (no module globals)",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: paragraph/photo/paragraph/video/paragraph sequence survives",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Article: no invented video route attached to Article ID",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: unchanged text UI shows known photo URL and native player link",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: Copy Text and preview use the same media positions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: Markdown clipboard equals preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: AI copy retains media URLs and data-only note",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: md file bytes match copied text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: txt file bytes match copied text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Workbench: no uncaught application error",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "Stay: unchanged isolated-mode launcher and text tab work",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: known image and exact video page exported without unsafeWindow",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: Copy Text records same in-place media links",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: Markdown clipboard matches preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: AI copy includes exact video route",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: export Blob matches Markdown preview",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Stay: TXT Blob matches copied pure text",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "Mobile: controls fit 390 CSS pixels",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "environment": "Playwright Chromium; synthetic X DOM; clipboard/Stay bridge recorded, NOT real Safari or live X",
+  "passed": 28,
+  "failed": 0
+}

@@ -28,7 +28,7 @@
 
 请在 Safari 打开以下链接，并保存 `.user.js` 文件：
 
-[**下载 X Capture Studio · Stay v1.0.0-rc.5**](../releases/X-Capture-Studio-Stay-v1.0.0-rc.5.user.js)
+[**下载 X Capture Studio · Stay v1.0.0-rc.7**](../releases/X-Capture-Studio-Stay-v1.0.0-rc.7.user.js)
 
 如果 Safari 打开的是 JavaScript 纯文本页面而不是下载文件，请从 GitHub 文件页面选择“下载原始文件”，或保存到 iPhone / iPad 的 **“文件” App**。请确认文件扩展名仍为 `.user.js`（不是 `.txt` 或 `.html`）。
 

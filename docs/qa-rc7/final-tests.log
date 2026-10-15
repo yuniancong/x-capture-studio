@@ -1,0 +1,1340 @@
+
+> x-capture-studio@1.0.0-rc.7 test
+> node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs
+
+TAP version 13
+# Subtest: defaults keep single long PDF and 2x PNG
+ok 1 - defaults keep single long PDF and 2x PNG
+  ---
+  duration_ms: 1.405377
+  type: 'test'
+  ...
+# Subtest: only explicit parent links establish author thread
+ok 2 - only explicit parent links establish author thread
+  ---
+  duration_ms: 0.664972
+  type: 'test'
+  ...
+# Subtest: find known thread ancestors from middle post
+ok 3 - find known thread ancestors from middle post
+  ---
+  duration_ms: 0.235214
+  type: 'test'
+  ...
+# Subtest: direct reply rule excludes replies to a nonauthor reply
+ok 4 - direct reply rule excludes replies to a nonauthor reply
+  ---
+  duration_ms: 0.186481
+  type: 'test'
+  ...
+# Subtest: same-author candidate rule is not called a thread
+ok 5 - same-author candidate rule is not called a thread
+  ---
+  duration_ms: 0.155184
+  type: 'test'
+  ...
+# Subtest: single rule only selects anchor
+ok 6 - single rule only selects anchor
+  ---
+  duration_ms: 0.087371
+  type: 'test'
+  ...
+# Subtest: all rule includes all loaded records
+ok 7 - all rule includes all loaded records
+  ---
+  duration_ms: 0.191368
+  type: 'test'
+  ...
+# Subtest: manual selection is cloned and preserved
+ok 8 - manual selection is cloned and preserved
+  ---
+  duration_ms: 0.111258
+  type: 'test'
+  ...
+# Subtest: circular parent data terminates safely
+ok 9 - circular parent data terminates safely
+  ---
+  duration_ms: 0.317408
+  type: 'test'
+  ...
+# Subtest: empty capture safely selects nothing
+ok 10 - empty capture safely selects nothing
+  ---
+  duration_ms: 0.338831
+  type: 'test'
+  ...
+# Subtest: role classification distinguishes author answering someone
+ok 11 - role classification distinguishes author answering someone
+  ---
+  duration_ms: 0.166551
+  type: 'test'
+  ...
+# Subtest: dedup preserves longer body when later DOM is shorter
+ok 12 - dedup preserves longer body when later DOM is shorter
+  ---
+  duration_ms: 0.353132
+  type: 'test'
+  ...
+# Subtest: merge updates explicit reply relation independently
+ok 13 - merge updates explicit reply relation independently
+  ---
+  duration_ms: 0.090957
+  type: 'test'
+  ...
+# Subtest: canonical URL removes tracking and media suffix
+ok 14 - canonical URL removes tracking and media suffix
+  ---
+  duration_ms: 0.320913
+  type: 'test'
+  ...
+# Subtest: article URL has its own canonical form
+ok 15 - article URL has its own canonical form
+  ---
+  duration_ms: 0.158889
+  type: 'test'
+  ...
+# Subtest: reject hostile scheme and lookalike host
+ok 16 - reject hostile scheme and lookalike host
+  ---
+  duration_ms: 0.097707
+  type: 'test'
+  ...
+# Subtest: reject malformed post ID suffix
+ok 17 - reject malformed post ID suffix
+  ---
+  duration_ms: 0.064487
+  type: 'test'
+  ...
+# Subtest: only HTTP(S) links survive
+ok 18 - only HTTP(S) links survive
+  ---
+  duration_ms: 0.098228
+  type: 'test'
+  ...
+# Subtest: asset allowlist admits twimg only plus exact fixed font
+ok 19 - asset allowlist admits twimg only plus exact fixed font
+  ---
+  duration_ms: 0.274583
+  type: 'test'
+  ...
+# Subtest: asset allowlist rejects credentials, ports, lookalikes
+ok 20 - asset allowlist rejects credentials, ports, lookalikes
+  ---
+  duration_ms: 0.115874
+  type: 'test'
+  ...
+# Subtest: presets whitelist keys, enums and CSS colors
+ok 21 - presets whitelist keys, enums and CSS colors
+  ---
+  duration_ms: 0.388976
+  type: 'test'
+  ...
+# Subtest: numeric NaN and invalid container do not poison options
+ok 22 - numeric NaN and invalid container do not poison options
+  ---
+  duration_ms: 0.138438
+  type: 'test'
+  ...
+# Subtest: narrow canvas cannot collapse under oversized outer margins
+ok 23 - narrow canvas cannot collapse under oversized outer margins
+  ---
+  duration_ms: 1.887594
+  type: 'test'
+  ...
+# Subtest: source metadata includes selected records only
+ok 24 - source metadata includes selected records only
+  ---
+  duration_ms: 0.312431
+  type: 'test'
+  ...
+# Subtest: anonymous default removes IDs and URLs from provenance
+ok 25 - anonymous default removes IDs and URLs from provenance
+  ---
+  duration_ms: 0.118218
+  type: 'test'
+  ...
+# Subtest: anonymous explicit override restores sources
+ok 26 - anonymous explicit override restores sources
+  ---
+  duration_ms: 0.128744
+  type: 'test'
+  ...
+# Subtest: metadata opt-out removes source metadata only
+ok 27 - metadata opt-out removes source metadata only
+  ---
+  duration_ms: 0.074011
+  type: 'test'
+  ...
+# Subtest: CRC32 reference vector
+ok 28 - CRC32 reference vector
+  ---
+  duration_ms: 0.103085
+  type: 'test'
+  ...
+# Subtest: invalid PNG rejected instead of silently outputting
+ok 29 - invalid PNG rejected instead of silently outputting
+  ---
+  duration_ms: 0.321905
+  type: 'test'
+  ...
+# Subtest: Retina dimensions are actual scaled pixels
+ok 30 - Retina dimensions are actual scaled pixels
+  ---
+  duration_ms: 0.130407
+  type: 'test'
+  ...
+# Subtest: oversize image triggers safety warning not scale change
+ok 31 - oversize image triggers safety warning not scale change
+  ---
+  duration_ms: 0.072088
+  type: 'test'
+  ...
+# Subtest: graphemes keep emoji family and accents together
+ok 32 - graphemes keep emoji family and accents together
+  ---
+  duration_ms: 0.13922
+  type: 'test'
+  ...
+# Subtest: layout selection/order is exact and duplicates removed
+ok 33 - layout selection/order is exact and duplicates removed
+  ---
+  duration_ms: 0.647225
+  type: 'test'
+  ...
+# Subtest: fixed ratio expands and centers instead of cropping
+ok 34 - fixed ratio expands and centers instead of cropping
+  ---
+  duration_ms: 1.328261
+  type: 'test'
+  ...
+# Subtest: long Latin URL wraps and remains text
+ok 35 - long Latin URL wraps and remains text
+  ---
+  duration_ms: 1.286609
+  type: 'test'
+  ...
+# Subtest: anonymous visual removes header names and backlinks
+ok 36 - anonymous visual removes header names and backlinks
+  ---
+  duration_ms: 0.7631
+  type: 'test'
+  ...
+# Subtest: missing media creates explicit warning
+ok 37 - missing media creates explicit warning
+  ---
+  duration_ms: 0.550209
+  type: 'test'
+  ...
+# Subtest: context text retains quote, poll, note and link card
+ok 38 - context text retains quote, poll, note and link card
+  ---
+  duration_ms: 0.193111
+  type: 'test'
+  ...
+# Subtest: embedded Article posts remain in layout text
+ok 39 - embedded Article posts remain in layout text
+  ---
+  duration_ms: 0.41787
+  type: 'test'
+  ...
+# Subtest: svg: absolute lines preserve relative geometry
+ok 40 - svg: absolute lines preserve relative geometry
+  ---
+  duration_ms: 0.509969
+  type: 'test'
+  ...
+# Subtest: svg: quadratic converts to cubic geometry
+ok 41 - svg: quadratic converts to cubic geometry
+  ---
+  duration_ms: 0.254503
+  type: 'test'
+  ...
+# Subtest: svg: elliptical arc ends at the same endpoint
+ok 42 - svg: elliptical arc ends at the same endpoint
+  ---
+  duration_ms: 0.17242
+  type: 'test'
+  ...
+# Subtest: svg: implicit repeated moveto becomes lines
+ok 43 - svg: implicit repeated moveto becomes lines
+  ---
+  duration_ms: 0.083566
+  type: 'test'
+  ...
+# Subtest: svg: malicious, incomplete and out-of-budget paths rejected
+ok 44 - svg: malicious, incomplete and out-of-budget paths rejected
+  ---
+  duration_ms: 0.120442
+  type: 'test'
+  ...
+# Subtest: svg: computed color normalizes without CSS values
+ok 45 - svg: computed color normalizes without CSS values
+  ---
+  duration_ms: 0.436848
+  type: 'test'
+  ...
+# Subtest: metadata: homepage never used as a primary source
+ok 46 - metadata: homepage never used as a primary source
+  ---
+  duration_ms: 0.180552
+  type: 'test'
+  ...
+# Subtest: metadata: selected permalink used when anchor excluded
+ok 47 - metadata: selected permalink used when anchor excluded
+  ---
+  duration_ms: 0.195745
+  type: 'test'
+  ...
+# Subtest: metadata: quoted links are preserved and deduplicated
+ok 48 - metadata: quoted links are preserved and deduplicated
+  ---
+  duration_ms: 0.289686
+  type: 'test'
+  ...
+# Subtest: metadata: anonymous hides quoted as well as main URLs
+ok 49 - metadata: anonymous hides quoted as well as main URLs
+  ---
+  duration_ms: 0.173802
+  type: 'test'
+  ...
+# Subtest: background: settings whitelist local bitmap only
+ok 50 - background: settings whitelist local bitmap only
+  ---
+  duration_ms: 0.27876
+  type: 'test'
+  ...
+# Subtest: background: crop and softness bounded
+ok 51 - background: crop and softness bounded
+  ---
+  duration_ms: 0.1128
+  type: 'test'
+  ...
+# Subtest: background: scene places image before cards
+ok 52 - background: scene places image before cards
+  ---
+  duration_ms: 0.254012
+  type: 'test'
+  ...
+# Subtest: background: image placement honors crop position
+ok 53 - background: image placement honors crop position
+  ---
+  duration_ms: 0.135203
+  type: 'test'
+  ...
+# Subtest: quote: data enrichment preserves visible translated text
+ok 54 - quote: data enrichment preserves visible translated text
+  ---
+  duration_ms: 0.436388
+  type: 'test'
+  ...
+# Subtest: quote: incompatible post IDs are not merged
+ok 55 - quote: incompatible post IDs are not merged
+  ---
+  duration_ms: 0.082785
+  type: 'test'
+  ...
+# Subtest: quote: complete author header includes avatar and source badge
+ok 56 - quote: complete author header includes avatar and source badge
+  ---
+  duration_ms: 0.381705
+  type: 'test'
+  ...
+# Subtest: quote: anonymization removes avatar and badge shapes
+ok 57 - quote: anonymization removes avatar and badge shapes
+  ---
+  duration_ms: 0.37821
+  type: 'test'
+  ...
+# Subtest: quote: merge preserves avatar when next partial scan omits it
+ok 58 - quote: merge preserves avatar when next partial scan omits it
+  ---
+  duration_ms: 0.118048
+  type: 'test'
+  ...
+# Subtest: native media: horizontal four-tile geometry not changed into grid
+ok 59 - native media: horizontal four-tile geometry not changed into grid
+  ---
+  duration_ms: 0.356608
+  type: 'test'
+  ...
+1..59
+# tests 59
+# suites 0
+# pass 59
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44.387141
+TAP version 13
+# Subtest: text: defaults preserve context and omit metrics/capture time
+ok 1 - text: defaults preserve context and omit metrics/capture time
+  ---
+  duration_ms: 2.593588
+  type: 'test'
+  ...
+# Subtest: text: exact selection and order, deduplicated; no unrelated root body
+ok 2 - text: exact selection and order, deduplicated; no unrelated root body
+  ---
+  duration_ms: 0.305811
+  type: 'test'
+  ...
+# Subtest: text: empty selection is empty, cannot overwrite clipboard with a heading
+ok 3 - text: empty selection is empty, cannot overwrite clipboard with a heading
+  ---
+  duration_ms: 0.188745
+  type: 'test'
+  ...
+# Subtest: text: format metadata and deterministic privacy-safe filename
+ok 4 - text: format metadata and deterministic privacy-safe filename
+  ---
+  duration_ms: 0.888979
+  type: 'test'
+  ...
+# Subtest: text: newline/Unicode stays intact; original capture is not mutated
+ok 5 - text: newline/Unicode stays intact; original capture is not mutated
+  ---
+  duration_ms: 0.664181
+  type: 'test'
+  ...
+# Subtest: text: selected parent uses the export order; missing parent is not invented
+ok 6 - text: selected parent uses the export order; missing parent is not invented
+  ---
+  duration_ms: 0.362126
+  type: 'test'
+  ...
+# Subtest: text: same author without relationship is not called a continuation
+ok 7 - text: same author without relationship is not called a continuation
+  ---
+  duration_ms: 0.274794
+  type: 'test'
+  ...
+# Subtest: text: reply-to handle is retained only as observed evidence
+ok 8 - text: reply-to handle is retained only as observed evidence
+  ---
+  duration_ms: 0.19932
+  type: 'test'
+  ...
+# Subtest: text: per-post canonical source and Article source
+ok 9 - text: per-post canonical source and Article source
+  ---
+  duration_ms: 0.336317
+  type: 'test'
+  ...
+# Subtest: text: unsupported/unknown source is marked, homepage never substituted
+ok 10 - text: unsupported/unknown source is marked, homepage never substituted
+  ---
+  duration_ms: 0.407414
+  type: 'test'
+  ...
+# Subtest: text: quote and embedded posts keep independent author/body/source
+ok 11 - text: quote and embedded posts keep independent author/body/source
+  ---
+  duration_ms: 0.379592
+  type: 'test'
+  ...
+# Subtest: text: media keeps observed alt text with its image URL; video never uses its poster
+ok 12 - text: media keeps observed alt text with its image URL; video never uses its poster
+  ---
+  duration_ms: 2.512556
+  type: 'test'
+  ...
+# Subtest: text: poll, note, edit state and link cards are retained
+ok 13 - text: poll, note, edit state and link cards are retained
+  ---
+  duration_ms: 0.368375
+  type: 'test'
+  ...
+# Subtest: text: time, stats and capture time are optional
+ok 14 - text: time, stats and capture time are optional
+  ---
+  duration_ms: 0.1862
+  type: 'test'
+  ...
+# Subtest: text: author/source/relation/quote/note/media switches do not erase body
+ok 15 - text: author/source/relation/quote/note/media switches do not erase body
+  ---
+  duration_ms: 0.147522
+  type: 'test'
+  ...
+# Subtest: text: anonymization removes identities and source/relationship backlinks including quotes
+ok 16 - text: anonymization removes identities and source/relationship backlinks including quotes
+  ---
+  duration_ms: 0.215074
+  type: 'test'
+  ...
+# Subtest: text: anonymous explicit sources opt-in restores sources only, not names
+ok 17 - text: anonymous explicit sources opt-in restores sources only, not names
+  ---
+  duration_ms: 0.833476
+  type: 'test'
+  ...
+# Subtest: text: anonymous mode does not silently rewrite identifiers inside the original body
+ok 18 - text: anonymous mode does not silently rewrite identifiers inside the original body
+  ---
+  duration_ms: 0.134122
+  type: 'test'
+  ...
+# Subtest: text: folding warnings are exported rather than falsely claiming completeness
+ok 19 - text: folding warnings are exported rather than falsely claiming completeness
+  ---
+  duration_ms: 0.171649
+  type: 'test'
+  ...
+# Subtest: text: AI copy is structured Markdown with a short scope note
+ok 20 - text: AI copy is structured Markdown with a short scope note
+  ---
+  duration_ms: 0.172199
+  type: 'test'
+  ...
+# Subtest: text: Markdown Article headings/lists/quote/code and rich runs
+ok 21 - text: Markdown Article headings/lists/quote/code and rich runs
+  ---
+  duration_ms: 0.31876
+  type: 'test'
+  ...
+# Subtest: text: plain text retains inline link targets without Markdown punctuation
+ok 22 - text: plain text retains inline link targets without Markdown punctuation
+  ---
+  duration_ms: 0.160271
+  type: 'test'
+  ...
+# Subtest: text: unsafe links/HTML are not executable Markdown
+ok 23 - text: unsafe links/HTML are not executable Markdown
+  ---
+  duration_ms: 0.198619
+  type: 'test'
+  ...
+# Subtest: text: cyclic embeds terminate with a truthful omission note
+ok 24 - text: cyclic embeds terminate with a truthful omission note
+  ---
+  duration_ms: 0.146641
+  type: 'test'
+  ...
+# Subtest: text: long content is not truncated
+ok 25 - text: long content is not truncated
+  ---
+  duration_ms: 11.737556
+  type: 'test'
+  ...
+# Subtest: text: missing fields stay missing, not fabricated
+ok 26 - text: missing fields stay missing, not fabricated
+  ---
+  duration_ms: 0.233232
+  type: 'test'
+  ...
+# Subtest: text: configuration normalization ignores hostile keys and invalid values
+ok 27 - text: configuration normalization ignores hostile keys and invalid values
+  ---
+  duration_ms: 0.117337
+  type: 'test'
+  ...
+# Subtest: text: Markdown preserves explicit post line breaks, without escaping digits
+ok 28 - text: Markdown preserves explicit post line breaks, without escaping digits
+  ---
+  duration_ms: 0.138739
+  type: 'test'
+  ...
+# Subtest: text: large code with many backtick groups is serialized without argument overflow
+ok 29 - text: large code with many backtick groups is serialized without argument overflow
+  ---
+  duration_ms: 11.115519
+  type: 'test'
+  ...
+# Subtest: image links: observed direct image URL follows its label without changing surrounding text
+ok 30 - image links: observed direct image URL follows its label without changing surrounding text
+  ---
+  duration_ms: 1.197184
+  type: 'test'
+  ...
+# Subtest: video links: keep video URL separate from poster and between the same surrounding paragraphs
+ok 31 - video links: keep video URL separate from poster and between the same surrounding paragraphs
+  ---
+  duration_ms: 0.692684
+  type: 'test'
+  ...
+# Subtest: media links: text preserves image/video positions, query strings, quote and Article order
+ok 32 - media links: text preserves image/video positions, query strings, quote and Article order
+  ---
+  duration_ms: 0.779895
+  type: 'test'
+  ...
+# Subtest: media links: markdown preserves image/video positions, query strings, quote and Article order
+ok 33 - media links: markdown preserves image/video positions, query strings, quote and Article order
+  ---
+  duration_ms: 0.784002
+  type: 'test'
+  ...
+# Subtest: media links: ai preserves image/video positions, query strings, quote and Article order
+ok 34 - media links: ai preserves image/video positions, query strings, quote and Article order
+  ---
+  duration_ms: 0.646114
+  type: 'test'
+  ...
+# Subtest: media links: no changes at all to non-media text across formats
+ok 35 - media links: no changes at all to non-media text across formats
+  ---
+  duration_ms: 1.189292
+  type: 'test'
+  ...
+# Subtest: media links: a Blob video falls back to its OWN original post, not its poster or outer quote
+ok 36 - media links: a Blob video falls back to its OWN original post, not its poster or outer quote
+  ---
+  duration_ms: 0.250437
+  type: 'test'
+  ...
+# Subtest: media links: HLS is labeled as a playback stream, never an MP4 download
+ok 37 - media links: HLS is labeled as a playback stream, never an MP4 download
+  ---
+  duration_ms: 0.2061
+  type: 'test'
+  ...
+# Subtest: media links: missing, relative, local and credential URLs are not fabricated or leaked
+ok 38 - media links: missing, relative, local and credential URLs are not fabricated or leaked
+  ---
+  duration_ms: 0.423939
+  type: 'test'
+  ...
+# Subtest: media links: unrelated source page URL cannot masquerade as an image resource
+ok 39 - media links: unrelated source page URL cannot masquerade as an image resource
+  ---
+  duration_ms: 0.15936
+  type: 'test'
+  ...
+# Subtest: media links: empty video identity remains missing, never guess an outer source
+ok 40 - media links: empty video identity remains missing, never guess an outer source
+  ---
+  duration_ms: 0.131798
+  type: 'test'
+  ...
+# Subtest: media links: independent sources option hides post fallback but not original media
+ok 41 - media links: independent sources option hides post fallback but not original media
+  ---
+  duration_ms: 0.178949
+  type: 'test'
+  ...
+# Subtest: media links: anonymity suppresses all automatic image/video URLs in quote and Article
+ok 42 - media links: anonymity suppresses all automatic image/video URLs in quote and Article
+  ---
+  duration_ms: 0.405331
+  type: 'test'
+  ...
+# Subtest: media links: media toggle suppresses both marker and URL without touching text
+ok 43 - media links: media toggle suppresses both marker and URL without touching text
+  ---
+  duration_ms: 0.375325
+  type: 'test'
+  ...
+# Subtest: media links: all link-card images remain with their card, not appended after source notes
+ok 44 - media links: all link-card images remain with their card, not appended after source notes
+  ---
+  duration_ms: 0.251049
+  type: 'test'
+  ...
+# Subtest: media links: enrichment changes resource metadata only, preserving display data and block order
+ok 45 - media links: enrichment changes resource metadata only, preserving display data and block order
+  ---
+  duration_ms: 0.99592
+  type: 'test'
+  ...
+# Subtest: media links: multiple videos are matched by observed poster identity, not array index
+ok 46 - media links: multiple videos are matched by observed poster identity, not array index
+  ---
+  duration_ms: 0.494345
+  type: 'test'
+  ...
+# Subtest: media links: conflicting or ambiguous media does not receive a wrong direct URL
+ok 47 - media links: conflicting or ambiguous media does not receive a wrong direct URL
+  ---
+  duration_ms: 0.200683
+  type: 'test'
+  ...
+# Subtest: media links: existing observed MP4 is not replaced and invalid sources are rejected
+ok 48 - media links: existing observed MP4 is not replaced and invalid sources are rejected
+  ---
+  duration_ms: 0.559242
+  type: 'test'
+  ...
+# Subtest: media links: quote enrichment preserves visible translation and captured pixels
+ok 49 - media links: quote enrichment preserves visible translation and captured pixels
+  ---
+  duration_ms: 0.397729
+  type: 'test'
+  ...
+# Subtest: media links: observed mixed-media order affects text only, never capture blocks
+ok 50 - media links: observed mixed-media order affects text only, never capture blocks
+  ---
+  duration_ms: 0.389898
+  type: 'test'
+  ...
+# Subtest: media links: incomplete or duplicate source positions retain the captured order
+ok 51 - media links: incomplete or duplicate source positions retain the captured order
+  ---
+  duration_ms: 0.99574
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 74.433354
+TAP version 13
+# Subtest: photo: observed rendition remains until high-resolution validation
+ok 1 - photo: observed rendition remains until high-resolution validation
+  ---
+  duration_ms: 4.394592
+  type: 'test'
+  ...
+# Subtest: video: observed video/2 is not stripped to the parent post
+ok 2 - video: observed video/2 is not stripped to the parent post
+  ---
+  duration_ms: 0.730842
+  type: 'test'
+  ...
+# Subtest: video: observed MP4 and video page are both kept and distinguished
+ok 3 - video: observed MP4 and video page are both kept and distinguished
+  ---
+  duration_ms: 2.095949
+  type: 'test'
+  ...
+# Subtest: photo: width/height and display source are not mutated
+ok 4 - photo: width/height and display source are not mutated
+  ---
+  duration_ms: 0.474715
+  type: 'test'
+  ...
+# Subtest: media: original paragraph locations survive in all formats
+ok 5 - media: original paragraph locations survive in all formats
+  ---
+  duration_ms: 1.164955
+  type: 'test'
+  ...
+# Subtest: image URL: query PNG uses original format
+ok 6 - image URL: query PNG uses original format
+  ---
+  duration_ms: 0.552332
+  type: 'test'
+  ...
+# Subtest: image URL: old .jpg:small spelling normalized
+ok 7 - image URL: old .jpg:small spelling normalized
+  ---
+  duration_ms: 0.249776
+  type: 'test'
+  ...
+# Subtest: image URL: bare original PNG extension retained
+ok 8 - image URL: bare original PNG extension retained
+  ---
+  duration_ms: 0.121142
+  type: 'test'
+  ...
+# Subtest: image URL: original request is idempotent
+ok 9 - image URL: original request is idempotent
+  ---
+  duration_ms: 0.398991
+  type: 'test'
+  ...
+# Subtest: image URL: unknown WebP original format is not guessed
+ok 10 - image URL: unknown WebP original format is not guessed
+  ---
+  duration_ms: 0.330939
+  type: 'test'
+  ...
+# Subtest: image URL: signed resources kept byte-identical, not invalidated
+ok 11 - image URL: signed resources kept byte-identical, not invalidated
+  ---
+  duration_ms: 0.182174
+  type: 'test'
+  ...
+# Subtest: image URL: foreign CDN and avatar/banner/poster paths are not altered
+ok 12 - image URL: foreign CDN and avatar/banner/poster paths are not altered
+  ---
+  duration_ms: 0.132459
+  type: 'test'
+  ...
+# Subtest: image URL: invalid/local/user-info credentials rejected
+ok 13 - image URL: invalid/local/user-info credentials rejected
+  ---
+  duration_ms: 0.126921
+  type: 'test'
+  ...
+# Subtest: image URL: missing format is not silently invented
+ok 14 - image URL: missing format is not silently invented
+  ---
+  duration_ms: 0.090216
+  type: 'test'
+  ...
+# Subtest: video page: native link suffix preserved without tracking/time query
+ok 15 - video page: native link suffix preserved without tracking/time query
+  ---
+  duration_ms: 0.068544
+  type: 'test'
+  ...
+# Subtest: video page: relative DOM link resolves
+ok 16 - video page: relative DOM link resolves
+  ---
+  duration_ms: 0.069995
+  type: 'test'
+  ...
+# Subtest: video page: canonical provenance remains a separate concern
+ok 17 - video page: canonical provenance remains a separate concern
+  ---
+  duration_ms: 0.070036
+  type: 'test'
+  ...
+# Subtest: video page: unsafe host, root post, files and invalid indices rejected
+ok 18 - video page: unsafe host, root post, files and invalid indices rejected
+  ---
+  duration_ms: 0.110757
+  type: 'test'
+  ...
+# Subtest: video page: mixed media uses observed attachment slot, not video counter
+ok 19 - video page: mixed media uses observed attachment slot, not video counter
+  ---
+  duration_ms: 0.463078
+  type: 'test'
+  ...
+# Subtest: video page: two explicit indices stay separate and ordered
+ok 20 - video page: two explicit indices stay separate and ordered
+  ---
+  duration_ms: 0.43107
+  type: 'test'
+  ...
+# Subtest: video page: unknown mixed order remains unknown, not fabricated
+ok 21 - video page: unknown mixed order remains unknown, not fabricated
+  ---
+  duration_ms: 0.333503
+  type: 'test'
+  ...
+# Subtest: video page: Article never invents a status player from its article ID
+ok 22 - video page: Article never invents a status player from its article ID
+  ---
+  duration_ms: 0.194574
+  type: 'test'
+  ...
+# Subtest: video page: Article can retain an observed embedded player URL
+ok 23 - video page: Article can retain an observed embedded player URL
+  ---
+  duration_ms: 0.150687
+  type: 'test'
+  ...
+# Subtest: video page: quote keeps its own post and player identity
+ok 24 - video page: quote keeps its own post and player identity
+  ---
+  duration_ms: 0.196256
+  type: 'test'
+  ...
+# Subtest: video stream: HLS labeled separately from a file direct link
+ok 25 - video stream: HLS labeled separately from a file direct link
+  ---
+  duration_ms: 0.261343
+  type: 'test'
+  ...
+# Subtest: privacy: anonymity suppresses original photo and player/file links in every format
+ok 26 - privacy: anonymity suppresses original photo and player/file links in every format
+  ---
+  duration_ms: 0.210166
+  type: 'test'
+  ...
+# Subtest: privacy: includeMedia=false removes all media labels/links
+ok 27 - privacy: includeMedia=false removes all media labels/links
+  ---
+  duration_ms: 0.156085
+  type: 'test'
+  ...
+# Subtest: enrichment: known uploaded PNG replaces rendered WebP link, not pixels
+ok 28 - enrichment: known uploaded PNG replaces rendered WebP link, not pixels
+  ---
+  duration_ms: 0.787347
+  type: 'test'
+  ...
+# Subtest: enrichment: duplicate/conflicting identities never borrow an unrelated image
+ok 29 - enrichment: duplicate/conflicting identities never borrow an unrelated image
+  ---
+  duration_ms: 0.155945
+  type: 'test'
+  ...
+# Subtest: enrichment: MP4 retained but missing player metadata is still filled
+ok 30 - enrichment: MP4 retained but missing player metadata is still filled
+  ---
+  duration_ms: 0.434074
+  type: 'test'
+  ...
+# Subtest: Markdown: keep existing image-label plus clickable URL format, no remote embedding change
+ok 31 - Markdown: keep existing image-label plus clickable URL format, no remote embedding change
+  ---
+  duration_ms: 0.258209
+  type: 'test'
+  ...
+# Subtest: video page: direct resource still exported when source-note switch is off
+ok 32 - video page: direct resource still exported when source-note switch is off
+  ---
+  duration_ms: 0.214784
+  type: 'test'
+  ...
+# Subtest: video page: unrelated direct href does not mask a known post permalink
+ok 33 - video page: unrelated direct href does not mask a known post permalink
+  ---
+  duration_ms: 0.3123
+  type: 'test'
+  ...
+# Subtest: video page: canonical i/web post is not confused with an Article ID
+ok 34 - video page: canonical i/web post is not confused with an Article ID
+  ---
+  duration_ms: 0.145008
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 32.968406
+TAP version 13
+# Subtest: image candidates exist without pretending name=orig was verified
+ok 1 - image candidates exist without pretending name=orig was verified
+  ---
+  duration_ms: 4.452007
+  type: 'test'
+  ...
+# Subtest: same video retains MP4 and HLS rather than overwrite
+ok 2 - same video retains MP4 and HLS rather than overwrite
+  ---
+  duration_ms: 0.499212
+  type: 'test'
+  ...
+# Subtest: HLS multivariant keeps quality groups, subtitle and captions
+ok 3 - HLS multivariant keeps quality groups, subtitle and captions
+  ---
+  duration_ms: 1.634703
+  type: 'test'
+  ...
+# Subtest: DASH segmented representations never become standalone MP4 files
+ok 4 - DASH segmented representations never become standalone MP4 files
+  ---
+  duration_ms: 1.719081
+  type: 'test'
+  ...
+# Subtest: orig 404 falls back to next real image and does not change display src
+ok 5 - orig 404 falls back to next real image and does not change display src
+  ---
+  duration_ms: 2.815633
+  type: 'test'
+  ...
+# Subtest: verification failure retains observed HLS URL
+ok 6 - verification failure retains observed HLS URL
+  ---
+  duration_ms: 0.973187
+  type: 'test'
+  ...
+# Subtest: HLS dimensions, bitrate, average bitrate, codec commas and fps
+ok 7 - HLS dimensions, bitrate, average bitrate, codec commas and fps
+  ---
+  duration_ms: 0.962691
+  type: 'test'
+  ...
+# Subtest: HLS in-band CEA-708 is a track without downloadable URL
+ok 8 - HLS in-band CEA-708 is a track without downloadable URL
+  ---
+  duration_ms: 0.76324
+  type: 'test'
+  ...
+# Subtest: HLS relative audio/subtitle paths and default/forced metadata
+ok 9 - HLS relative audio/subtitle paths and default/forced metadata
+  ---
+  duration_ms: 0.639354
+  type: 'test'
+  ...
+# Subtest: HLS iframe playlists are not recommended full-video streams
+ok 10 - HLS iframe playlists are not recommended full-video streams
+  ---
+  duration_ms: 0.766275
+  type: 'test'
+  ...
+# Subtest: HLS media MP4 init and segments are never file resources
+ok 11 - HLS media MP4 init and segments are never file resources
+  ---
+  duration_ms: 0.381916
+  type: 'test'
+  ...
+# Subtest: HLS live EVENT differs from ended EVENT and static VOD
+ok 12 - HLS live EVENT differs from ended EVENT and static VOD
+  ---
+  duration_ms: 1.206057
+  type: 'test'
+  ...
+# Subtest: HLS low latency parts counted, preload/steering not fetched
+ok 13 - HLS low latency parts counted, preload/steering not fetched
+  ---
+  duration_ms: 0.283266
+  type: 'test'
+  ...
+# Subtest: HLS variables resolve named VALUE and imported parent values
+ok 14 - HLS variables resolve named VALUE and imported parent values
+  ---
+  duration_ms: 0.426042
+  type: 'test'
+  ...
+# Subtest: HLS missing variable is recorded, not turned into a fabricated URL
+ok 15 - HLS missing variable is recorded, not turned into a fabricated URL
+  ---
+  duration_ms: 0.142414
+  type: 'test'
+  ...
+# Subtest: HLS encryption excludes key URI from exported model
+ok 16 - HLS encryption excludes key URI from exported model
+  ---
+  duration_ms: 0.244198
+  type: 'test'
+  ...
+# Subtest: HLS AES-128 encryption is not necessarily DRM
+ok 17 - HLS AES-128 encryption is not necessarily DRM
+  ---
+  duration_ms: 0.185039
+  type: 'test'
+  ...
+# Subtest: HLS malformed lists, duplicate attrs, too much input fail closed
+ok 18 - HLS malformed lists, duplicate attrs, too much input fail closed
+  ---
+  duration_ms: 0.377079
+  type: 'test'
+  ...
+# Subtest: HLS signed master propagates privacy to relative child URLs
+ok 19 - HLS signed master propagates privacy to relative child URLs
+  ---
+  duration_ms: 0.438541
+  type: 'test'
+  ...
+# Subtest: DASH periods, dimensions, codecs, frame rate, dynamic state
+ok 20 - DASH periods, dimensions, codecs, frame rate, dynamic state
+  ---
+  duration_ms: 1.354651
+  type: 'test'
+  ...
+# Subtest: DASH subtitle and audio are not selectable as complete video
+ok 21 - DASH subtitle and audio are not selectable as complete video
+  ---
+  duration_ms: 0.761597
+  type: 'test'
+  ...
+# Subtest: DASH TTML vs IMSC1 segmentation and forced subtitles
+ok 22 - DASH TTML vs IMSC1 segmentation and forced subtitles
+  ---
+  duration_ms: 0.55702
+  type: 'test'
+  ...
+# Subtest: DASH BaseURL inheritance and alternatives preserve actual resources
+ok 23 - DASH BaseURL inheritance and alternatives preserve actual resources
+  ---
+  duration_ms: 0.367684
+  type: 'test'
+  ...
+# Subtest: DASH inherited templates survive representation overrides
+ok 24 - DASH inherited templates survive representation overrides
+  ---
+  duration_ms: 0.209395
+  type: 'test'
+  ...
+# Subtest: DASH ContentProtection marked, no KID/pssh/key data exported
+ok 25 - DASH ContentProtection marked, no KID/pssh/key data exported
+  ---
+  duration_ms: 0.222906
+  type: 'test'
+  ...
+# Subtest: DASH embedded CEA-608 tracks have no standalone URL
+ok 26 - DASH embedded CEA-608 tracks have no standalone URL
+  ---
+  duration_ms: 0.362626
+  type: 'test'
+  ...
+# Subtest: DASH identical representation IDs in different periods never merge
+ok 27 - DASH identical representation IDs in different periods never merge
+  ---
+  duration_ms: 0.539253
+  type: 'test'
+  ...
+# Subtest: XML DTD, external entities, malformed nesting and attributes are rejected
+ok 28 - XML DTD, external entities, malformed nesting and attributes are rejected
+  ---
+  duration_ms: 0.362636
+  type: 'test'
+  ...
+# Subtest: XML namespace, CDATA and built-in/numeric entities safely decode
+ok 29 - XML namespace, CDATA and built-in/numeric entities safely decode
+  ---
+  duration_ms: 0.154673
+  type: 'test'
+  ...
+# Subtest: VMAP preserves MP4/HLS variants and ignores tracker URLs
+ok 30 - VMAP preserves MP4/HLS variants and ignores tracker URLs
+  ---
+  duration_ms: 0.476638
+  type: 'test'
+  ...
+# Subtest: format classification recognizes MIME-only extensionless media
+ok 31 - format classification recognizes MIME-only extensionless media
+  ---
+  duration_ms: 0.127412
+  type: 'test'
+  ...
+# Subtest: video partitions and init.mp4 do not become whole files
+ok 32 - video partitions and init.mp4 do not become whole files
+  ---
+  duration_ms: 0.112059
+  type: 'test'
+  ...
+# Subtest: unsupported but observed video formats classified without claiming X universally emits them
+ok 33 - unsupported but observed video formats classified without claiming X universally emits them
+  ---
+  duration_ms: 0.134493
+  type: 'test'
+  ...
+# Subtest: subtitle formats mapped separately from video
+ok 34 - subtitle formats mapped separately from video
+  ---
+  duration_ms: 0.09945
+  type: 'test'
+  ...
+# Subtest: poster/image/page cannot be mistaken for MP4
+ok 35 - poster/image/page cannot be mistaken for MP4
+  ---
+  duration_ms: 0.668036
+  type: 'test'
+  ...
+# Subtest: network policy rejects localhost, IP literals, user-info, redirects target domains
+ok 36 - network policy rejects localhost, IP literals, user-info, redirects target domains
+  ---
+  duration_ms: 0.140252
+  type: 'test'
+  ...
+# Subtest: network policy allows only three current resource hosts
+ok 37 - network policy allows only three current resource hosts
+  ---
+  duration_ms: 0.121623
+  type: 'test'
+  ...
+# Subtest: signature detection preserves signed URL, benign tag remains public
+ok 38 - signature detection preserves signed URL, benign tag remains public
+  ---
+  duration_ms: 0.168864
+  type: 'test'
+  ...
+# Subtest: image rules do not invent jpg from WebP and do not rewrite foreign CDN
+ok 39 - image rules do not invent jpg from WebP and do not rewrite foreign CDN
+  ---
+  duration_ms: 0.74962
+  type: 'test'
+  ...
+# Subtest: signed images have only the original unchanged URL
+ok 40 - signed images have only the original unchanged URL
+  ---
+  duration_ms: 0.686565
+  type: 'test'
+  ...
+# Subtest: candidate is not a verified original in text without a request
+ok 41 - candidate is not a verified original in text without a request
+  ---
+  duration_ms: 2.563623
+  type: 'test'
+  ...
+# Subtest: no mutation by pure text serializer
+ok 42 - no mutation by pure text serializer
+  ---
+  duration_ms: 0.360623
+  type: 'test'
+  ...
+# Subtest: three video formats retained in default copy, all quality variants available on request
+ok 43 - three video formats retained in default copy, all quality variants available on request
+  ---
+  duration_ms: 1.014198
+  type: 'test'
+  ...
+# Subtest: Animated GIF retains semantic marker and MP4 container
+ok 44 - Animated GIF retains semantic marker and MP4 container
+  ---
+  duration_ms: 0.490359
+  type: 'test'
+  ...
+# Subtest: media paragraph positions preserved across txt markdown and AI
+ok 45 - media paragraph positions preserved across txt markdown and AI
+  ---
+  duration_ms: 1.263965
+  type: 'test'
+  ...
+# Subtest: Markdown image embedding remains opt-in with escaped alt text
+ok 46 - Markdown image embedding remains opt-in with escaped alt text
+  ---
+  duration_ms: 0.361635
+  type: 'test'
+  ...
+# Subtest: all media, tracks, signed URL suppression obey anonymous mode
+ok 47 - all media, tracks, signed URL suppression obey anonymous mode
+  ---
+  duration_ms: 0.186851
+  type: 'test'
+  ...
+# Subtest: signed resources hidden by default, explicit opt-in preserves exact query
+ok 48 - signed resources hidden by default, explicit opt-in preserves exact query
+  ---
+  duration_ms: 0.373423
+  type: 'test'
+  ...
+# Subtest: subtitle language, default, in-band, formats are exported at same media position
+ok 49 - subtitle language, default, in-band, formats are exported at same media position
+  ---
+  duration_ms: 0.35155
+  type: 'test'
+  ...
+# Subtest: caption absence is not fabricated
+ok 50 - caption absence is not fabricated
+  ---
+  duration_ms: 0.131148
+  type: 'test'
+  ...
+# Subtest: all resources output still excludes segment and key links
+ok 51 - all resources output still excludes segment and key links
+  ---
+  duration_ms: 0.279952
+  type: 'test'
+  ...
+# Subtest: incremental merges keep resources without duplicates
+ok 52 - incremental merges keep resources without duplicates
+  ---
+  duration_ms: 0.2455
+  type: 'test'
+  ...
+# Subtest: merge rejects known different owner and media ID
+ok 53 - merge rejects known different owner and media ID
+  ---
+  duration_ms: 0.263457
+  type: 'test'
+  ...
+# Subtest: scan updates never erase prior verification or dimensions
+ok 54 - scan updates never erase prior verification or dimensions
+  ---
+  duration_ms: 0.211258
+  type: 'test'
+  ...
+# Subtest: image orig permission failure falls back without blocking entire export
+ok 55 - image orig permission failure falls back without blocking entire export
+  ---
+  duration_ms: 1.604578
+  type: 'test'
+  ...
+# Subtest: all HD requests fail; observed image survives and is not called verified
+ok 56 - all HD requests fail; observed image survives and is not called verified
+  ---
+  duration_ms: 3.572262
+  type: 'test'
+  ...
+# Subtest: HTML returned for image never counts as a valid bitmap
+ok 57 - HTML returned for image never counts as a valid bitmap
+  ---
+  duration_ms: 2.116229
+  type: 'test'
+  ...
+# Subtest: same image uses successful small cache across repeated inspections
+ok 58 - same image uses successful small cache across repeated inspections
+  ---
+  duration_ms: 3.028663
+  type: 'test'
+  ...
+# Subtest: playlist recursion and request budgets are bounded; segments never fetched
+ok 59 - playlist recursion and request budgets are bounded; segments never fetched
+  ---
+  duration_ms: 2.159223
+  type: 'test'
+  ...
+# Subtest: circular master playlists terminate without rerequesting root
+ok 60 - circular master playlists terminate without rerequesting root
+  ---
+  duration_ms: 0.591441
+  type: 'test'
+  ...
+# Subtest: encrypted root records tracks without fetching children or keys
+ok 61 - encrypted root records tracks without fetching children or keys
+  ---
+  duration_ms: 0.59742
+  type: 'test'
+  ...
+# Subtest: foreign and signed links are retained but no network request by default
+ok 62 - foreign and signed links are retained but no network request by default
+  ---
+  duration_ms: 0.259401
+  type: 'test'
+  ...
+# Subtest: cancel before request leaves observed resources intact
+ok 63 - cancel before request leaves observed resources intact
+  ---
+  duration_ms: 0.24525
+  type: 'test'
+  ...
+# Subtest: host rejects HEAD support failures only after bounded GET fallback
+ok 64 - host rejects HEAD support failures only after bounded GET fallback
+  ---
+  duration_ms: 15.843902
+  type: 'test'
+  ...
+# Subtest: host forbids redirects and omits credentials and referrer
+ok 65 - host forbids redirects and omits credentials and referrer
+  ---
+  duration_ms: 0.406743
+  type: 'test'
+  ...
+# Subtest: host cancels oversized stream rather than accept truncated manifest
+ok 66 - host cancels oversized stream rather than accept truncated manifest
+  ---
+  duration_ms: 0.807366
+  type: 'test'
+  ...
+# Subtest: unrelated posts never get their media inspected by selected capture
+ok 67 - unrelated posts never get their media inspected by selected capture
+  ---
+  duration_ms: 0.402907
+  type: 'test'
+  ...
+# Subtest: resolver deadline also terminates an unresponsive host bridge
+ok 68 - resolver deadline also terminates an unresponsive host bridge
+  ---
+  duration_ms: 40.810062
+  type: 'test'
+  ...
+# Subtest: JPEG dimensions are guarded before bitmap decoding allocation
+ok 69 - JPEG dimensions are guarded before bitmap decoding allocation
+  ---
+  duration_ms: 0.613714
+  type: 'test'
+  ...
+# Subtest: an orig response smaller than an observed srcset rendition is not chosen blindly
+ok 70 - an orig response smaller than an observed srcset rendition is not chosen blindly
+  ---
+  duration_ms: 2.131191
+  type: 'test'
+  ...
+# Subtest: failed generated candidates never become observed fallback URLs
+ok 71 - failed generated candidates never become observed fallback URLs
+  ---
+  duration_ms: 0.480223
+  type: 'test'
+  ...
+# Subtest: explicit signed-image consent is not blocked by a cached previous refusal
+ok 72 - explicit signed-image consent is not blocked by a cached previous refusal
+  ---
+  duration_ms: 1.143483
+  type: 'test'
+  ...
+1..72
+# tests 72
+# suites 0
+# pass 72
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 574.912482
