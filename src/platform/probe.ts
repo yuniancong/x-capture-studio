@@ -62,8 +62,66 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
     const nested=publicQuote(q.quoted_status_result?.result||q.quoted_status,depth+1);if(nested)result.quote=nested;
     return result;
   };
-  const nodes=[...win.document.querySelectorAll('article[data-testid="tweet"], [data-testid="twitterArticleReadView"], [data-testid="twitterArticleRichTextView"]')];
+  // Logged-out desktop X (2026-10) renders through Relay: props hold fragment references and the
+  // resolved data lives in fragment hook snapshots under the <article>. Every value is attributed by
+  // its own record ID (base64 "Tweet:<id>", media "client:<that>:media_entities2:<n>"), never by position.
+  const relayTweet=(v:any):string|undefined=>{
+    if(typeof v!=='string'||v.length>400)return;const m=v.match(/^(?:client:)?([A-Za-z0-9+/]{8,}=*)(?::|$)/);if(!m)return;
+    try{return atob(m[1]).match(/^Tweet:(\d{1,25})$/)?.[1];}catch{return;}
+  };
+  const relayPost=(el:any)=>{
+    const fk=Object.keys(el).find(k=>k.startsWith('__reactFiber$'));let root:any;try{root=fk?el[fk]:undefined;}catch{return;}
+    const snapshots:any[]=[],stack:[any,number][]=[[root?.child,0]];let fibers=0;
+    while(stack.length&&fibers<4000){
+      const [f,depth]=stack.pop()!;if(!f||typeof f!=='object')continue;fibers++;
+      try{
+        let hook=f.memoizedState;
+        for(let i=0;hook&&typeof hook==='object'&&i<48;i++,hook=hook.next){const v=hook.memoizedState;if(!v||typeof v!=='object')continue;
+          if(v.snapshot?.data&&typeof v.snapshot.data==='object')snapshots.push(v.snapshot.data);
+          if(Array.isArray(v.snapshots))for(const x of v.snapshots.slice(0,16))if(x?.data&&typeof x.data==='object')snapshots.push(x.data);}
+        if(f.sibling)stack.push([f.sibling,depth]);if(f.child&&depth<120)stack.push([f.child,depth+1]);
+      }catch{}
+    }
+    const records=new Map<string,any>(),record=(id:string)=>{let r=records.get(id);if(!r)records.set(id,r={media:[]});return r;};
+    const seen=new WeakSet<object>();let budget=20000;
+    const visit=(o:any,tweet:string|undefined,index:number,depth:number)=>{
+      if(!o||typeof o!=='object'||seen.has(o)||depth>9||budget--<=0||(win.Node&&o instanceof win.Node))return;seen.add(o);
+      try{
+        if(typeof o.__id==='string'){tweet=relayTweet(o.__id);const n=o.__id.match(/:media_entities2:(\d{1,2})$/);index=n?Number(n[1]):-1;}
+        // Some fragments select rest_id without __id; `details` exists only on tweet records (users have rest_id too).
+        else if(typeof o.rest_id==='string'&&/^\d+$/.test(o.rest_id)&&o.details&&typeof o.details==='object'){tweet=o.rest_id;index=-1;}
+        if(tweet&&index>=0){const m=record(tweet).media[index]||={};
+          for(const k of ['media_url_https','type','id_str','media_key','ext_alt_text','original_info','video_download_url','video_info'])if(o[k]!=null&&m[k]===undefined)m[k]=o[k];}
+        else if(tweet){const r=record(tweet),d=o.details;
+          const text=o.note_tweet?.note_tweet_results?.result?.text??d?.full_text;if(typeof text==='string'&&r.fullText===undefined)r.fullText=text;
+          if(Number.isFinite(d?.created_at_ms)&&!r.published)r.published=new Date(d.created_at_ms).toISOString();
+          const parent=o.reply_to_results?.rest_id;if(typeof parent==='string'&&/^\d+$/.test(parent)&&parent!==tweet)r.parentId=parent;}
+      }catch{return;}
+      let keys:string[];try{keys=Object.keys(o);}catch{return;}
+      for(const k of keys){
+        if(k==='__fragmentOwner'||/token|cookie|session|auth|password/i.test(k))continue;
+        let v:any;try{v=o[k];}catch{continue;}if(!v||typeof v!=='object')continue;
+        if(k==='media_entities2'&&Array.isArray(v))v.slice(0,64).forEach((x:any,i:number)=>visit(x,tweet,i,depth+1));else visit(v,tweet,index,depth+1);
+      }
+    };
+    for(const data of snapshots)visit(data,undefined,-1,0);
+    for(const [id,r] of records){
+      if(!wanted.has(id)||found.has(id))continue;
+      const media=r.media.filter(Boolean).map((m:any)=>{
+        const info=m.video_info&&typeof m.video_info==='object'?m.video_info:undefined,variants=Array.isArray(info?.variants)?info.variants.slice(0,127):[];
+        // The largest progressive MP4 is often only in video_download_url, not in variants.
+        if(info&&typeof m.video_download_url==='string'&&!variants.some((v:any)=>v?.url===m.video_download_url))variants.push({content_type:'video/mp4',url:m.video_download_url});
+        const type=typeof m.type==='string'?m.type:info?(variants.some((v:any)=>/\/tweet_video\//.test(v?.url||''))?'animated_gif':'video'):'photo';
+        return {...m,type,video_info:info?{...info,variants}:undefined};
+      });
+      const data:any={id,relationEvidence:'data',media:publicMedia({extended_entities:{media}},`https://x.com/i/web/status/${id}`)};
+      if(r.parentId)data.parentId=r.parentId;if(r.published)data.published=r.published;if(typeof r.fullText==='string'&&r.fullText.length<400000)data.fullText=r.fullText;
+      found.set(id,data);
+    }
+  };
+  const nodes=[...win.document.querySelectorAll('article[data-testid="tweet"], [data-testid="twitterArticleReadView"], [data-testid="twitterArticleRichTextView"], article:not([data-testid])')];
   for(const el of nodes){
+    if(el.tagName==='ARTICLE'&&!el.hasAttribute('data-testid')){relayPost(el);continue;}
     const own=Object.keys(el).filter(k=>k.startsWith('__reactFiber$')||k.startsWith('__reactProps$'));if(!own.length)continue;
     const queue:[any,number][]=[],seen=new WeakSet<object>();let budget=3200;
     // Desktop X (2026) passes a flattened tweet as a prop of an ANCESTOR component.

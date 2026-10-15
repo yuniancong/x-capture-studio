@@ -39,6 +39,7 @@ export class Collector {
         const p=fresh.find(p=>p.id===raw.id);if(!p)continue;
         enrichMediaLinks(p.blocks,raw.media);enrichCard(p,raw.media);
         if(raw.parentId&&/^\d+$/.test(raw.parentId))p.parentId=raw.parentId;
+        if(!p.published&&typeof raw.published==='string'&&!isNaN(Date.parse(raw.published)))p.published=raw.published;
         if(raw.conversationId&&/^\d+$/.test(raw.conversationId))p.conversationId=raw.conversationId;
         if(p.parentId)p.relationEvidence='data';
         if(raw.quote){p.quote=enrichQuote(p.quote,raw.quote,p.capturedAt);if(p.quote?.url)p.warnings=p.warnings.filter(w=>!w.includes('引用原帖链接未识别'));}

@@ -3,6 +3,7 @@ import {postID,safeLink,sourceURL} from './urls';
 import {absolutePath,hexColor} from './svg';
 import {observedVideoURL,observedVideoPageURL,observedImageURL} from './media-links';
 import {imageDOMResources,videoDOMResources,iframeMedia} from '../media/dom';
+import {postNodes} from './post-nodes';
 const clean=(s:string|null|undefined)=>(s||'').replace(/\u200b/g,'').trim();
 const richSelectors='[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"], [data-testid="articleRichTextView"]';
 const authorSelector='[data-testid="User-Name"], [data-testid="UserName"]';
@@ -27,9 +28,8 @@ function quoteNode(el:Element):Element|null {
   }
   return null;
 }
-function visibleBadge(header:Element):Badge|undefined {
-  const mark=header.querySelector('[data-testid="icon-verified"], [aria-label="Verified account"], [aria-label="已认证账号"], [aria-label="認証済みアカウント"], [aria-label="已認證帳戶"]');
-  const svg=mark?.tagName.toLowerCase()==='svg'?mark:mark?.querySelector('svg');if(!svg)return;
+function visibleBadge(header:Element,mark=header.querySelector('[data-testid="icon-verified"], [aria-label="Verified account"], [aria-label="已认证账号"], [aria-label="認証済みアカウント"], [aria-label="已認證帳戶"]')):Badge|undefined {
+  const svg=['svg','symbol'].includes(mark?.tagName.toLowerCase()||'')?mark:mark?.querySelector('svg');if(!svg)return;
   const vb=(svg.getAttribute('viewBox')||'0 0 24 24').trim().split(/[\s,]+/).map(Number);
   if(vb.length!==4||vb.some(v=>!Number.isFinite(v)||Math.abs(v)>10000)||vb[2]<=0||vb[3]<=0)return;
   const fallback=hexColor(getComputedStyle(svg).color);
@@ -136,8 +136,62 @@ function readPoll(el:Element,quote:Element|null):Poll|undefined{
   if(!options.length)return {options:[],summary:clean(poll.textContent)};
   return {options,summary:clean(poll.querySelector('[data-testid="pollSummary"], [data-testid="pollFooter"]')?.textContent)};
 }
+function videoMedia(video:HTMLVideoElement,box:Element|null,url:string|undefined,order:number,attachment:number):Media{
+  const poster=visibleVideoFrame(video)||video.poster||imageSrc(box?.querySelector('img'))||'';
+  return {...videoDOMResources(video),src:poster,textOrder:order,sourceUrl:observedVideoURL(video),playbackUrl:observedVideoPageURL(video),attachmentIndex:attachment>=0?attachment+1:undefined,posterUrl:video.poster||undefined,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
+    display:displayBox(video),duration:Number.isFinite(video.duration)?`${Math.floor(video.duration/60)}:${String(Math.floor(video.duration%60)).padStart(2,'0')}`:clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent)||undefined};
+}
+/** Logged-out desktop X (verified 2026-10-16): Tailwind markup without data-testid or <time>.
+ * Identity comes from the post's own permalink and profile links. The quoted post is a nested
+ * <article>, so every lookup excludes it; engagement controls are read, never clicked. */
+function parseLoggedOutPost(el:Element,quoted:boolean,ownerId:string,depth:number):Post|undefined{
+  if(depth>4)return;
+  const quote=el.querySelector('article');const own=(selector:string)=>ownNodes(el,selector,quote);
+  const permalinks=own('a[href*="/status/"]').filter(a=>!a.closest('[data-engagement-action]')&&!/\/(?:photo|video)\/\d/.test(a.getAttribute('href')||''));
+  const stamp=permalinks.find(a=>!a.children.length&&clean(a.textContent));
+  let url=[stamp,...permalinks].map(a=>sourceURL(a?.getAttribute('href')||'')).find(Boolean);
+  if(!url&&quoted)url=sourceURL(el.parentElement?.closest('[role="link"][data-href]')?.getAttribute('data-href')||'');
+  const id=url?postID(url):undefined;
+  if(!id&&!quoted)return;
+  const links=own('a[href]');
+  const handleLink=links.find(a=>/^@[A-Za-z0-9_]+$/.test(clean(a.textContent)));
+  const nameLink=links.find(a=>a!==handleLink&&a.getAttribute('href')===handleLink?.getAttribute('href')&&!a.querySelector('img')&&!!clean(a.textContent));
+  let header=nameLink?.parentElement||null;while(header&&handleLink&&!header.contains(handleLink)&&header!==el)header=header.parentElement;
+  const handle=clean(handleLink?.textContent).slice(1)||url?.match(/^https:\/\/x.com\/([^/]+)\/status/)?.[1]||'unknown';
+  const mark=nameLink?.parentElement?.querySelector('[aria-haspopup="dialog"][aria-label] svg')||null;
+  // The badge is a sprite reference (<use href="#icon-verified-…">); its paths live in the shared <symbol>.
+  const sprite=mark?.querySelector('use')?.getAttribute('href')||mark?.querySelector('use')?.getAttribute('xlink:href')||'';
+  const symbol=sprite.startsWith('#')?el.ownerDocument.getElementById(sprite.slice(1)):null;
+  const author:Author={name:clean(nameLink?.textContent)||handle,handle,avatar:imageSrc(own('img[src*="profile_images"], img[src*="default_profile"]')[0]),verified:!!mark,
+    badge:mark&&header?visibleBadge(header,symbol?.tagName.toLowerCase()==='symbol'?symbol:mark):undefined};
+  const blocks:Block[]=[];
+  const txt=own('div[dir="auto"]').find(d=>!d.closest('a,button'));const runs=txt?inlineRuns(txt):[];
+  if(runs.length)blocks.push({kind:'text',runs});
+  const media=own('video, img[src*="//pbs.twimg.com/media/"]');
+  media.forEach((n,i)=>{
+    if(n.tagName==='IMG'){const m=mediaFromImage(n as HTMLImageElement);m.textOrder=i;m.attachmentIndex=i+1;blocks.push({kind:'media',media:m});return;}
+    const box=n.parentElement,m=videoMedia(n as HTMLVideoElement,box,url,i,i);
+    // The duration badge has no test ID here; it is the m:ss leaf in the player overlay (00:00 = not loaded).
+    if(!m.duration)m.duration=clean([...(box?.querySelectorAll('div,span')||[])].find(d=>!d.children.length&&/^\d{1,2}:\d{2}(?::\d{2})?$/.test(clean(d.textContent))&&/[1-9]/.test(d.textContent||''))?.textContent)||undefined;
+    blocks.push({kind:'media',media:m});
+  });
+  const metrics:Record<string,string>={};
+  for(const [key,action] of [['replies','reply'],['reposts','retweet'],['likes','like'],['bookmarks','bookmark']]){const n=own(`[data-engagement-action="${action}"]`)[0];if(n)metrics[key]=clean(n.textContent)||'—';}
+  // Status page: views is the permalink beside the timestamp; timelines use a generic engagement pill.
+  const views=permalinks.find(a=>a!==stamp&&a.children.length)?.firstElementChild||own('[data-engagement-action="generic"]')[0];
+  if(views)metrics.views=clean(views.textContent)||'—';
+  const warnings:string[]=[];
+  if(quoted&&!url)warnings.push('引用原帖链接未识别；已保留当前页面可见的作者和内容，不会编造链接。');
+  const p:Post={id:id||`visible-quote-${ownerId}-${depth}`,url:url||'',author,blocks,kind:'post',textStructure:'text-with-attachments',displayTime:clean(stamp?.textContent)||undefined,
+    metrics,relationEvidence:'unknown',warnings,capturedAt:new Date().toISOString()};
+  if(quote){const qp=parseLoggedOutPost(quote,true,p.id,depth+1);if(qp&&qp.id!==p.id){p.quote=qp;p.warnings.push(...qp.warnings);}else p.warnings.push('检测到引用卡片，但当前可见内容未能完整读取。');}
+  if(!blocks.length&&!p.quote&&clean(el.textContent))p.warnings.push('未识别到正文内容；请确认帖子已加载。');
+  for(const b of p.blocks)if(b.kind==='media')b.media.ownerId=p.id;
+  return p;
+}
 export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Post|undefined{
   if(depth>4)return;
+  if(el.tagName==='ARTICLE'&&!el.hasAttribute('data-testid'))return parseLoggedOutPost(el,quoted,ownerId,depth);
   const quote=quoteNode(el);
   const times=ownNodes(el,'time',quote);const time=times[0];
   const linkCandidates=[time?.closest('a')?.getAttribute('href'),el.getAttribute('href'),el.getAttribute('data-href'),el.getAttribute('data-url'),...ownNodes(el,'a[href*="/status/"]',quote).map(a=>a.getAttribute('href'))];
@@ -158,11 +212,7 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
   for(const img of images){if(inlineMedia&&txt?.contains(img)||img.closest('[data-testid="videoComponent"]')?.querySelector('video'))continue;const m=mediaFromImage(img);m.textOrder=mediaOrder.indexOf(img);if(m.src&&!seen.has(m.src)){seen.add(m.src);blocks.push({kind:'media',media:m});}}
   for(const video of ownNodes(el,'video',quote) as HTMLVideoElement[]){
     if(inlineMedia&&txt?.contains(video))continue;
-    const box=video.closest('[data-testid="videoComponent"]')||video.parentElement;
-    const poster=visibleVideoFrame(video)||video.poster||imageSrc(box?.querySelector('img'))||'';
-    const m:Media={...videoDOMResources(video),src:poster,textOrder:mediaOrder.indexOf(video),sourceUrl:observedVideoURL(video),playbackUrl:observedVideoPageURL(video),attachmentIndex:attachmentNodes.indexOf(video)>=0?attachmentNodes.indexOf(video)+1:undefined,posterUrl:video.poster||undefined,kind:/\bGIF\b/i.test(box?.textContent||'')?'gif':'video',alt:'视频封面',href:url,
-      display:displayBox(video),duration:Number.isFinite(video.duration)?`${Math.floor(video.duration/60)}:${String(Math.floor(video.duration%60)).padStart(2,'0')}`:clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent)||undefined};
-    blocks.push({kind:'media',media:m});
+    blocks.push({kind:'media',media:videoMedia(video,video.closest('[data-testid="videoComponent"]')||video.parentElement,url,mediaOrder.indexOf(video),attachmentNodes.indexOf(video))});
   }
   for(const f of ownNodes(el,'iframe',quote) as HTMLIFrameElement[]){if(inlineMedia&&txt?.contains(f))continue;const m=iframeMedia(f);if(m)blocks.push({kind:'media',media:m});}
   const metrics:Record<string,string>={};
@@ -207,7 +257,7 @@ export function parseArticle(scope:Document|Element=document):Post|undefined{
 }
 export function collectDOM(scope:Document|Element=document):Post[]{
   const primary=scope.querySelector('[data-testid="primaryColumn"]')||scope.querySelector('main')||scope;
-  const nodes=[...primary.querySelectorAll('article[data-testid="tweet"]')].filter(el=>!el.parentElement?.closest('article[data-testid="tweet"]'));
+  const nodes=postNodes(primary);
   const posts=nodes.filter(el=>!el.closest(richSelectors)).map(el=>parsePost(el)).filter((p):p is Post=>!!p);
   const article=parseArticle(scope);if(article){const idx=posts.findIndex(p=>p.id===article.id);if(idx>=0)posts[idx]=article;else posts.unshift(article);}
   return [...new Map(posts.map(p=>[p.id,p])).values()];

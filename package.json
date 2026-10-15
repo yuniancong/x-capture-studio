@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/build.cjs",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs && node scripts/test-discovery.cjs && node scripts/test-rc8-video.cjs"
+    "test": "node scripts/test.cjs && node scripts/test-text.cjs && node scripts/test-hd-links.cjs && node scripts/test-multimedia.cjs && node scripts/test-discovery.cjs && node scripts/test-rc8-video.cjs && node scripts/test-logged-out.cjs"
   },
   "devDependencies": {
     "typescript": "5.8.3"
