@@ -62,3 +62,16 @@
 **iPhone/iPad（约 3 分钟）**：保留旧脚本为停用状态 → 导入新 `.user.js` 并启用 → Safari 允许 Stay 访问 x.com → 刷新目标帖 → 出现 X Capture 入口 → 文本 → 确认 `.m3u8` 链接仍在 → 复制文本、导出 TXT/MD、PNG/PDF、系统分享各一次。异常时停用新脚本、启用旧脚本并刷新即可回退。
 
 `SOURCE_MANIFEST_RC8.json` 对应 rc.8 基线提交（修订前快照），本修订未改写；修订后的可复现性以 `scripts/package_release.py --check` 为准。
+
+## 合并后最终检查（含素质选择、未登录页面、macOS 助手）
+
+| 套件 | 结果 |
+|---|---:|
+| TypeScript | PASS |
+| Node 单元/契约（275 + 未登录 4 + 素质 9） | 288/288 |
+| discovery / multimedia / hd_links / media_links / text_export / PNG·PDF | 40 / 53 / 28 / 24 / 34 / 50 全通过 |
+| rc2_regression（macOS） | 54/54（xattr 修复后完整通过） |
+| logged_out_qa | 22/22 |
+
+真实安装最终 ZIP（Chrome for Testing 153）：worker、session、alarms、唤醒均正常；**未登录真实 X 页面注入 4 个帖内入口**（修订前 0）。
+素质选择用真实资源验证：同一照片原图解码为 2048×1365 并绘入 PNG 场景；视频 540p 输出真实 540 MP4（响应头已验证）与 540 HLS 子播放列表，“最高可用”输出与修订前一致。手机 375px 宽无横向溢出。

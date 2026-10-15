@@ -859,11 +859,12 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const collector_1 = __require(1);
 const parser_1 = __require(3);
-const host_1 = __require(11);
+const host_1 = __require(12);
 const urls_1 = __require(4);
-const dom_1 = __require(16);
-const model_1 = __require(13);
-const passive_log_1 = __require(17);
+const dom_1 = __require(17);
+const model_1 = __require(14);
+const passive_log_1 = __require(18);
+const post_nodes_1 = __require(10);
 // Keep the launcher independent of PDF/fontkit initialization. A rendering error must not hide the entry point.
 const host = (0, host_1.createHost)("stay"), collector = new collector_1.Collector(host);
 let active, opening = false, lastError = '';
@@ -875,8 +876,8 @@ async function open(rootId, demo = false) {
     opening = true;
     stayBoot?.note('OPEN', '正在打开编辑器');
     try {
-        const { Studio } = await Promise.resolve().then(() => __importStar(__require(18)));
-        const capture = demo ? (await Promise.resolve().then(() => __importStar(__require(40)))).demoCapture() : await collector.capture(rootId);
+        const { Studio } = await Promise.resolve().then(() => __importStar(__require(19)));
+        const capture = demo ? (await Promise.resolve().then(() => __importStar(__require(42)))).demoCapture() : await collector.capture(rootId);
         active = new Studio(capture, host, demo ? undefined : collector, () => { active = undefined; });
         await active.open();
         lastError = '';
@@ -899,19 +900,19 @@ function diagnostics() {
         stayBoot.diagnose();
         return;
     }
-    const count = document.querySelectorAll('article[data-testid="tweet"]').length;
+    const count = (0, post_nodes_1.postNodes)(document).length;
     alert(`X Capture ${model_1.VERSION}\n运行端：${"stay"}\n页面状态：${document.readyState}\n已识别帖子容器：${count}\n编辑器：${active ? '已打开' : '未打开'}\n最近错误：${lastError || '无'}\n\n${count ? '已注入页面；点 X Capture 可打开编辑器。' : '脚本已运行，但当前没有可识别的帖子。请在浏览器（不是 X 原生 App）打开帖子详情，等待正文后再点。'}\n无入口时请检查 Stay 中脚本是否启用、x.com 站点访问权限，并禁用旧版重复脚本。`);
 }
 function attachButtons() {
     const main = document.querySelector('[data-testid="primaryColumn"]') || document.querySelector('main') || document;
-    for (const article of main.querySelectorAll('article[data-testid="tweet"]')) {
-        if (article.parentElement?.closest('article[data-testid="tweet"]'))
-            continue;
+    for (const article of (0, post_nodes_1.postNodes)(main)) {
         const old = article.querySelector('[data-xcapture-ui="button"]');
         if (old?.dataset.version === model_1.VERSION)
             continue;
         old?.remove();
-        const bar = [...article.querySelectorAll('[role="group"]')].find(g => g.querySelector('[data-testid="reply"]'));
+        // Logged-out X has no role="group"; its bar is the row holding the post's own reply action.
+        const bar = [...article.querySelectorAll('[role="group"]')].find(g => g.querySelector('[data-testid="reply"]')) ||
+            [...article.querySelectorAll('[data-engagement-action="reply"]')].find(n => n.closest('article') === article)?.parentElement || undefined;
         if (!bar)
             continue; // The independent floating launcher covers changed/missing action bars and Articles.
         const b = document.createElement('button');
@@ -965,7 +966,7 @@ if ("stay" === 'demo') {
         if (button)
             button.onclick = () => void open(undefined, true);
         // Test seam exists only in the standalone offline demo.
-        globalThis.XCapture = { version: model_1.VERSION, openDemo: () => open(undefined, true), openCapture: async (c) => { active?.close(); const { Studio } = await Promise.resolve().then(() => __importStar(__require(18))); active = new Studio(c, host, undefined, () => active = undefined); await active.open(); }, get studio() { return active; }, collectDOM: parser_1.collectDOM };
+        globalThis.XCapture = { version: model_1.VERSION, openDemo: () => open(undefined, true), openCapture: async (c) => { active?.close(); const { Studio } = await Promise.resolve().then(() => __importStar(__require(19))); active = new Studio(c, host, undefined, () => active = undefined); await active.open(); }, get studio() { return active; }, collectDOM: parser_1.collectDOM };
         void open(undefined, true);
     };
     if (document.documentElement)
@@ -1035,7 +1036,7 @@ exports.Collector = void 0;
 exports.enrichQuote = enrichQuote;
 const text_expansion_1 = __require(2);
 const parser_1 = __require(3);
-const selection_1 = __require(10);
+const selection_1 = __require(11);
 const media_links_1 = __require(6);
 const resources_1 = __require(7);
 /** A visible card poster is identity evidence; an unrelated card never inherits video variants. */
@@ -1101,6 +1102,8 @@ class Collector {
                     enrichCard(p, raw.media);
                     if (raw.parentId && /^\d+$/.test(raw.parentId))
                         p.parentId = raw.parentId;
+                    if (!p.published && typeof raw.published === 'string' && !isNaN(Date.parse(raw.published)))
+                        p.published = raw.published;
                     if (raw.conversationId && /^\d+$/.test(raw.conversationId))
                         p.conversationId = raw.conversationId;
                     if (p.parentId)
@@ -1271,6 +1274,7 @@ const urls_1 = __require(4);
 const svg_1 = __require(5);
 const media_links_1 = __require(6);
 const dom_1 = __require(9);
+const post_nodes_1 = __require(10);
 const clean = (s) => (s || '').replace(/\u200b/g, '').trim();
 const richSelectors = '[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"], [data-testid="articleRichTextView"]';
 const authorSelector = '[data-testid="User-Name"], [data-testid="UserName"]';
@@ -1300,9 +1304,8 @@ function quoteNode(el) {
     }
     return null;
 }
-function visibleBadge(header) {
-    const mark = header.querySelector('[data-testid="icon-verified"], [aria-label="Verified account"], [aria-label="已认证账号"], [aria-label="認証済みアカウント"], [aria-label="已認證帳戶"]');
-    const svg = mark?.tagName.toLowerCase() === 'svg' ? mark : mark?.querySelector('svg');
+function visibleBadge(header, mark = header.querySelector('[data-testid="icon-verified"], [aria-label="Verified account"], [aria-label="已认证账号"], [aria-label="認証済みアカウント"], [aria-label="已認證帳戶"]')) {
+    const svg = ['svg', 'symbol'].includes(mark?.tagName.toLowerCase() || '') ? mark : mark?.querySelector('svg');
     if (!svg)
         return;
     const vb = (svg.getAttribute('viewBox') || '0 0 24 24').trim().split(/[\s,]+/).map(Number);
@@ -1526,9 +1529,96 @@ function readPoll(el, quote) {
         return { options: [], summary: clean(poll.textContent) };
     return { options, summary: clean(poll.querySelector('[data-testid="pollSummary"], [data-testid="pollFooter"]')?.textContent) };
 }
+function videoMedia(video, box, url, order, attachment) {
+    const poster = visibleVideoFrame(video) || video.poster || imageSrc(box?.querySelector('img')) || '';
+    return { ...(0, dom_1.videoDOMResources)(video), src: poster, textOrder: order, sourceUrl: (0, media_links_1.observedVideoURL)(video), playbackUrl: (0, media_links_1.observedVideoPageURL)(video), attachmentIndex: attachment >= 0 ? attachment + 1 : undefined, posterUrl: video.poster || undefined, kind: /\bGIF\b/i.test(box?.textContent || '') ? 'gif' : 'video', alt: '视频封面', href: url,
+        display: displayBox(video), duration: Number.isFinite(video.duration) ? `${Math.floor(video.duration / 60)}:${String(Math.floor(video.duration % 60)).padStart(2, '0')}` : clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent) || undefined };
+}
+/** Logged-out desktop X (verified 2026-10-16): Tailwind markup without data-testid or <time>.
+ * Identity comes from the post's own permalink and profile links. The quoted post is a nested
+ * <article>, so every lookup excludes it; engagement controls are read, never clicked. */
+function parseLoggedOutPost(el, quoted, ownerId, depth) {
+    if (depth > 4)
+        return;
+    const quote = el.querySelector('article');
+    const own = (selector) => ownNodes(el, selector, quote);
+    const permalinks = own('a[href*="/status/"]').filter(a => !a.closest('[data-engagement-action]') && !/\/(?:photo|video)\/\d/.test(a.getAttribute('href') || ''));
+    const stamp = permalinks.find(a => !a.children.length && clean(a.textContent));
+    let url = [stamp, ...permalinks].map(a => (0, urls_1.sourceURL)(a?.getAttribute('href') || '')).find(Boolean);
+    if (!url && quoted)
+        url = (0, urls_1.sourceURL)(el.parentElement?.closest('[role="link"][data-href]')?.getAttribute('data-href') || '');
+    const id = url ? (0, urls_1.postID)(url) : undefined;
+    if (!id && !quoted)
+        return;
+    const links = own('a[href]');
+    const handleLink = links.find(a => /^@[A-Za-z0-9_]+$/.test(clean(a.textContent)));
+    const nameLink = links.find(a => a !== handleLink && a.getAttribute('href') === handleLink?.getAttribute('href') && !a.querySelector('img') && !!clean(a.textContent));
+    let header = nameLink?.parentElement || null;
+    while (header && handleLink && !header.contains(handleLink) && header !== el)
+        header = header.parentElement;
+    const handle = clean(handleLink?.textContent).slice(1) || url?.match(/^https:\/\/x.com\/([^/]+)\/status/)?.[1] || 'unknown';
+    const mark = nameLink?.parentElement?.querySelector('[aria-haspopup="dialog"][aria-label] svg') || null;
+    // The badge is a sprite reference (<use href="#icon-verified-…">); its paths live in the shared <symbol>.
+    const sprite = mark?.querySelector('use')?.getAttribute('href') || mark?.querySelector('use')?.getAttribute('xlink:href') || '';
+    const symbol = sprite.startsWith('#') ? el.ownerDocument.getElementById(sprite.slice(1)) : null;
+    const author = { name: clean(nameLink?.textContent) || handle, handle, avatar: imageSrc(own('img[src*="profile_images"], img[src*="default_profile"]')[0]), verified: !!mark,
+        badge: mark && header ? visibleBadge(header, symbol?.tagName.toLowerCase() === 'symbol' ? symbol : mark) : undefined };
+    const blocks = [];
+    const txt = own('div[dir="auto"]').find(d => !d.closest('a,button'));
+    const runs = txt ? inlineRuns(txt) : [];
+    if (runs.length)
+        blocks.push({ kind: 'text', runs });
+    const media = own('video, img[src*="//pbs.twimg.com/media/"]');
+    media.forEach((n, i) => {
+        if (n.tagName === 'IMG') {
+            const m = mediaFromImage(n);
+            m.textOrder = i;
+            m.attachmentIndex = i + 1;
+            blocks.push({ kind: 'media', media: m });
+            return;
+        }
+        const box = n.parentElement, m = videoMedia(n, box, url, i, i);
+        // The duration badge has no test ID here; it is the m:ss leaf in the player overlay (00:00 = not loaded).
+        if (!m.duration)
+            m.duration = clean([...(box?.querySelectorAll('div,span') || [])].find(d => !d.children.length && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(clean(d.textContent)) && /[1-9]/.test(d.textContent || ''))?.textContent) || undefined;
+        blocks.push({ kind: 'media', media: m });
+    });
+    const metrics = {};
+    for (const [key, action] of [['replies', 'reply'], ['reposts', 'retweet'], ['likes', 'like'], ['bookmarks', 'bookmark']]) {
+        const n = own(`[data-engagement-action="${action}"]`)[0];
+        if (n)
+            metrics[key] = clean(n.textContent) || '—';
+    }
+    // Status page: views is the permalink beside the timestamp; timelines use a generic engagement pill.
+    const views = permalinks.find(a => a !== stamp && a.children.length)?.firstElementChild || own('[data-engagement-action="generic"]')[0];
+    if (views)
+        metrics.views = clean(views.textContent) || '—';
+    const warnings = [];
+    if (quoted && !url)
+        warnings.push('引用原帖链接未识别；已保留当前页面可见的作者和内容，不会编造链接。');
+    const p = { id: id || `visible-quote-${ownerId}-${depth}`, url: url || '', author, blocks, kind: 'post', textStructure: 'text-with-attachments', displayTime: clean(stamp?.textContent) || undefined,
+        metrics, relationEvidence: 'unknown', warnings, capturedAt: new Date().toISOString() };
+    if (quote) {
+        const qp = parseLoggedOutPost(quote, true, p.id, depth + 1);
+        if (qp && qp.id !== p.id) {
+            p.quote = qp;
+            p.warnings.push(...qp.warnings);
+        }
+        else
+            p.warnings.push('检测到引用卡片，但当前可见内容未能完整读取。');
+    }
+    if (!blocks.length && !p.quote && clean(el.textContent))
+        p.warnings.push('未识别到正文内容；请确认帖子已加载。');
+    for (const b of p.blocks)
+        if (b.kind === 'media')
+            b.media.ownerId = p.id;
+    return p;
+}
 function parsePost(el, quoted = false, ownerId = 'visible', depth = 0) {
     if (depth > 4)
         return;
+    if (el.tagName === 'ARTICLE' && !el.hasAttribute('data-testid'))
+        return parseLoggedOutPost(el, quoted, ownerId, depth);
     const quote = quoteNode(el);
     const times = ownNodes(el, 'time', quote);
     const time = times[0];
@@ -1562,11 +1652,7 @@ function parsePost(el, quoted = false, ownerId = 'visible', depth = 0) {
     for (const video of ownNodes(el, 'video', quote)) {
         if (inlineMedia && txt?.contains(video))
             continue;
-        const box = video.closest('[data-testid="videoComponent"]') || video.parentElement;
-        const poster = visibleVideoFrame(video) || video.poster || imageSrc(box?.querySelector('img')) || '';
-        const m = { ...(0, dom_1.videoDOMResources)(video), src: poster, textOrder: mediaOrder.indexOf(video), sourceUrl: (0, media_links_1.observedVideoURL)(video), playbackUrl: (0, media_links_1.observedVideoPageURL)(video), attachmentIndex: attachmentNodes.indexOf(video) >= 0 ? attachmentNodes.indexOf(video) + 1 : undefined, posterUrl: video.poster || undefined, kind: /\bGIF\b/i.test(box?.textContent || '') ? 'gif' : 'video', alt: '视频封面', href: url,
-            display: displayBox(video), duration: Number.isFinite(video.duration) ? `${Math.floor(video.duration / 60)}:${String(Math.floor(video.duration % 60)).padStart(2, '0')}` : clean(box?.querySelector('[data-testid="videoDuration"]')?.textContent) || undefined };
-        blocks.push({ kind: 'media', media: m });
+        blocks.push({ kind: 'media', media: videoMedia(video, video.closest('[data-testid="videoComponent"]') || video.parentElement, url, mediaOrder.indexOf(video), attachmentNodes.indexOf(video)) });
     }
     for (const f of ownNodes(el, 'iframe', quote)) {
         if (inlineMedia && txt?.contains(f))
@@ -1647,7 +1733,7 @@ function parseArticle(scope = document) {
 }
 function collectDOM(scope = document) {
     const primary = scope.querySelector('[data-testid="primaryColumn"]') || scope.querySelector('main') || scope;
-    const nodes = [...primary.querySelectorAll('article[data-testid="tweet"]')].filter(el => !el.parentElement?.closest('article[data-testid="tweet"]'));
+    const nodes = (0, post_nodes_1.postNodes)(primary);
     const posts = nodes.filter(el => !el.closest(richSelectors)).map(el => parsePost(el)).filter((p) => !!p);
     const article = parseArticle(scope);
     if (article) {
@@ -2824,6 +2910,29 @@ function iframeMedia(frame) {
 function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CLASSIC_POST = void 0;
+exports.isLoggedOutPost = isLoggedOutPost;
+exports.postNodes = postNodes;
+/** Post containers across X web UIs.
+ * Classic (logged-in, 2026): <article data-testid="tweet">.
+ * Logged-out desktop (verified 2026-10-16): Tailwind <article class="flex flex-col gap-1"> with no data-testid.
+ * A logged-out post is recognised only with its own engagement bar and permalink; its quoted post is a nested <article>. */
+exports.CLASSIC_POST = 'article[data-testid="tweet"]';
+function isLoggedOutPost(el) {
+    if (el.tagName !== 'ARTICLE' || el.hasAttribute('data-testid') || el.parentElement?.closest('article'))
+        return false;
+    const own = (n) => n.closest('article') === el;
+    return [...el.querySelectorAll('[data-engagement-action]')].some(own) && [...el.querySelectorAll('a[href*="/status/"]')].some(own);
+}
+/** Top-level post containers in document order. Classic selection is unchanged; logged-out posts are added only when present. */
+function postNodes(root) {
+    return [...root.querySelectorAll(`${exports.CLASSIC_POST}, article:not([data-testid])`)].filter(el => el.matches(exports.CLASSIC_POST) ? !el.parentElement?.closest(exports.CLASSIC_POST) : isLoggedOutPost(el));
+}
+
+},
+function(module,exports,__require){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.ROLE_LABELS = void 0;
 exports.rootPost = rootPost;
 exports.authorChain = authorChain;
@@ -2910,11 +3019,11 @@ function(module,exports,__require){
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.nativeBytes = nativeBytes;
 exports.createHost = createHost;
-const resource_network_1 = __require(12);
-const model_1 = __require(13);
+const resource_network_1 = __require(13);
+const model_1 = __require(14);
 const urls_1 = __require(4);
-const binary_1 = __require(14);
-const probe_1 = __require(15);
+const binary_1 = __require(15);
+const probe_1 = __require(16);
 async function nativeBytes(url, signal) {
     const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 35000);
     const abort = () => ctrl.abort();
@@ -3442,8 +3551,153 @@ function pageProbe(ids, suppliedWindow) {
             result.quote = nested;
         return result;
     };
-    const nodes = [...win.document.querySelectorAll('article[data-testid="tweet"], [data-testid="twitterArticleReadView"], [data-testid="twitterArticleRichTextView"]')];
+    // Logged-out desktop X (2026-10) renders through Relay: props hold fragment references and the
+    // resolved data lives in fragment hook snapshots under the <article>. Every value is attributed by
+    // its own record ID (base64 "Tweet:<id>", media "client:<that>:media_entities2:<n>"), never by position.
+    const relayTweet = (v) => {
+        if (typeof v !== 'string' || v.length > 400)
+            return;
+        const m = v.match(/^(?:client:)?([A-Za-z0-9+/]{8,}=*)(?::|$)/);
+        if (!m)
+            return;
+        try {
+            return atob(m[1]).match(/^Tweet:(\d{1,25})$/)?.[1];
+        }
+        catch {
+            return;
+        }
+    };
+    const relayPost = (el) => {
+        const fk = Object.keys(el).find(k => k.startsWith('__reactFiber$'));
+        let root;
+        try {
+            root = fk ? el[fk] : undefined;
+        }
+        catch {
+            return;
+        }
+        const snapshots = [], stack = [[root?.child, 0]];
+        let fibers = 0;
+        while (stack.length && fibers < 4000) {
+            const [f, depth] = stack.pop();
+            if (!f || typeof f !== 'object')
+                continue;
+            fibers++;
+            try {
+                let hook = f.memoizedState;
+                for (let i = 0; hook && typeof hook === 'object' && i < 48; i++, hook = hook.next) {
+                    const v = hook.memoizedState;
+                    if (!v || typeof v !== 'object')
+                        continue;
+                    if (v.snapshot?.data && typeof v.snapshot.data === 'object')
+                        snapshots.push(v.snapshot.data);
+                    if (Array.isArray(v.snapshots))
+                        for (const x of v.snapshots.slice(0, 16))
+                            if (x?.data && typeof x.data === 'object')
+                                snapshots.push(x.data);
+                }
+                if (f.sibling)
+                    stack.push([f.sibling, depth]);
+                if (f.child && depth < 120)
+                    stack.push([f.child, depth + 1]);
+            }
+            catch { }
+        }
+        const records = new Map(), record = (id) => { let r = records.get(id); if (!r)
+            records.set(id, r = { media: [] }); return r; };
+        const seen = new WeakSet();
+        let budget = 20000;
+        const visit = (o, tweet, index, depth) => {
+            var _a;
+            if (!o || typeof o !== 'object' || seen.has(o) || depth > 9 || budget-- <= 0 || (win.Node && o instanceof win.Node))
+                return;
+            seen.add(o);
+            try {
+                if (typeof o.__id === 'string') {
+                    tweet = relayTweet(o.__id);
+                    const n = o.__id.match(/:media_entities2:(\d{1,2})$/);
+                    index = n ? Number(n[1]) : -1;
+                }
+                // Some fragments select rest_id without __id; `details` exists only on tweet records (users have rest_id too).
+                else if (typeof o.rest_id === 'string' && /^\d+$/.test(o.rest_id) && o.details && typeof o.details === 'object') {
+                    tweet = o.rest_id;
+                    index = -1;
+                }
+                if (tweet && index >= 0) {
+                    const m = (_a = record(tweet).media)[index] || (_a[index] = {});
+                    for (const k of ['media_url_https', 'type', 'id_str', 'media_key', 'ext_alt_text', 'original_info', 'video_download_url', 'video_info'])
+                        if (o[k] != null && m[k] === undefined)
+                            m[k] = o[k];
+                }
+                else if (tweet) {
+                    const r = record(tweet), d = o.details;
+                    const text = o.note_tweet?.note_tweet_results?.result?.text ?? d?.full_text;
+                    if (typeof text === 'string' && r.fullText === undefined)
+                        r.fullText = text;
+                    if (Number.isFinite(d?.created_at_ms) && !r.published)
+                        r.published = new Date(d.created_at_ms).toISOString();
+                    const parent = o.reply_to_results?.rest_id;
+                    if (typeof parent === 'string' && /^\d+$/.test(parent) && parent !== tweet)
+                        r.parentId = parent;
+                }
+            }
+            catch {
+                return;
+            }
+            let keys;
+            try {
+                keys = Object.keys(o);
+            }
+            catch {
+                return;
+            }
+            for (const k of keys) {
+                if (k === '__fragmentOwner' || /token|cookie|session|auth|password/i.test(k))
+                    continue;
+                let v;
+                try {
+                    v = o[k];
+                }
+                catch {
+                    continue;
+                }
+                if (!v || typeof v !== 'object')
+                    continue;
+                if (k === 'media_entities2' && Array.isArray(v))
+                    v.slice(0, 64).forEach((x, i) => visit(x, tweet, i, depth + 1));
+                else
+                    visit(v, tweet, index, depth + 1);
+            }
+        };
+        for (const data of snapshots)
+            visit(data, undefined, -1, 0);
+        for (const [id, r] of records) {
+            if (!wanted.has(id) || found.has(id))
+                continue;
+            const media = r.media.filter(Boolean).map((m) => {
+                const info = m.video_info && typeof m.video_info === 'object' ? m.video_info : undefined, variants = Array.isArray(info?.variants) ? info.variants.slice(0, 127) : [];
+                // The largest progressive MP4 is often only in video_download_url, not in variants.
+                if (info && typeof m.video_download_url === 'string' && !variants.some((v) => v?.url === m.video_download_url))
+                    variants.push({ content_type: 'video/mp4', url: m.video_download_url });
+                const type = typeof m.type === 'string' ? m.type : info ? (variants.some((v) => /\/tweet_video\//.test(v?.url || '')) ? 'animated_gif' : 'video') : 'photo';
+                return { ...m, type, video_info: info ? { ...info, variants } : undefined };
+            });
+            const data = { id, relationEvidence: 'data', media: publicMedia({ extended_entities: { media } }, `https://x.com/i/web/status/${id}`) };
+            if (r.parentId)
+                data.parentId = r.parentId;
+            if (r.published)
+                data.published = r.published;
+            if (typeof r.fullText === 'string' && r.fullText.length < 400000)
+                data.fullText = r.fullText;
+            found.set(id, data);
+        }
+    };
+    const nodes = [...win.document.querySelectorAll('article[data-testid="tweet"], [data-testid="twitterArticleReadView"], [data-testid="twitterArticleRichTextView"], article:not([data-testid])')];
     for (const el of nodes) {
+        if (el.tagName === 'ARTICLE' && !el.hasAttribute('data-testid')) {
+            relayPost(el);
+            continue;
+        }
         const own = Object.keys(el).filter(k => k.startsWith('__reactFiber$') || k.startsWith('__reactProps$'));
         if (!own.length)
             continue;
@@ -3646,20 +3900,22 @@ function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Studio = void 0;
-const model_1 = __require(13);
-const options_1 = __require(19);
-const selection_1 = __require(10);
-const layout_1 = __require(20);
-const canvas_1 = __require(22);
+const model_1 = __require(14);
+const options_1 = __require(20);
+const selection_1 = __require(11);
+const layout_1 = __require(21);
+const canvas_1 = __require(23);
 const urls_1 = __require(4);
-const text_tools_1 = __require(24);
-const assets_1 = __require(36);
-const png_1 = __require(33);
-const metadata_1 = __require(34);
-const pdf_1 = __require(37);
-const dom_1 = __require(16);
-const controls_1 = __require(35);
-const styles_1 = __require(39);
+const text_tools_1 = __require(25);
+const assets_1 = __require(38);
+const quality_1 = __require(34);
+const resources_1 = __require(7);
+const png_1 = __require(35);
+const metadata_1 = __require(36);
+const pdf_1 = __require(39);
+const dom_1 = __require(17);
+const controls_1 = __require(37);
+const styles_1 = __require(41);
 class Studio {
     constructor(capture, host, collector, onClose) {
         this.host = host;
@@ -3669,6 +3925,8 @@ class Studio {
         this.order = [];
         this.assets = new Map();
         this.scene = { width: 760, height: 100, commands: [], links: [], cards: [], texts: [], warnings: [] };
+        this.mediaQuality = { ...quality_1.QUALITY_DEFAULTS };
+        this.qualityDone = new WeakMap();
         this.tab = 'style';
         this.saved = {};
         this.zoom = 1;
@@ -3691,9 +3949,11 @@ class Studio {
         this.counter = (0, dom_1.el)('span', { class: 'xc-counter' });
         this.dimensions = (0, dom_1.el)('span');
         this.quality = (0, dom_1.el)('div', { class: 'xc-quality' });
+        this.mediaQualityRow = (0, dom_1.el)('div', { class: 'xc-media-quality' });
         this.status = (0, dom_1.el)('div', { class: 'xc-status', role: 'status', 'aria-live': 'polite', hidden: true });
         this.controls = (0, dom_1.el)('div', { class: 'xc-controls' });
-        this.textTools = new text_tools_1.TextTools(() => ({ capture: this.capture, selected: this.selected, order: this.order, privacy: this.options }), host, { notify: m => this.toast(m), show: card => this.showOverlay(card), close: () => this.closeOverlay(), refresh: () => this.refreshForDiscovery(), showPage: done => this.showPageForObservation(done) });
+        this.textTools = new text_tools_1.TextTools(() => ({ capture: this.capture, selected: this.selected, order: this.order, privacy: this.options, quality: this.mediaQuality }), host, { mediaChanged: () => { if (!this.closed)
+                this.renderFooter(); }, notify: m => this.toast(m), show: card => this.showOverlay(card), close: () => this.closeOverlay(), refresh: () => this.refreshForDiscovery(), showPage: done => this.showPageForObservation(done) });
         const fit = (0, dom_1.button)('适应预览', () => { this.autoZoom = true; this.paint(); }, 'xc-textbtn');
         const zoomOut = (0, dom_1.el)('button', { type: 'button', class: 'xc-iconbtn', 'aria-label': '缩小预览', onClick: () => { this.autoZoom = false; this.zoom = Math.max(.2, this.zoom / 1.2); this.paint(); } }, (0, dom_1.icon)('minus', 15));
         const zoomIn = (0, dom_1.el)('button', { type: 'button', class: 'xc-iconbtn', 'aria-label': '放大预览', onClick: () => { this.autoZoom = false; this.zoom = Math.min(2.5, this.zoom * 1.2); this.paint(); } }, (0, dom_1.icon)('plus', 15));
@@ -3708,7 +3968,7 @@ class Studio {
         const texts = (0, dom_1.button)('复制文本', () => void this.textTools.copy('text'), 'xc-textbtn');
         texts.dataset.action = 'copy-text';
         const textExport = (0, dom_1.button)('文本导出', () => this.switchTab('text'), 'xc-textbtn');
-        const footer = (0, dom_1.el)('div', { class: 'xc-footer' }, (0, dom_1.el)('div', { class: 'xc-dimensions' }, this.dimensions, this.quality), (0, dom_1.el)('div', { class: 'xc-export-row' }, png, pdf), (0, dom_1.el)('div', { class: 'xc-footer-tools' }, copy, texts, textExport), (0, dom_1.el)('div', { class: 'xc-shortcut' }, '⌘ / Ctrl + S 导出 · Esc 关闭'));
+        const footer = (0, dom_1.el)('div', { class: 'xc-footer' }, this.mediaQualityRow, (0, dom_1.el)('div', { class: 'xc-dimensions' }, this.dimensions, this.quality), (0, dom_1.el)('div', { class: 'xc-export-row' }, png, pdf), (0, dom_1.el)('div', { class: 'xc-footer-tools' }, copy, texts, textExport), (0, dom_1.el)('div', { class: 'xc-shortcut' }, '⌘ / Ctrl + S 导出 · Esc 关闭'));
         const panel = (0, dom_1.el)('aside', { class: 'xc-panel' }, header, tabs, this.controls, footer);
         this.studio = (0, dom_1.el)('div', { class: 'xc-studio', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'X Capture 编辑器', tabindex: '-1' }, workspace, panel, this.status);
         this.shadow.append((0, dom_1.el)('style', {}, styles_1.STYLES), (0, dom_1.el)('div', { class: 'xc-backdrop' }, this.studio));
@@ -3757,6 +4017,7 @@ class Studio {
         for (const [k, v] of Object.entries(saved || {}).slice(0, 50))
             this.saved[k] = (0, options_1.normalizeOptions)(v);
         await textOptionsReady;
+        this.mediaQuality = (0, quality_1.normalizeQuality)(await this.host.getValue('media-quality', quality_1.QUALITY_DEFAULTS).catch(() => quality_1.QUALITY_DEFAULTS));
         this.order = this.capture.posts.map(p => p.id);
         this.selected = (0, selection_1.selectByRule)(this.capture, this.options.defaultReplies === 'all' ? 'all' : this.options.defaultReplies === 'direct' ? 'direct' : 'thread');
         if (!this.selected.size && this.capture.posts[0])
@@ -3781,6 +4042,7 @@ class Studio {
         if (this.closed)
             return;
         this.closed = true;
+        this.qualityAbort?.abort();
         this.textTools.dispose();
         this.abort?.abort();
         this.assetAbort.abort();
@@ -3806,13 +4068,99 @@ class Studio {
     update(patch, controls = false) { this.options = (0, options_1.normalizeOptions)({ ...this.options, ...patch }); this.schedule(); void this.host.setValue('options', this.options).catch(() => this.toast('设置暂未持久保存。')); if (controls)
         this.renderControls(); }
     render() { if (this.closed)
-        return; this.textTools.selectionChanged(); this.scene = (0, layout_1.layoutCapture)(this.capture, this.selected, this.order, this.options, this.assets, this.measure); this.counter.textContent = `${this.selected.size} 条 / ${this.capture.posts.length} 条候选`; this.paint(); this.renderFooter(); }
+        return; this.textTools.selectionChanged(); this.scene = (0, layout_1.layoutCapture)(this.capture, this.selected, this.order, this.options, this.assets, this.measure); this.counter.textContent = `${this.selected.size} 条 / ${this.capture.posts.length} 条候选`; this.paint(); this.renderFooter(); if (this.mediaQuality.image !== 'default')
+        void this.applyImageQuality(); }
     renderFooter() {
         const b = (0, canvas_1.exportBudget)(this.scene.width, this.scene.height, this.options.scale, (0, png_1.mobileDevice)());
         this.dimensions.textContent = `${b.width.toLocaleString()} × ${b.height.toLocaleString()} px${b.ok ? '' : ' · 尺寸超限'}`;
         this.quality.replaceChildren();
         for (const v of [1, 2, 3, 4])
             this.quality.append((0, dom_1.button)(v + '×', () => this.update({ scale: v }), this.options.scale === v ? 'is-active' : ''));
+        this.renderMediaQuality();
+    }
+    /** Options come from the selected media's real renditions; rebuilt when resources change, not while one is open. */
+    renderMediaQuality() {
+        if (this.mediaQualityRow.contains(this.shadow.activeElement))
+            return;
+        const quotes = this.options.showQuote, images = (0, quality_1.imageQualityOptions)(this.capture, this.selected, quotes), videos = (0, quality_1.videoQualityOptions)(this.capture, this.selected, quotes);
+        const pick = (label, title, options, value, change) => {
+            const node = (0, dom_1.el)('select', { class: 'xc-select', 'aria-label': label, title, onChange: (e) => change(e.target.value) });
+            if (!options.some(o => o.value === value))
+                options = [...options, { value, label: value.replace(/^p/, '') + 'p · 当前选择无此清晰度' }];
+            for (const o of options)
+                node.append((0, dom_1.el)('option', { value: o.value, selected: o.value === value, disabled: !!o.disabled && o.value !== value }, o.label));
+            node.disabled = options.length < 2 && !!options[0]?.disabled;
+            return (0, dom_1.el)('label', { class: 'xc-media-quality-item' }, (0, dom_1.el)('span', {}, label), node);
+        };
+        this.mediaQualityRow.replaceChildren(pick('图片素质', '影响 PNG / PDF 中的图片和文本中的图片链接；所选级别不可用时逐张降级', images, this.mediaQuality.image, v => this.setMediaQuality({ image: v })), pick('视频素质', '只影响复制文本中的视频链接（MP4 与对应 HLS 播放流）', videos, this.mediaQuality.video, v => this.setMediaQuality({ video: v })));
+    }
+    setMediaQuality(patch) {
+        this.mediaQuality = (0, quality_1.normalizeQuality)({ ...this.mediaQuality, ...patch });
+        void this.host.setValue('media-quality', this.mediaQuality).catch(() => this.toast('素质设置暂未持久保存；本次设置仍然有效。'));
+        if (patch.image !== undefined) {
+            this.qualityAbort?.abort();
+            this.qualityDone = new WeakMap();
+            if (patch.image === 'default')
+                this.clearImageQuality();
+            else
+                void this.applyImageQuality(true);
+        }
+        this.textTools.qualityChanged();
+        this.shadow.activeElement?.blur?.();
+        this.renderFooter();
+    }
+    clearImageQuality() { (0, resources_1.visitMedia)(this.capture, new Set(this.capture.posts.map(p => p.id)), m => { m.renderSrc = undefined; }, true); this.render(); }
+    /** Load the chosen rendition per image (falling back lower), record its real decoded size, then re-render. */
+    async applyImageQuality(announce = false) {
+        const level = this.mediaQuality.image;
+        if (level === 'default')
+            return;
+        const items = [];
+        (0, resources_1.visitMedia)(this.capture, this.selected, m => { if (m.kind === 'image' && this.qualityDone.get(m) !== level)
+            items.push(m); }, this.options.showQuote);
+        if (!items.length)
+            return;
+        for (const m of items)
+            this.qualityDone.set(m, level);
+        const ctrl = this.qualityAbort = new AbortController();
+        let cursor = 0, exact = 0, lower = 0, kept = 0;
+        if (announce)
+            this.toast(`正在载入所选图片素质（${items.length} 张）…`, true);
+        const worker = async () => {
+            while (cursor < items.length && !ctrl.signal.aborted) {
+                const m = items[cursor++];
+                let chosen;
+                for (const [i, v] of (0, quality_1.imageLevelChain)(m, level).entries()) {
+                    if (ctrl.signal.aborted)
+                        return;
+                    try {
+                        const a = await (0, assets_1.loadAsset)(v.url, this.host, this.assets, ctrl.signal);
+                        m.variants = (0, resources_1.mergeVariants)(m.variants, [{ ...v, state: 'verified', verifiedBy: 'image-decode', width: a.width, height: a.height, checkedAt: new Date().toISOString(), problem: undefined }]);
+                        chosen = v.url;
+                        if (i === 0)
+                            exact++;
+                        else
+                            lower++;
+                        break;
+                    }
+                    catch {
+                        if (ctrl.signal.aborted)
+                            return;
+                        m.variants = (0, resources_1.mergeVariants)(m.variants, [{ ...v, state: 'unverified', problem: 'network-or-cors', checkedAt: new Date().toISOString() }]);
+                    }
+                }
+                if (!chosen)
+                    kept++;
+                m.renderSrc = chosen;
+            }
+        };
+        await Promise.all([worker(), worker()]);
+        if (ctrl.signal.aborted || this.closed)
+            return;
+        this.render();
+        this.textTools.qualityChanged();
+        if (announce || lower || kept)
+            this.toast(`图片素质已应用：${exact} 张为所选级别${lower ? `，${lower} 张降级` : ''}${kept ? `，${kept} 张保留页面图` : ''}。`);
     }
     paint() {
         if (this.closed)
@@ -4307,9 +4655,9 @@ exports.fontCSS = fontCSS;
 exports.themeColors = themeColors;
 exports.graphemes = graphemes;
 exports.layoutCapture = layoutCapture;
-const QRCode = __require(21);
-const selection_1 = __require(10);
-const options_1 = __require(19);
+const QRCode = __require(22);
+const selection_1 = __require(11);
+const options_1 = __require(20);
 exports.SYSTEM_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", sans-serif';
 const FALLBACK_BADGE = 'M12 1.6 L14.5 3 L17.4 2.7 L18.7 5.3 L21.3 6.6 L21 9.5 L22.4 12 L21 14.5 L21.3 17.4 L18.7 18.7 L17.4 21.3 L14.5 21 L12 22.4 L9.5 21 L6.6 21.3 L5.3 18.7 L2.7 17.4 L3 14.5 L1.6 12 L3 9.5 L2.7 6.6 L5.3 5.3 L6.6 2.7 L9.5 3 Z';
 const MONO_FONT = 'ui-monospace, SFMono-Regular, Consolas, monospace';
@@ -4469,7 +4817,7 @@ function layoutCapture(capture, selection, order, o, assets, measure) {
             return y;
         const gap = 8;
         const draw = (m, mx, my, mw, mh, fit = o.mediaFit) => {
-            const src = m.src || '', asset = assets.get(src);
+            const src = m.renderSrc && assets.has(m.renderSrc) ? m.renderSrc : m.src || '', asset = assets.get(src);
             rect(mx, my, mw, mh, colors.soft, Math.min(o.radius, 12));
             if (src && asset)
                 s.commands.push({ type: 'image', x: mx, y: my, w: mw, h: mh, src, r: Math.min(o.radius, 12), fit, alt: m.alt || '' });
@@ -4502,7 +4850,7 @@ function layoutCapture(capture, selection, order, o, assets, measure) {
             return y + rows * rowH + (rows - 1) * gap + 12;
         }
         for (const m of media) {
-            const a = assets.get(m.src), iw = a?.width || m.width || 800, ih = a?.height || m.height || 450;
+            const a = assets.get(m.renderSrc && assets.has(m.renderSrc) ? m.renderSrc : m.src), iw = a?.width || m.width || 800, ih = a?.height || m.height || 450;
             const h = Math.min(o.mediaMaxHeight, Math.max(100, w * ih / iw));
             draw(m, x, y, w, h, o.mediaLayout === 'native' && m.display ? m.display.fit : o.mediaFit);
             y += h + 12;
@@ -6038,8 +6386,8 @@ exports.bounds = bounds;
 exports.drawScene = drawScene;
 exports.canvasBlob = canvasBlob;
 exports.exportBudget = exportBudget;
-const layout_1 = __require(20);
-const image_1 = __require(23);
+const layout_1 = __require(21);
+const image_1 = __require(24);
 function rounded(ctx, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
     ctx.beginPath();
@@ -6222,14 +6570,14 @@ function(module,exports,__require){
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TextTools = void 0;
 const discovery_1 = __require(8);
-const passive_log_1 = __require(17);
-const discovery_client_1 = __require(25);
-const resolver_1 = __require(26);
+const passive_log_1 = __require(18);
+const discovery_client_1 = __require(26);
+const resolver_1 = __require(27);
 const resources_1 = __require(7);
-const text_1 = __require(31);
-const png_1 = __require(33);
-const dom_1 = __require(16);
-const controls_1 = __require(35);
+const text_1 = __require(32);
+const png_1 = __require(35);
+const dom_1 = __require(17);
+const controls_1 = __require(37);
 const formatName = (format) => format === 'text' ? '纯文本' : format === 'ai' ? 'AI 上下文' : 'Markdown';
 /** Shares the current selection, but owns text-only options. Visual styling never rewrites text. */
 class TextTools {
@@ -6250,6 +6598,7 @@ class TextTools {
             this.discoveryStatus.textContent = this.discoveryMessage(status); if (!this.disposed) {
             this.updatePreview?.();
             this.updateDiagnostics();
+            this.ui.mediaChanged?.();
         } }, () => { this.returnFromPage?.(); this.returnFromPage = undefined; if (!this.disposed)
             void this.prepareResources(true); });
     }
@@ -6273,6 +6622,9 @@ class TextTools {
         setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
     }
     selectionChanged() { this.discovery.invalidateScope(); }
+    /** Quality levels only change which known link is written; refresh the open preview. */
+    qualityChanged() { if (!this.disposed)
+        this.updatePreview?.(); }
     /** Local only: media this page already requested, attached by CDN media identity. No request. */
     attachPassive() {
         if (this.disposed || !this.options.includeMedia)
@@ -6286,7 +6638,7 @@ class TextTools {
     }
     result(format = this.format) {
         const s = this.snapshot();
-        return (0, text_1.serializeText)(s.capture, s.selected, s.order, this.options, format, s.privacy);
+        return (0, text_1.serializeText)(s.capture, s.selected, s.order, this.options, format, s.privacy, s.quality);
     }
     render() {
         const root = (0, dom_1.el)('section', { class: 'xc-text-tools', 'aria-label': '文本导出' });
@@ -6449,6 +6801,7 @@ class TextTools {
             if (!this.disposed) {
                 this.updatePreview?.();
                 this.updateDiagnostics();
+                this.ui.mediaChanged?.();
             }
         });
         return this.inspection;
@@ -6463,8 +6816,8 @@ class TextTools {
         }
         const ready = this.prepareResources();
         // Capture the requested selection now. A later selection change cannot change an in-flight copy.
-        const snapshot = this.snapshot(), selected = new Set(snapshot.selected), order = [...snapshot.order], options = { ...this.options }, privacy = { ...snapshot.privacy };
-        const result = () => (0, text_1.serializeText)(snapshot.capture, selected, order, options, format, privacy);
+        const snapshot = this.snapshot(), selected = new Set(snapshot.selected), order = [...snapshot.order], options = { ...this.options }, privacy = { ...snapshot.privacy }, quality = snapshot.quality && { ...snapshot.quality };
+        const result = () => (0, text_1.serializeText)(snapshot.capture, selected, order, options, format, privacy, quality);
         try {
             if (this.inspection && typeof navigator.clipboard?.write === 'function' && typeof ClipboardItem !== 'undefined') {
                 // Promise-valued ClipboardItem keeps iOS's trusted user-gesture boundary.
@@ -6490,7 +6843,7 @@ class TextTools {
     async exportFile(format = 'markdown') {
         if (this.disposed)
             return;
-        const snapshot = this.snapshot(), selected = new Set(snapshot.selected), order = [...snapshot.order], options = { ...this.options }, privacy = { ...snapshot.privacy };
+        const snapshot = this.snapshot(), selected = new Set(snapshot.selected), order = [...snapshot.order], options = { ...this.options }, privacy = { ...snapshot.privacy }, quality = snapshot.quality && { ...snapshot.quality };
         if (!selected.size) {
             this.ui.notify('尚未选择帖子，请先在「内容」中勾选。');
             return;
@@ -6498,7 +6851,7 @@ class TextTools {
         await this.prepareResources();
         if (this.disposed)
             return;
-        const result = (0, text_1.serializeText)(snapshot.capture, selected, order, options, format, privacy);
+        const result = (0, text_1.serializeText)(snapshot.capture, selected, order, options, format, privacy, quality);
         const download = this.openResult(result);
         if (!(0, png_1.mobileDevice)())
             download.click();
@@ -6541,7 +6894,7 @@ function(module,exports,__require){
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaDiscoveryClient = void 0;
 const discovery_1 = __require(8);
-const passive_log_1 = __require(17);
+const passive_log_1 = __require(18);
 const EMPTY = { state: 'idle', observed: 0, matched: 0, ambiguous: 0, unmatched: 0, segments: 0, limited: false, formats: [] };
 /** Short-lived client session. UI selection/route changes cannot attach late results to a new scope. */
 class MediaDiscoveryClient {
@@ -6736,10 +7089,10 @@ function(module,exports,__require){
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaResolver = exports.RESOLVE_LIMITS = void 0;
 const resources_1 = __require(7);
-const hls_1 = __require(27);
-const dash_1 = __require(28);
-const vmap_1 = __require(30);
-const resource_network_1 = __require(12);
+const hls_1 = __require(28);
+const dash_1 = __require(29);
+const vmap_1 = __require(31);
+const resource_network_1 = __require(13);
 exports.RESOLVE_LIMITS = { maxRequests: 32, maxBytes: 24 * 1024 * 1024, maxDepth: 2, timeoutMs: 6000, maxMs: 28000 };
 /** All lookups are bounded, optional and user-triggered. No segment/key downloads. */
 class MediaResolver {
@@ -7239,7 +7592,7 @@ function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseDASH = parseDASH;
-const xml_1 = __require(29);
+const xml_1 = __require(30);
 const resources_1 = __require(7);
 const num = (s) => { if (!s)
     return; const [a, b] = s.split('/').map(Number), v = b === undefined ? a : a / b; return Number.isFinite(v) && v >= 0 ? v : undefined; };
@@ -7463,7 +7816,7 @@ function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVMAP = parseVMAP;
-const xml_1 = __require(29);
+const xml_1 = __require(30);
 const resources_1 = __require(7);
 /** Extract only declared media. Ad impressions/tracking and VAST wrappers are never followed. */
 function parseVMAP(text, address) {
@@ -7498,9 +7851,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TEXT_DEFAULTS = void 0;
 exports.normalizeTextOptions = normalizeTextOptions;
 exports.serializeText = serializeText;
-const selection_1 = __require(10);
+const selection_1 = __require(11);
 const urls_1 = __require(4);
-const text_1 = __require(32);
+const text_1 = __require(33);
+const quality_1 = __require(34);
 exports.TEXT_DEFAULTS = {
     includeAuthor: true, includeTime: true, includeSources: true,
     includeRelations: true, includeQuote: true, includeNotes: true,
@@ -7541,8 +7895,8 @@ const validHandle = (s) => !!s && s !== 'unknown' && /^[A-Za-z0-9_]{1,40}$/.test
 /** One pure serializer for copy and file export. No DOM, media fetch, font or clipboard dependency.
  * Only selected top-level posts are included, in exactly the same order as the visual export.
  * Embedded posts remain nested; missing information is explicitly marked rather than fabricated. */
-function serializeText(capture, selected, order, rawOptions, format = 'text', privacy = {}) {
-    const o = normalizeTextOptions(rawOptions), md = format !== 'text';
+function serializeText(capture, selected, order, rawOptions, format = 'text', privacy = {}, rawQuality = quality_1.QUALITY_DEFAULTS) {
+    const o = normalizeTextOptions(rawOptions), md = format !== 'text', quality = (0, quality_1.normalizeQuality)(rawQuality);
     const byId = new Map(capture.posts.map(p => [p.id, p]));
     const posts = [...new Set(order)].filter(id => selected.has(id)).map(id => byId.get(id)).filter((p) => !!p);
     const index = new Map(posts.map((p, i) => [p.id, i + 1]));
@@ -7641,7 +7995,7 @@ function serializeText(capture, selected, order, rawOptions, format = 'text', pr
             if (!o.includeMedia)
                 return '';
             const result = (0, text_1.mediaTextLines)(m, p, { all: o.includeAllResources, images: o.markdownImages, subtitles: o.includeSubtitles, sensitive: o.includeSensitiveMedia,
-                markdown: md, links: linkAllowed, sources: sourceAllowed });
+                markdown: md, links: linkAllowed, sources: sourceAllowed, imageLevel: quality.image, videoLevel: quality.video });
             result.warnings.forEach(w => warnings.add(w));
             return result.text;
         }
@@ -7744,6 +8098,7 @@ exports.mediaTextLines = mediaTextLines;
 const urls_1 = __require(4);
 const media_links_1 = __require(6);
 const resources_1 = __require(7);
+const quality_1 = __require(34);
 const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/([\\`*_[\]~|])/g, '\\$1');
 const urlText = (s, md) => md ? '<' + s.replace(/[<>\s]/g, c => encodeURIComponent(c)) + '>' : s;
 function details(v, all) {
@@ -7788,7 +8143,8 @@ function mediaTextLines(m, p, o) {
     } return urlText(url, o.markdown); };
     const lines = [];
     if (m.kind === 'image') {
-        const best = (0, resources_1.preferredImage)(m);
+        // A chosen level uses its decoded rendition (or the next lower one); otherwise the previous rule.
+        const best = (o.imageLevel && o.imageLevel !== 'default' ? (0, quality_1.verifiedImageForLevel)(m, o.imageLevel) : undefined) || (0, resources_1.preferredImage)(m);
         const address = best && addr(best.url, best.sensitive);
         if (address && !(0, urls_1.sourceURL)(best.url)) {
             lines.push(o.markdown && o.images ? `![${escape(alt || '图片')}](<${best.url.replace(/[<>\s]/g, c => encodeURIComponent(c))}>)` : `${marker} ${address}`);
@@ -7814,7 +8170,8 @@ function mediaTextLines(m, p, o) {
             if (a)
                 lines.push(`${marker} 外部播放器：${a}`);
         }
-        for (const v of (0, resources_1.recommendedVariants)(m, o.all)) {
+        const leveled = !o.all && o.videoLevel ? (0, quality_1.videoVariantsForLevel)(m, o.videoLevel) : undefined;
+        for (const v of leveled?.length ? leveled : (0, resources_1.recommendedVariants)(m, o.all)) {
             const a = addr(v.url, v.sensitive);
             if (!a)
                 continue;
@@ -7871,10 +8228,117 @@ function mediaTextLines(m, p, o) {
 function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.shortSide = exports.QUALITY_DEFAULTS = void 0;
+exports.normalizeQuality = normalizeQuality;
+exports.imageLevelVariant = imageLevelVariant;
+exports.imageLevelChain = imageLevelChain;
+exports.verifiedImageForLevel = verifiedImageForLevel;
+exports.imageQualityOptions = imageQualityOptions;
+exports.videoQualityOptions = videoQualityOptions;
+exports.videoVariantsForLevel = videoVariantsForLevel;
+const resources_1 = __require(7);
+exports.QUALITY_DEFAULTS = { image: 'default', video: 'best' };
+const IMAGE_ORDER = ['orig', '4096x4096', 'large'];
+const IMAGE_NAMES = { orig: '原图', '4096x4096': '4096', 'large': '大图' };
+function normalizeQuality(raw) {
+    const v = raw && typeof raw === 'object' ? raw : {};
+    const image = ['default', ...IMAGE_ORDER].includes(v.image) ? v.image : 'default';
+    const video = v.video === 'best' || /^p\d{2,4}$/.test(v.video) ? v.video : 'best';
+    return { image, video };
+}
+const levelName = (v) => { try {
+    return new URL(v.url).searchParams.get('name') || v.name;
+}
+catch {
+    return v.name;
+} };
+const dims = (w, h) => w && h ? `${w}×${h}` : '';
+/** Short side in pixels, the common "720p" meaning for portrait and landscape alike. */
+const shortSide = (v) => v.width && v.height ? Math.min(v.width, v.height) : 0;
+exports.shortSide = shortSide;
+/** Real CDN rendition for one level. Only X image-server photos have levels; others return undefined. */
+function imageLevelVariant(m, level) {
+    if (m.kind !== 'image')
+        return;
+    return [...(0, resources_1.existingVariants)(m), ...(0, resources_1.imageCandidates)(m)].find(v => v.kind === 'image' && levelName(v) === level);
+}
+/** Ordered fallbacks: the chosen level, then lower levels. Known-unavailable renditions are skipped. */
+function imageLevelChain(m, level) {
+    if (level === 'default')
+        return [];
+    return IMAGE_ORDER.slice(IMAGE_ORDER.indexOf(level)).map(l => imageLevelVariant(m, l)).filter((v) => !!v && v.state !== 'unavailable' && v.state !== 'blocked');
+}
+/** For text: only a rendition that actually decoded counts. */
+function verifiedImageForLevel(m, level) {
+    return imageLevelChain(m, level).find(v => v.state === 'verified' && !!v.width && !!v.height);
+}
+function selectedMedia(c, selected, quotes, kind) {
+    const out = [];
+    (0, resources_1.visitMedia)(c, selected, m => { if (kind(m))
+        out.push(m); }, quotes);
+    return out;
+}
+/** Options reflect what is known right now: decoded sizes when verified, otherwise "选择后载入". */
+function imageQualityOptions(c, selected, quotes = true) {
+    const images = selectedMedia(c, selected, quotes, m => m.kind === 'image');
+    const out = [{ value: 'default', label: '默认（页面图）' }];
+    for (const level of IMAGE_ORDER) {
+        const vs = images.map(m => imageLevelVariant(m, level)).filter((v) => !!v);
+        if (!vs.length) {
+            out.push({ value: level, label: `${IMAGE_NAMES[level]} · 无可用`, disabled: true });
+            continue;
+        }
+        const ok = vs.filter(v => v.state === 'verified' && v.width && v.height), bad = vs.filter(v => v.state === 'unavailable').length;
+        const largest = ok.sort((a, b) => b.width * b.height - a.width * a.height)[0];
+        const detail = largest ? (images.length > 1 ? `${ok.length}/${images.length} 张 · 最大 ${dims(largest.width, largest.height)}` : dims(largest.width, largest.height)) : bad === vs.length ? '不可用' : '选择后载入';
+        out.push({ value: level, label: `${IMAGE_NAMES[level]} · ${detail}`, disabled: bad === vs.length });
+    }
+    return images.length ? out : [{ value: 'default', label: '无图片', disabled: true }];
+}
+const videoCandidates = (m) => (0, resources_1.existingVariants)(m).filter(v => (v.kind === 'file' && !v.segmented || v.kind === 'hls' && v.playlist !== 'master' && !!v.parentUrl) &&
+    (!v.role || v.role === 'video') && !['candidate', 'unavailable'].includes(v.state) && (0, exports.shortSide)(v) > 0);
+/** Distinct real levels (short side) present among the selected videos' MP4 / HLS renditions. */
+function videoQualityOptions(c, selected, quotes = true) {
+    const videos = selectedMedia(c, selected, quotes, m => m.kind !== 'image');
+    if (!videos.length)
+        return [{ value: 'best', label: '无视频', disabled: true }];
+    const levels = new Map();
+    for (const m of videos)
+        for (const p of new Set(videoCandidates(m).map(exports.shortSide)))
+            levels.set(p, (levels.get(p) || 0) + 1);
+    const out = [{ value: 'best', label: levels.size ? '最高可用' : '最高可用（尚未取得清晰度）' }];
+    for (const [p, n] of [...levels].sort((a, b) => b[0] - a[0]))
+        out.push({ value: 'p' + p, label: `${p}p${videos.length > 1 ? ` · ${n}/${videos.length} 个视频` : ''}` });
+    return out;
+}
+/** Renditions for one level: the closest at-or-below (else the smallest above). HLS falls back to the master. */
+function videoVariantsForLevel(m, level) {
+    if (level === 'best')
+        return;
+    const target = Number(level.slice(1));
+    const all = videoCandidates(m);
+    const pick = (kind) => {
+        const g = all.filter(v => v.kind === kind);
+        if (!g.length)
+            return;
+        const below = g.filter(v => (0, exports.shortSide)(v) <= target).sort((a, b) => (0, exports.shortSide)(b) - (0, exports.shortSide)(a) || (b.bitrate || 0) - (a.bitrate || 0));
+        return below[0] || g.sort((a, b) => (0, exports.shortSide)(a) - (0, exports.shortSide)(b))[0];
+    };
+    const file = pick('file');
+    let hls = pick('hls');
+    if (!hls)
+        hls = (0, resources_1.existingVariants)(m).find(v => v.kind === 'hls' && (v.playlist === 'master' || !v.parentUrl) && !['candidate', 'unavailable'].includes(v.state) && (!v.role || v.role === 'video'));
+    return [file, hls].filter((v) => !!v);
+}
+
+},
+function(module,exports,__require){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.mobileDevice = void 0;
 exports.exportPNG = exportPNG;
-const canvas_1 = __require(22);
-const metadata_1 = __require(34);
+const canvas_1 = __require(23);
+const metadata_1 = __require(36);
 const mobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 exports.mobileDevice = mobileDevice;
 async function exportPNG(scene, assets, capture, selected, o) {
@@ -7907,10 +8371,10 @@ exports.sourceList = sourceList;
 exports.xmpMetadata = xmpMetadata;
 exports.crc32 = crc32;
 exports.addPngMetadata = addPngMetadata;
-const model_1 = __require(13);
+const model_1 = __require(14);
 const urls_1 = __require(4);
-const options_1 = __require(19);
-const binary_1 = __require(14);
+const options_1 = __require(20);
+const binary_1 = __require(15);
 function provenance(c, selected, o) {
     const allow = o.sourceMetadata && (0, options_1.sourcesAllowed)(o), posts = c.posts.filter(p => selected.has(p.id));
     const sources = allow ? posts.flatMap(p => { const url = (0, urls_1.sourceURL)(p.url); return url ? [{ url, id: p.id, published: p.published, parentId: p.parentId, relationEvidence: p.relationEvidence }] : []; }) : [];
@@ -7999,7 +8463,7 @@ exports.toggle = toggle;
 exports.range = range;
 exports.select = select;
 exports.colors = colors;
-const dom_1 = __require(16);
+const dom_1 = __require(17);
 function group(label, content, extra) { return (0, dom_1.el)('section', { class: 'xc-group' }, (0, dom_1.el)('div', { class: 'xc-label' }, label, extra ? (0, dom_1.el)('span', {}, extra) : null), content); }
 function segment(items, value, change) { const root = (0, dom_1.el)('div', { class: 'xc-segment' }); for (const [k, label] of items) {
     const b = (0, dom_1.button)(label, () => { change(k); root.querySelectorAll('button').forEach(n => { n.classList.toggle('is-active', n === b); n.setAttribute('aria-pressed', String(n === b)); }); }, k === value ? 'is-active' : '');
@@ -8049,9 +8513,10 @@ exports.useMemoryFont = useMemoryFont;
 exports.loadPdfFont = loadPdfFont;
 exports.mediaSources = mediaSources;
 exports.decodeData = decodeData;
+exports.loadAsset = loadAsset;
 exports.loadAssets = loadAssets;
-const model_1 = __require(13);
-const binary_1 = __require(14);
+const model_1 = __require(14);
+const binary_1 = __require(15);
 const urls_1 = __require(4);
 const DB = 'xc-public-font-cache-v1';
 async function fontDB() { return new Promise((resolve, reject) => { const r = indexedDB.open(DB, 1); r.onupgradeneeded = () => r.result.createObjectStore('font'); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); r.onblocked = () => reject(new Error('字体缓存不可用。')); }); }
@@ -8108,36 +8573,42 @@ function mediaSources(capture) { const result = new Set(); const post = (p) => {
     result.add(p.linkCard.image); }; capture.posts.forEach(post); return [...result]; }
 function guessMime(bytes) { return bytes[0] === 137 ? 'image/png' : bytes[0] === 255 ? 'image/jpeg' : bytes[0] === 71 ? 'image/gif' : bytes[0] === 82 ? 'image/webp' : 'application/octet-stream'; }
 async function decodeData(dataUrl) { return new Promise((resolve, reject) => { const img = new Image(); const timer = setTimeout(() => reject(new Error('图片解码超时')), 20000); img.onload = () => { clearTimeout(timer); resolve({ image: img, dataUrl, width: img.naturalWidth, height: img.naturalHeight }); }; img.onerror = () => { clearTimeout(timer); reject(new Error('图片格式不能解码')); }; img.src = dataUrl; }); }
+/** Fetch + decode one image into the asset map, with the same source allowlist and pixel cap. */
+async function loadAsset(u, host, map, signal) {
+    const cached = map.get(u);
+    if (cached)
+        return cached;
+    let dataUrl;
+    if (/^data:image\/(?:png|jpeg|gif|webp);base64,/.test(u))
+        dataUrl = u;
+    else {
+        if (!(0, urls_1.allowedAsset)(u))
+            throw new Error('不支持的图片来源');
+        const b = await host.readBytes(u, signal);
+        dataUrl = `data:${guessMime(b)};base64,${(0, binary_1.base64)(b)}`;
+    }
+    const asset = await decodeData(dataUrl);
+    if (asset.width * asset.height > 50000000)
+        throw new Error('图片像素超过安全上限');
+    map.set(u, asset);
+    return asset;
+}
 async function loadAssets(capture, host, map, onProgress, signal) {
     const urls = mediaSources(capture).filter(u => !map.has(u));
     const failures = [];
     let cursor = 0, done = 0;
-    async function worker() {
-        while (cursor < urls.length) {
-            const u = urls[cursor++];
-            if (signal?.aborted)
-                return;
-            try {
-                let dataUrl;
-                if (/^data:image\/(?:png|jpeg|gif|webp);base64,/.test(u))
-                    dataUrl = u;
-                else {
-                    if (!(0, urls_1.allowedAsset)(u))
-                        throw new Error('不支持的图片来源');
-                    const b = await host.readBytes(u, signal);
-                    dataUrl = `data:${guessMime(b)};base64,${(0, binary_1.base64)(b)}`;
-                }
-                const asset = await decodeData(dataUrl);
-                if (asset.width * asset.height > 50000000)
-                    throw new Error('图片像素超过安全上限');
-                map.set(u, asset);
-            }
-            catch {
-                failures.push(u);
-            }
-            onProgress?.(++done, urls.length);
+    async function worker() { while (cursor < urls.length) {
+        const u = urls[cursor++];
+        if (signal?.aborted)
+            return;
+        try {
+            await loadAsset(u, host, map, signal);
         }
-    }
+        catch {
+            failures.push(u);
+        }
+        onProgress?.(++done, urls.length);
+    } }
     await Promise.all([worker(), worker(), worker()]);
     return failures;
 }
@@ -8147,12 +8618,12 @@ function(module,exports,__require){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.exportPDF = exportPDF;
-const image_1 = __require(23);
-const fontkit = __require(38);
-const canvas_1 = __require(22);
-const layout_1 = __require(20);
-const binary_1 = __require(14);
-const metadata_1 = __require(34);
+const image_1 = __require(24);
+const fontkit = __require(40);
+const canvas_1 = __require(23);
+const layout_1 = __require(21);
+const binary_1 = __require(15);
+const metadata_1 = __require(36);
 /** Small deterministic PDF 1.7 writer. True embedded, subset CID fonts + ToUnicode;
  * images remain image XObjects. No screenshot-backed page or invisible OCR layer. */
 class PDFWriter {
@@ -26432,6 +26903,7 @@ exports.STYLES = String.raw `
 .xc-text-options{margin-top:18px;}.xc-text-result-card{width:740px;}.xc-text-result-preview{height:42vh;max-height:50vh;min-height:160px;}
 .xc-text-tools button:disabled{cursor:not-allowed;}
 .xc-footer-tools .xc-textbtn{white-space:nowrap;}
+.xc-media-quality{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.xc-media-quality-item{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:11px;color:#96a3b0}.xc-media-quality .xc-select{padding:5px 6px;font-size:11px;border-radius:6px;min-width:0;text-overflow:ellipsis}.xc-media-quality .xc-select:disabled{opacity:.55}
 @media(max-width:620px){.xc-studio.text-active .xc-workspace{height:25%;min-height:140px;}.xc-text-preview{font-size:16px;line-height:1.55;min-height:180px;}.xc-text-tools .xc-button{min-height:44px;}.xc-text-result-card{width:100%;}.xc-text-result-preview{height:40dvh;min-height:160px;}.xc-text-tools .xc-segment button{min-height:38px;}}
 .xc-observation-banner{position:fixed;right:16px;bottom:112px;z-index:2147483647;max-width:min(420px,calc(100vw - 32px));padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:#112334;color:#dcecf8;border:1px solid #318bc0;border-radius:12px;font:13px/1.6 system-ui;box-shadow:0 6px 30px #0005;pointer-events:auto;}
 .xc-resource-diagnostics{white-space:pre-wrap;overflow-wrap:anywhere;color:#9db1c3;font:11px/1.7 ui-monospace,monospace;}

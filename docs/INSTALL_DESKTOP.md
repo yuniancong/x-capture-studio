@@ -17,7 +17,7 @@
 目标：Chrome 或 Microsoft Edge，版本 v1.0.0-rc.8。
 安装包必须来自已提交的 GitHub 分支：feat/rc8-video-discovery（候选版，下载后必须按下方 SHA-256 严格核对）
 文件路径：releases/X-Capture-Studio-Chrome-v1.0.0-rc.8.zip
-预期 SHA-256：3af830bba328cc7f88ce4fe54b77eed4dcc8ef6338f016d2e5eb749b759644d0
+预期 SHA-256：47715b0ff6e24f5d88c26ad355817817893672fee6398518af5bae1eaa4f5824
 
 请直接执行你能够安全执行的步骤，而不只是给我一段操作说明：
 1. 检查本机操作系统、Python 3 和 Chrome / Edge 是否已安装；优先使用现有浏览器，不新建浏览器资料目录。

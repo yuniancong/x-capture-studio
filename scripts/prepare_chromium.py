@@ -22,7 +22,7 @@ VERSION = '1.0.0-rc.8'
 SOURCE_REF = 'feat/rc8-video-discovery'  # Candidate branch, SHA-256 pinned below; switch to main after merge
 ARCHIVE = f'X-Capture-Studio-Chrome-v{VERSION}.zip'
 URL = f'https://raw.githubusercontent.com/yuniancong/x-capture-studio/{SOURCE_REF}/releases/{ARCHIVE}'
-SHA256 = '3af830bba328cc7f88ce4fe54b77eed4dcc8ef6338f016d2e5eb749b759644d0'
+SHA256 = '47715b0ff6e24f5d88c26ad355817817893672fee6398518af5bae1eaa4f5824'
 LIMIT_BYTES = 25 * 1024 * 1024
 
 
