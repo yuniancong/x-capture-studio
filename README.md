@@ -1,8 +1,8 @@
 # X Capture Studio
 
-> **rc.8 修复候选（本地交付）**：基于 rc.7 增加可选短时桌面媒体观察，修正字幕证据、HLS 画质与折叠长文媒体顺序。安装与权限说明见 [INSTALL_RC8.md](INSTALL_RC8.md)，实现边界见 [DISCOVERY_RC8.md](docs/DISCOVERY_RC8.md)。下面原 rc.7 安装入口为历史基线；不要将候选交付当作 main 已更新。
+> **v1.0.0-rc.8 候选（分支 `feat/rc8-video-discovery`）**：修复已登录桌面 X 只得到 `/video/1` 的问题——直接读取页面已有的 M3U8/MP4 变体，无需额外授权；另含可选短时桌面媒体观察、字幕证据、HLS 画质与折叠长文修正。安装与权限见 [INSTALL_RC8.md](INSTALL_RC8.md)，真实环境验证见 [VERIFY_VIDEO_RC8.md](docs/VERIFY_VIDEO_RC8.md)。iPhone/Stay 真机尚待验收；rc.7 / rc.5 安装包保留用于回退。
 
-> **v1.0.0-rc.7 多媒体升级候选。** 已提交到升级分支供安装测试和审查，rc.5 安装包保留为回退；真实 X 与 Safari＋Stay 真机尚待验收。阅读 [rc.7 安装与使用说明](INSTALL_RC7.md)。
+> rc.7 多媒体候选的说明保留在 [INSTALL_RC7.md](INSTALL_RC7.md)。
 
 **A local-first, high-fidelity X / Twitter capture tool for Chromium and Safari + Stay.**
 
@@ -14,8 +14,8 @@
 
 | 平台 | 安装入口 | 安装文件 |
 |---|---|---|
-| **电脑 · Chrome / Edge** | **[复制给 Codex / Claude Code 的安装 Prompt](docs/INSTALL_DESKTOP.md)** | [Chromium v1.0.0-rc.7 ZIP](releases/X-Capture-Studio-Chrome-v1.0.0-rc.7.zip) |
-| **手机 · iPhone / iPad Safari + Stay** | **[配官方截图的逐步安装教程](docs/INSTALL_STAY.md)** | [Stay v1.0.0-rc.7 user.js](releases/X-Capture-Studio-Stay-v1.0.0-rc.7.user.js) |
+| **电脑 · Chrome / Edge** | **[复制给 Codex / Claude Code 的安装 Prompt](docs/INSTALL_DESKTOP.md)** | [Chromium v1.0.0-rc.8 ZIP](releases/X-Capture-Studio-Chrome-v1.0.0-rc.8.zip) |
+| **手机 · iPhone / iPad Safari + Stay** | **[配官方截图的逐步安装教程](docs/INSTALL_STAY.md)** | [Stay v1.0.0-rc.8 user.js](releases/X-Capture-Studio-Stay-v1.0.0-rc.8.user.js) |
 
 **[图文安装中心（独立网页）](docs/install.html)**：电脑端内置**复制 AI 安装指令**；手机端提供带 Stay 官方 App Store 历史截图的分步说明。也可直接打开 HTML 文件查看；如将仓库 `docs/` 启用 GitHub Pages，安装页可直接线上访问。
 
@@ -61,7 +61,7 @@ npm test
 
 ## 版本与兼容
 
-当前升级候选安装产物均为 **v1.0.0-rc.7**；rc.5 仍可作为历史回退。电脑通过加载已解压的 Chromium Manifest V3 扩展使用；iPhone/iPad 通过 Safari + Stay userscript 使用。**这不是 Chrome Web Store 上架版本**，也不能在 X 原生 App 内使用。正文及媒体仅覆盖已经加载并且能够取得的数据。
+当前升级候选安装产物均为 **v1.0.0-rc.8**；rc.7 与 rc.5 仍可作为历史回退。电脑通过加载已解压的 Chromium Manifest V3 扩展使用；iPhone/iPad 通过 Safari + Stay userscript 使用。**这不是 Chrome Web Store 上架版本**，也不能在 X 原生 App 内使用。正文及媒体仅覆盖已经加载并且能够取得的数据。
 
 本次只新增面向公开使用的安装指南、AI 安装准备脚本和许可证；**未改动 rc.5 浏览器插件与 Stay 可执行代码**。运行本地测试不等于覆盖所有真实 X 布局或 iOS Stay 设备。
 

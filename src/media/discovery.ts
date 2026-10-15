@@ -32,7 +32,7 @@ function contextOK(v:ObservationContext):boolean {
     typeof v.documentId==='string'&&v.documentId.length>0&&v.documentId.length<=160&&
     /^[A-Za-z0-9_-]{8,100}$/.test(v.sessionId);
 }
-function acceptedVariant(url:string,mime=''):ResourceVariant|undefined {
+export function acceptedVariant(url:string,mime=''):ResourceVariant|undefined {
   const v=variant({url,mime},'network');
   return v&&['file','hls','dash','audio','subtitle','vmap','segment'].includes(v.kind)?v:undefined;
 }

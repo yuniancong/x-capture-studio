@@ -1,5 +1,8 @@
 import {Block, Media, Post} from './model';
 import {mergeMediaResources,sameMediaKey} from '../media/resources';
+import {mediaFamilies} from '../media/discovery';
+/** CDN media IDs from posters (any rendition) and media keys; not post IDs. */
+const cdnIDs=(m:any):string[]=>[...new Set([m?.posterUrl,m?.src].flatMap(u=>typeof u==='string'?mediaFamilies(u):[]).concat(typeof m?.mediaId==='string'&&/^(?:\d+_)?\d+$/.test(m.mediaId)?['media-id:'+m.mediaId.replace(/^\d+_/,'')]:[]).filter(k=>k.startsWith('media-id:')))];
 
 /** Observed, reusable HTTP(S) addresses only. Never expose local Blob/data URLs
  * or user-info credentials. Unknown/signed resource parameters are not rewritten. */
@@ -111,7 +114,9 @@ export function enrichMediaLinks(blocks: Block[], value: unknown): void {
     const key = sameMediaKey(media) || resourceKey(media.posterUrl) || resourceKey(media.src);
     const sameType = raw.filter(m => m.kind === media.kind);
     const matches = key ? sameType.filter(m => !!media.mediaId&&m.mediaId===media.mediaId || (!media.mediaId||!m.mediaId)&&((sameMediaKey({...m,mediaId:undefined})||resourceKey(m.posterUrl)||resourceKey(m.src)) === (sameMediaKey({...media,mediaId:undefined})||resourceKey(media.posterUrl)||resourceKey(media.src)))) : [];
-    const candidate = matches.length === 1 ? matches[0] : !key && observed.length === 1 && raw.length === 1 && sameType.length === 1 ? sameType[0] : undefined;
+    // Same CDN media ID is identity evidence even when poster renditions differ (format/name query).
+    const own = cdnIDs(media), byID = !matches.length && own.length ? sameType.filter(m => cdnIDs(m).some(k => own.includes(k))) : [];
+    const candidate = matches.length === 1 ? matches[0] : byID.length === 1 ? byID[0] : !key && observed.length === 1 && raw.length === 1 && sameType.length === 1 ? sameType[0] : undefined;
     if (!candidate) continue;
     mergeMediaResources(media,candidate);
     if (media.kind === 'image') {

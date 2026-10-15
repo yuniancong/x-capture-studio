@@ -26,7 +26,7 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
         const url=valid(v?.url);if(!url)return;const mime=string(v.content_type||v.mime_type||v.mime);
         const path=new URL(url).pathname,ext=path.match(/\.(\w+)$/)?.[1]?.toLowerCase();
         const k=/mpegurl/i.test(mime||'')||ext==='m3u8'?'hls':mime?.split(';')[0].toLowerCase()==='application/dash+xml'||ext==='mpd'?'dash':/video\//i.test(mime||'')||['mp4','m4v','mov','webm','ogv','ogg'].includes(ext||'')?'file':undefined;
-        if(!k)return;const size=path.match(/\/vid\/(\d+)x(\d+)\//);
+        if(!k)return;const size=path.match(/\/vid\/(?:[a-z0-9.]+\/)?(\d+)x(\d+)\//i);
         return {url,kind:k,mime,width:finite(v.width)||finite(size?.[1]),height:finite(v.height)||finite(size?.[2]),bitrate:finite(v.bitrate??v.bit_rate),codecs:string(v.codecs),frameRate:finite(v.frame_rate),state:'observed',source:'page-data'};
       }).filter(Boolean);
       if(kind==='image'&&src)variants.push({url:src,kind:'image',width,height,state:'observed',source:'page-data'});
@@ -50,28 +50,34 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
   };
   const publicQuote=(item:any,depth=0):any=>{
     if(depth>3||!item||typeof item!=='object')return;
-    const q=item.tweet||item,legacy=q.legacy||{},id=String(q.rest_id||legacy.id_str||'');
+    const q=item.tweet||item,legacy=q.legacy||q,id=String(q.rest_id||legacy.id_str||'');
     if(!/^\d+$/.test(id))return;
-    const user=q.core?.user_results?.result,userLegacy=user?.legacy||{},name=user?.core?.name||userLegacy.name,handle=user?.core?.screen_name||userLegacy.screen_name;
-    const fullText=q.note_tweet?.note_tweet_results?.result?.text||legacy.full_text;
+    const user=q.core?.user_results?.result||q.user,userLegacy=user?.legacy||user||{},name=user?.core?.name||userLegacy.name,handle=user?.core?.screen_name||userLegacy.screen_name;
+    const fullText=q.note_tweet?.note_tweet_results?.result?.text||q.note_tweet?.text||legacy.full_text;
     const result:any={id,url:/^[A-Za-z0-9_]+$/.test(handle||'')?`https://x.com/${handle}/status/${id}`:`https://x.com/i/web/status/${id}`};
     if(typeof name==='string'&&typeof handle==='string')result.author={name:name.slice(0,200),handle:handle.slice(0,40),avatar:user?.avatar?.image_url||userLegacy.profile_image_url_https,verified:!!(user?.is_blue_verified||userLegacy.verified)};
     if(typeof fullText==='string')result.fullText=fullText.slice(0,400000);
     const date=new Date(legacy.created_at);if(!isNaN(+date))result.published=date.toISOString();
     result.media=publicMedia(q,result.url);
-    const nested=publicQuote(q.quoted_status_result?.result,depth+1);if(nested)result.quote=nested;
+    const nested=publicQuote(q.quoted_status_result?.result||q.quoted_status,depth+1);if(nested)result.quote=nested;
     return result;
   };
   const nodes=[...win.document.querySelectorAll('article[data-testid="tweet"], [data-testid="twitterArticleReadView"], [data-testid="twitterArticleRichTextView"]')];
   for(const el of nodes){
-    const key=Object.keys(el).find(k=>k.startsWith('__reactFiber$')||k.startsWith('__reactProps$'));if(!key)continue;
-    const queue:[any,number][]=[[el[key],0]],seen=new WeakSet<object>();let budget=2200;
+    const own=Object.keys(el).filter(k=>k.startsWith('__reactFiber$')||k.startsWith('__reactProps$'));if(!own.length)continue;
+    const queue:[any,number][]=[],seen=new WeakSet<object>();let budget=3200;
+    // Desktop X (2026) passes a flattened tweet as a prop of an ANCESTOR component.
+    // Read only those ancestors' props, shallowly; results stay keyed by wanted post IDs.
+    const fiberKey=own.find(k=>k.startsWith('__reactFiber$'));let fiber:any;try{fiber=fiberKey?el[fiberKey]?.return:undefined;}catch{fiber=undefined;}
+    for(let hop=0;fiber&&hop<16;hop++){let props:any;try{props=fiber.memoizedProps;fiber=fiber.return;}catch{break;}if(props&&typeof props==='object')queue.push([props,5]);}
+    for(const k of own)queue.push([el[k],0]);
     while(queue.length&&budget-->0){
       const [obj,depth]=queue.shift()!;if(!obj||typeof obj!=='object'||seen.has(obj))continue;seen.add(obj);
       let id:string|undefined;
       try{id=String(obj.rest_id||obj.id_str||obj.legacy?.id_str||obj.id||'');}catch{continue;}
-      if(id&&wanted.has(id)&&(obj.legacy&&(obj.legacy.full_text!==undefined||obj.note_tweet)||obj.media_entities||obj.article?.media_entities||obj.article_results?.result?.media_entities||obj.attachments?.media_keys)){
-        const l=obj.legacy||{},n=obj.note_tweet?.note_tweet_results?.result;
+      const flat=!obj.legacy&&typeof obj.id_str==='string'&&(obj.full_text!==undefined||obj.extended_entities);
+      if(id&&wanted.has(id)&&!found.has(id)&&(obj.legacy&&(obj.legacy.full_text!==undefined||obj.note_tweet)||flat||obj.media_entities||obj.article?.media_entities||obj.article_results?.result?.media_entities||obj.attachments?.media_keys)){
+        const l=obj.legacy||(flat?obj:{}),n=obj.note_tweet?.note_tweet_results?.result||(typeof obj.note_tweet?.text==='string'?obj.note_tweet:undefined);
         const text=typeof n?.text==='string'?n.text:typeof l.full_text==='string'?l.full_text:undefined;
         const data:any={id,relationEvidence:'data',media:[...publicMedia(obj,`https://x.com/i/web/status/${id}`),...cardMedia(obj,`https://x.com/i/web/status/${id}`)]};
         if(/^\d+$/.test(l.in_reply_to_status_id_str||''))data.parentId=l.in_reply_to_status_id_str;
@@ -83,7 +89,7 @@ export function pageProbe(ids:string[],suppliedWindow?:any):any[]{
           for(const u of entities.urls||[])if(u.url&&u.expanded_url)expanded=expanded.split(u.url).join(u.expanded_url);
           data.fullText=expanded;
         }
-        const q=publicQuote(obj.quoted_status_result?.result);if(q)data.quote=q;
+        const q=publicQuote(obj.quoted_status_result?.result||(flat?obj.quoted_status:undefined));if(q)data.quote=q;
         if(/^\d+$/.test(l.quoted_status_id_str||''))data.quotedId=l.quoted_status_id_str;
         found.set(id,data);
       }

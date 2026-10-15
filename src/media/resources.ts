@@ -40,6 +40,8 @@ export function classifyResource(url:string,mime='',hint?:ResourceKind):Resource
   const f=mediaFormat(url,mime),type=mime.toLowerCase();
   // Provenance beats extension: an MP4 may be an initialization or media segment.
   if(['ts','m4s','cmfv','cmfa'].includes(f)||(/\/(?:segments?|chunks?|seg)\/|\/(?:init|initialization|segment[-_]\d+)(?:\.|\/)/i.test(new URL(url).pathname)&&['mp4','m4v'].includes(f)))return 'segment';
+  // X HLS fMP4: /vid|aud/<codec>/<startMs>/<endMs>/... is an init/range part, not a playable file.
+  try{const u=new URL(url);if(u.hostname==='video.twimg.com'&&/\/(?:vid|aud)\/[\w.-]+\/\d+\/\d+\//.test(u.pathname)&&['mp4','m4a','m4v'].includes(f))return 'segment';}catch{}
   if(f==='hls')return 'hls';if(f==='dash')return 'dash';if(f==='vmap')return 'vmap';
   if(['vtt','srt','ttml','dfxp'].includes(f))return 'subtitle';
   if(['jpg','png','gif','webp','avif'].includes(f)||type.startsWith('image/'))return 'image';

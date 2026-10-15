@@ -1,5 +1,6 @@
 import type {Capture,Host} from '../core/model';
 import {ObservedResource,DiscoverySummary,attachObservations,performanceMediaEntries,xPageKey,ObservationState,ObservationResult} from './discovery';
+import {passiveMediaLog} from './passive-log';
 export interface DiscoverySnapshot {capture:Capture;selected:Set<string>;quotes:boolean;private:boolean;}
 export interface DiscoveryStatus {state:ObservationState|'idle'|'starting';expiresAt?:number;observed:number;matched:number;ambiguous:number;unmatched:number;segments:number;limited:boolean;formats:string[];}
 const EMPTY:DiscoveryStatus={state:'idle',observed:0,matched:0,ambiguous:0,unmatched:0,segments:0,limited:false,formats:[]};
@@ -10,7 +11,7 @@ export class MediaDiscoveryClient {
   private timer:ReturnType<typeof setTimeout>|undefined;private polling=false;private disposed=false;
   constructor(private host:Host,private snapshot:()=>DiscoverySnapshot,private refresh:()=>Promise<void>,
     private changed:(status:DiscoveryStatus)=>void,private finished:()=>void,
-    private page=()=>location.href,private entries=()=>performanceMediaEntries(performance),
+    private page=()=>location.href,private entries=()=>[...passiveMediaLog.entries(),...performanceMediaEntries(performance)],
     private config={callTimeoutMs:2500}) {}
   get active(){return this.status.state==='active'||this.status.state==='starting';}
   private scope():string {

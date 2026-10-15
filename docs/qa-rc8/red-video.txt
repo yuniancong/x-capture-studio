@@ -1,0 +1,199 @@
+TAP version 13
+# Subtest: Probe reads a flattened tweet held by an ancestor fiber (real logged-in X shape)
+not ok 1 - Probe reads a flattened tweet held by an ancestor fiber (real logged-in X shape)
+  ---
+  duration_ms: 1.339584
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:30:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: Probe ancestor walk stays keyed by post ID: another post's video is never attached
+ok 2 - Probe ancestor walk stays keyed by post ID: another post's video is never attached
+  ---
+  duration_ms: 0.10275
+  type: 'test'
+  ...
+# Subtest: Probe reads a flattened quoted_status with its own author
+not ok 3 - Probe reads a flattened quoted_status with its own author
+  ---
+  duration_ms: 0.234958
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:42:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'quote')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:45:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Probe is still a self-contained function for chrome.scripting MAIN world
+not ok 4 - Probe is still a self-contained function for chrome.scripting MAIN world
+  ---
+  duration_ms: 0.2955
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:48:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'media')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:50:54)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Collector: probe data replaces the /video/1-only fallback in text export
+not ok 5 - Collector: probe data replaces the /video/1-only fallback in text export
+  ---
+  duration_ms: 0.123125
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:52:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'media')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:55:76)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Enrichment also matches by CDN media ID when poster renditions differ
+not ok 6 - Enrichment also matches by CDN media ID when poster renditions differ
+  ---
+  duration_ms: 0.068375
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:58:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'media')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:60:98)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X fMP4 init/range files are segments, progressive MP4 is a file
+not ok 7 - X fMP4 init/range files are segments, progressive MP4 is a file
+  ---
+  duration_ms: 0.540375
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'file' !== 'segment'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'segment'
+  actual: 'file'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:64:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Passive log keeps manifests after X clears the timeline; drops segments, foreign hosts, page data
+not ok 8 - Passive log keeps manifests after X clears the timeline; drops segments, foreign hosts, page data
+  ---
+  duration_ms: 0.094583
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:76:1'
+  failureType: 'testCodeFailure'
+  error: 'C.PassiveMediaLog is not a constructor'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:77:41)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Passive log without PerformanceObserver fails closed
+not ok 9 - Passive log without PerformanceObserver fails closed
+  ---
+  duration_ms: 0.266625
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:88:1'
+  failureType: 'testCodeFailure'
+  error: 'C.PassiveMediaLog is not a constructor'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:89:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: Passive entries attach only by media identity; another video stays pending
+not ok 10 - Passive entries attach only by media identity; another video stays pending
+  ---
+  duration_ms: 0.313625
+  type: 'test'
+  location: '<repo>/scripts/test-rc8-video.cjs:91:1'
+  failureType: 'testCodeFailure'
+  error: 'C.PassiveMediaLog is not a constructor'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (<repo>/scripts/test-rc8-video.cjs:92:41)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 1
+# fail 9
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119.348541

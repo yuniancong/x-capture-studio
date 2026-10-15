@@ -1,4 +1,5 @@
-import {resourceDiagnostics} from '../media/discovery';
+import {resourceDiagnostics,attachObservations} from '../media/discovery';
+import {passiveMediaLog} from '../media/passive-log';
 import {MediaDiscoveryClient,DiscoveryStatus} from '../media/discovery-client';
 import {MediaResolver} from '../media/resolver';
 import {visitMedia} from '../media/resources';
@@ -41,6 +42,12 @@ export class TextTools {
     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
   }
   selectionChanged():void {this.discovery.invalidateScope();}
+  /** Local only: media this page already requested, attached by CDN media identity. No request. */
+  private attachPassive():void {
+    if(this.disposed||!this.options.includeMedia)return;const s=this.snapshot();
+    if(s.privacy.anonymize&&!s.privacy.anonymousSources)return;
+    const records=passiveMediaLog.entries();if(records.length)attachObservations(s.capture,s.selected,records,this.options.includeQuote);
+  }
   result(format: TextFormat = this.format): TextResult {
     const s = this.snapshot();
     return serializeText(s.capture, s.selected, s.order, this.options, format, s.privacy);
@@ -55,6 +62,7 @@ export class TextTools {
     copy.dataset.action = 'copy-text-format'; download.dataset.action = 'export-text';
     const ai = button('复制给 AI', () => void this.copy('ai'), 'xc-button full'); ai.dataset.action = 'copy-ai';
     const update = () => {
+      this.attachPassive();
       const result = this.result(); preview.value = result.text;
       meta.textContent = `${result.postCount} 条已选 · ${result.text.length.toLocaleString()} 字符 · UTF-8`;
       const copyLabel = '复制' + (this.format === 'text' ? '纯文本' : ' Markdown');
@@ -142,6 +150,7 @@ export class TextTools {
     if(!this.disposed)await this.prepareResources(true);
   }
   prepareResources(force=false):Promise<void> {
+    this.attachPassive();
     if(this.disposed||this.discovery.active||!this.resolver||!this.options.includeMedia)return Promise.resolve();
     const s=this.snapshot();
     // No verification network traffic for anonymized media unless explicitly allowed.

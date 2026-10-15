@@ -32,3 +32,4 @@ export * from '../src/media/discovery';
 export * from '../src/platform/network-observer';
 export * from '../src/core/text-expansion';
 export * from '../src/media/discovery-client';
+export * from '../src/media/passive-log';

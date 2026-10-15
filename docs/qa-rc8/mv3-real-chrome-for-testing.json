@@ -1,0 +1,34 @@
+{
+  "sw_url_suffix": "background.js",
+  "sw_seconds": 0.03,
+  "version": "1.0.0-rc.8",
+  "apis": {
+    "storageSession": true,
+    "alarms": true,
+    "webRequestBefore": false,
+    "sessionRoundtrip": true,
+    "alarmCreated": true,
+    "webRequestGranted": false,
+    "requestWithoutGesture": "rejected: This function must be called during a user gesture"
+  },
+  "stopAllWorkers": "sent",
+  "wake_via_message": "lastError: The message port closed before a response was received.",
+  "workers_after_wake": 1,
+  "x_status": 200,
+  "launcher_injected": true,
+  "tweet_testid_articles": 0,
+  "main_world_timeline_video_names": [
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/2mAqGNvsshEs6gQ6.m3u8?tag=29",
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/avc1/720x720/ZEHsONteDRFXDAqX.m3u8",
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/mp4a/128000/OPO4lDLQr2YeyNHI.m3u8",
+    "https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/0/0/720x720/mfITx85Mp6olIj5T.mp4",
+    "https://video.twimg.com/amplify_video/2110598821118099457/aud/mp4a/0/0/128000/xgVDAx9yzc7Dge2h.mp4"
+  ],
+  "isolated_world_observer": [
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/2mAqGNvsshEs6gQ6.m3u8?tag=29",
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/avc1/720x720/ZEHsONteDRFXDAqX.m3u8",
+    "https://video.twimg.com/amplify_video/2110598821118099457/pl/mp4a/128000/OPO4lDLQr2YeyNHI.m3u8",
+    "https://video.twimg.com/amplify_video/2110598821118099457/vid/avc1/0/0/720x720/mfITx85Mp6olIj5T.mp4",
+    "https://video.twimg.com/amplify_video/2110598821118099457/aud/mp4a/0/0/128000/xgVDAx9yzc7Dge2h.mp4"
+  ]
+}

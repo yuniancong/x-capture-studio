@@ -5,6 +5,7 @@ import type {Studio} from './ui/studio';
 import {postID} from './core/urls';
 import {icon} from './ui/dom';
 import {VERSION} from './core/model';
+import {passiveMediaLog} from './media/passive-log';
 
 // Keep the launcher independent of PDF/fontkit initialization. A rendering error must not hide the entry point.
 const host=createHost(__PLATFORM__),collector=new Collector(host);
@@ -63,6 +64,7 @@ if(__PLATFORM__==='demo'){
 }else{
   const runtime=window as any;runtime.__xcRuntimeV2?.dispose?.();
   let timer=0,disposed=false,pageAt=location.href;
+  passiveMediaLog.start();
   const refresh=()=>{timer=0;if(disposed)return;if(pageAt!==location.href){active?.close();collector.reset();pageAt=location.href;}try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
   // Leading deadline, not repeated debounce: a busy X timeline cannot starve reinjection forever.
   const schedule=()=>{if(!timer&&!disposed)timer=window.setTimeout(refresh,200);};
@@ -70,7 +72,7 @@ if(__PLATFORM__==='demo'){
   observer.observe(document,{childList:true,subtree:true});
   const interval=window.setInterval(()=>{if(!document.hidden)schedule();},2000);
   document.addEventListener('DOMContentLoaded',schedule);document.addEventListener('visibilitychange',schedule);window.addEventListener('pageshow',schedule);
-  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;active?.close();clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
+  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;passiveMediaLog.stop();active?.close();clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
   refresh();
   if(__PLATFORM__==='extension')try{chrome.runtime.onMessage.addListener((msg:any,_sender:any,respond:any)=>{if(msg?.type==='xc:open'){void open(postID(location.href));respond({ok:true});}return false;});}catch(e){lastError=(e as Error).message;}
   if(__PLATFORM__==='stay'&&!stayBoot){

@@ -1,5 +1,14 @@
 # 更新记录
 
+## 1.0.0-rc.8 修订 · 桌面视频只得到 /video/1 · 2026-10-16
+
+- 根因（真实已登录桌面 X 复现）：帖子数据改为上层组件的扁平 `props.tweet`，原探针只向下遍历且只认 `legacy` 结构，取不到页面已有的 M3U8/MP4 变体；X 还会清空资源时间线，已播视频重播不再请求清单。
+- 探针：浅层读取祖先组件 props，接受扁平帖子/引用帖/作者，仍按帖子 ID 归属；`/vid/avc1/WxH/` 解析尺寸。真实页面：7/7 帖子识别，目标视频得到 master M3U8 + 320/540/720 MP4。
+- 被动清单记录：PerformanceObserver 只记本页已请求的 `video.twimg.com` 清单/文件名，仅内存、无权限、不发请求；按 CDN 媒体 ID 唯一归属。
+- X fMP4 `/vid|aud/<codec>/<起>/<止>/` 识别为分段；海报渲染参数不同时按媒体 ID 匹配。
+- 真实 Chrome for Testing 153 安装发布 ZIP：worker 注册、session/alarms、休眠唤醒、内容脚本注入与隔离世界观察均通过。
+- 确定性打包脚本 `scripts/package_release.py`，源码重建字节一致。详见 `docs/VERIFY_VIDEO_RC8.md`。
+
 ## 1.0.0-rc.8 · 跨平台发现修复候选
 
 - 桌面可选非阻断式 webRequest 观察 + 有界 session 生命周期 + 当前文档资源时间线补充；唯一媒体身份匹配，歧义不附加。

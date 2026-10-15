@@ -1,0 +1,3 @@
+3af830bba328cc7f88ce4fe54b77eed4dcc8ef6338f016d2e5eb749b759644d0  X-Capture-Studio-Chrome-v1.0.0-rc.8.zip
+1e27e7737bef56d1858a510a7fbe5170b40e3b298c2a22a29d390761bb03ff3f  X-Capture-Studio-Stay-v1.0.0-rc.8.user.js
+bcbf5232530ade39e45229a0a1f2276473f490891bf19f69a20de0b9fdf1824d  X-Capture-Studio-Stay-v1.0.0-rc.8.zip
