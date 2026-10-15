@@ -1,3 +1,5 @@
+import {resourceDiagnostics} from '../media/discovery';
+import {MediaDiscoveryClient,DiscoveryStatus} from '../media/discovery-client';
 import {MediaResolver} from '../media/resolver';
 import {visitMedia} from '../media/resources';
 import {Capture, Host} from '../core/model';
@@ -7,7 +9,7 @@ import {el, button, icon} from './dom';
 import {segment, toggle} from './controls';
 
 type Snapshot = {capture: Capture; selected: Set<string>; order: string[]; privacy: TextPrivacy};
-type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void;};
+type UI = {notify(message: string): void; show(card: HTMLElement): void; close(): void; refresh?():Promise<void>; showPage?(done:()=>void):()=>void;};
 const formatName = (format: TextFormat) => format === 'text' ? '纯文本' : format === 'ai' ? 'AI 上下文' : 'Markdown';
 
 /** Shares the current selection, but owns text-only options. Visual styling never rewrites text. */
@@ -18,10 +20,14 @@ export class TextTools {
   private disposed = false;
   private resolver?:MediaResolver;private inspection?:Promise<void>;private inspectionAbort?:AbortController;
   private inspectionKey='';private inspectionLabel='未检查高清/播放清单';private updatePreview?:()=>void;
-  private resourceStatus?:HTMLElement;
+  private diagnosticNode?:HTMLElement;private resourceStatus?:HTMLElement;private discoveryStatus?:HTMLElement;private discovery:MediaDiscoveryClient;
+  private returnFromPage?:()=>void;private inspectGeneration=0;
 
   constructor(private snapshot: () => Snapshot, private host: Host, private ui: UI) {
     if(host.readResource)this.resolver=new MediaResolver((request,signal)=>host.readResource!(request,signal));
+    this.discovery=new MediaDiscoveryClient(host,()=>{const s=this.snapshot();return {...s,quotes:this.options.includeQuote,private:!!(s.privacy.anonymize&&!s.privacy.anonymousSources)||!this.options.includeMedia};},
+      ()=>this.ui.refresh?.()||Promise.resolve(),status=>{if(this.discoveryStatus)this.discoveryStatus.textContent=this.discoveryMessage(status);if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}},
+      ()=>{this.returnFromPage?.();this.returnFromPage=undefined;if(!this.disposed)void this.prepareResources(true);});
   }
   async load() {
     const value = await this.host.getValue('text-export-options', TEXT_DEFAULTS).catch(() => TEXT_DEFAULTS);
@@ -29,11 +35,12 @@ export class TextTools {
     this.options.includeSensitiveMedia=false; // Per-session, explicit consent only.
   }
   dispose() {
-    this.disposed = true;this.inspectionAbort?.abort();this.resolver?.clear();this.updatePreview=undefined;
+    this.disposed = true;++this.inspectGeneration;this.discovery.dispose();this.returnFromPage?.();this.returnFromPage=undefined;this.inspectionAbort?.abort();this.resolver?.clear();this.updatePreview=undefined;
     // Allow in-progress native downloads to retain their Blob URLs briefly.
     const urls = [...this.urls]; this.urls.clear();
     setTimeout(() => urls.forEach(url => URL.revokeObjectURL(url)), 60000);
   }
+  selectionChanged():void {this.discovery.invalidateScope();}
   result(format: TextFormat = this.format): TextResult {
     const s = this.snapshot();
     return serializeText(s.capture, s.selected, s.order, this.options, format, s.privacy);
@@ -81,16 +88,25 @@ export class TextTools {
       ['includeCaptureTime', '采集时间']
     ];
     for (const [key, label] of fields) details.append(toggle(label, this.options[key], value => {
-      this.options = {...this.options, [key]: value}; update();
+      this.options = {...this.options, [key]: value}; this.discovery.invalidateScope(); update();
       void this.host.setValue('text-export-options', {...this.options,includeSensitiveMedia:false}).catch(() => this.ui.notify('文本设置暂未持久保存；本次设置仍然有效。'));
     }));
     details.append(el('p', {class: 'xc-sub'}, '这些是文本专用开关，不改变图片 / PDF 外观。匿名设置仍与工作台共享；正文和替代文字中的身份不会自动打码。'));
     const more=el('details',{class:'xc-details xc-media-options'},el('summary',{},'媒体资源与高清检查'));
-    const inspect=button('检查高清 / 视频 / 字幕',()=>void this.prepareResources(true),'xc-button');
+    const inspect=button('检查高清 / 视频 / 字幕',()=>void this.inspectMedia(),'xc-button');
     inspect.dataset.action='inspect-media';
     this.resourceStatus=el('p',{class:'xc-sub',role:'status'},this.inspectionLabel);
-    more.append(inspect,button('停止检查',()=>this.inspectionAbort?.abort(),'xc-textbtn'),this.resourceStatus,
+    more.append(inspect,button('停止检查',()=>void this.stopInspection(),'xc-textbtn'),this.resourceStatus,
       el('p',{class:'xc-sub'},'仅检查已选内容。原图不可用时自动降级；保留 MP4 / HLS / DASH 和字幕。流的可用性、清晰度与文件直链分别标注。不下载视频分片。'));
+    this.discoveryStatus=el('p',{class:'xc-sub',role:'status','data-discovery-status':''},this.discoveryMessage(this.discovery.status));
+    more.append(this.discoveryStatus);
+    if(this.host.kind==='extension')more.append(
+      button('启用桌面视频观察',()=>void this.host.openObservationPermission?.().then(ok=>{if(!ok)this.ui.notify('当前环境无法打开权限页；可继续使用基础取链。');}),'xc-textbtn'),
+      button('返回网页播放视频',()=>{
+        if(!this.discovery.active){this.ui.notify('先点击“检查高清 / 视频 / 字幕”开启约 30 秒观察；未授权时先启用桌面视频观察。');return;}
+        this.returnFromPage?.();this.returnFromPage=this.ui.showPage?.(()=>void this.finishDiscovery());
+      },'xc-button'),
+      el('p',{class:'xc-sub'},'桌面请求观察是可选权限，仅主动检查时开启约 30 秒。返回网页播放后再回到结果；不会自动播放或刷新。归属不明确的资源不会塞进当前视频。'));
     for(const [key,label] of [['includeAllResources','完整资源：全部质量、音轨和验证状态'],['markdownImages','Markdown 使用可嵌入图片语法'],['includeSubtitles','附带已有字幕轨道与链接'],['includeSensitiveMedia','允许完整受限/签名链接（仅本人使用）']] as const){
       const control=toggle(label,this.options[key],value=>{
         if(key==='includeSensitiveMedia'&&value&&!confirm('签名/令牌链接可能授予临时访问权。仅在自己使用、不会公开分享时允许；不会移除或改写签名。是否继续？')){this.options[key]=false;const input=control.querySelector('input');if(input)input.checked=false;update();return;}
@@ -98,10 +114,35 @@ export class TextTools {
         void this.host.setValue('text-export-options',{...this.options,includeSensitiveMedia:false}).catch(()=>{});
       });more.append(control);
     }
+    this.diagnosticNode=el('pre',{class:'xc-resource-diagnostics'});
+    more.append(el('details',{class:'xc-details'},el('summary',{},'资源诊断（不含链接与账号）'),this.diagnosticNode));
+    this.updateDiagnostics();
     root.append(details,more);this.updatePreview=update;update();void this.prepareResources();return root;
   }
+  private updateDiagnostics():void {const s=this.snapshot();if(this.diagnosticNode)this.diagnosticNode.textContent=resourceDiagnostics(s.capture,s.selected,this.options.includeQuote).join('\n');}
+  private discoveryMessage(s:DiscoveryStatus):string {
+    const names:Record<string,string>={idle:'尚未启动资源观察',starting:'正在启动资源观察',active:'短时观察中，可返回网页播放',
+      expired:'观察窗口已结束',stopped:'观察已停止',unsupported:this.host.kind==='stay'?'Stay 使用 DOM 与页面可观察资源，不使用 Chrome 网络接口':'当前浏览器不支持网络观察',
+      'permission-required':'尚未授权桌面请求观察；基础取链继续可用','scope-changed':'页面或选区已变化，旧观察已停止',unavailable:'请求观察未启动，保留基础取链结果'};
+    return `${names[s.state]||s.state} · 已发现 ${s.observed} · 明确关联 ${s.matched} · 待确认 ${s.ambiguous+s.unmatched}${s.formats.length?' · '+s.formats.join(' / ').toUpperCase():''}${s.limited?' · 达到数量上限':''}`;
+  }
+  private async inspectMedia():Promise<void> {
+    const generation=++this.inspectGeneration;
+    this.inspectionAbort?.abort();if(this.inspection)await this.inspection;
+    if(this.disposed||generation!==this.inspectGeneration)return;
+    this.inspectionKey='';await this.discovery.start();
+    if(!this.discovery.active&&!this.disposed)await this.prepareResources(true);
+  }
+  private async stopInspection():Promise<void> {
+    ++this.inspectGeneration;this.inspectionAbort?.abort();await this.discovery.stop(false);
+    this.returnFromPage?.();this.returnFromPage=undefined;
+  }
+  private async finishDiscovery():Promise<void> {
+    await this.discovery.stop(true);this.returnFromPage?.();this.returnFromPage=undefined;
+    if(!this.disposed)await this.prepareResources(true);
+  }
   prepareResources(force=false):Promise<void> {
-    if(this.disposed||!this.resolver||!this.options.includeMedia)return Promise.resolve();
+    if(this.disposed||this.discovery.active||!this.resolver||!this.options.includeMedia)return Promise.resolve();
     const s=this.snapshot();
     // No verification network traffic for anonymized media unless explicitly allowed.
     if(s.privacy.anonymize&&!s.privacy.anonymousSources)return Promise.resolve();
@@ -114,7 +155,7 @@ export class TextTools {
       this.inspectionLabel=`已检查 ${done}/${total} 项媒体`;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;
     }).then(r=>{this.inspectionLabel=`媒体检查${r.partial?'部分完成':'完成'} · ${r.requests} 次有界请求 · 未验证项保留原链接`;
     }).catch(()=>{this.inspectionLabel='检查未完成，保留已发现的资源。';}).finally(()=>{
-      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed)this.updatePreview?.();
+      this.inspection=undefined;if(this.resourceStatus)this.resourceStatus.textContent=this.inspectionLabel;if(!this.disposed){this.updatePreview?.();this.updateDiagnostics();}
     });return this.inspection;
   }
   async copy(format:TextFormat='text') {

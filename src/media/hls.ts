@@ -31,7 +31,7 @@ export function parseHLS(text:string,address:string,imports:Record<string,string
   const add=(url:string|undefined,a:Record<string,string>={},role:ResourceVariant['role']='video',kind:ResourceVariant['kind']='hls')=>{
     if(!url)return;const size=a.RESOLUTION?.match(/^(\d+)x(\d+)$/i);
     const v=variant({url,kind,role,playlist:kind==='hls'?'media':undefined,parentUrl:base,bitrate:num(a.BANDWIDTH),averageBitrate:num(a['AVERAGE-BANDWIDTH']),
-      width:size?num(size[1]):undefined,height:size?num(size[2]):undefined,codecs:a.CODECS,frameRate:num(a['FRAME-RATE']),audioGroup:a.AUDIO,subtitleGroup:a.SUBTITLES,captionGroup:a['CLOSED-CAPTIONS'],
+      dimensionSource:'manifest',width:size?num(size[1]):undefined,height:size?num(size[2]):undefined,codecs:a.CODECS,frameRate:num(a['FRAME-RATE']),audioGroup:a.AUDIO,subtitleGroup:a.SUBTITLES,captionGroup:a['CLOSED-CAPTIONS'],
       name:a.NAME,language:a.LANGUAGE,sensitive:rootSensitive},'hls',kind)!;
     if(variants.length<512)variants.push(v);else warnings.push('HLS 变体超过保留上限。');
   };
@@ -56,10 +56,12 @@ export function parseHLS(text:string,address:string,imports:Record<string,string
       if(type==='VIDEO'){add(url,a,'video');continue;}
       if(!['AUDIO','SUBTITLES','CLOSED-CAPTIONS'].includes(type))continue;
       const cc=type==='CLOSED-CAPTIONS';const kind=type==='AUDIO'?'audio':cc?'captions':'subtitles';
-      const format=cc?(a['INSTREAM-ID']?.startsWith('SERVICE')?'CEA-708':'CEA-608'):'HLS';
+      const ccValid=/^(?:CC[1-4]|SERVICE(?:[1-9]|[1-5][0-9]|6[0-3]))$/.test(a['INSTREAM-ID']||'');
+      const format=cc?(ccValid?(a['INSTREAM-ID'].startsWith('SERVICE')?'CEA-708':'CEA-608'):'内嵌格式未确认'):'HLS';
+      if(type==='SUBTITLES'&&!url)warnings.push('字幕组没有有效 URI，仅保留轨道声明。');
       tracks.push({id:[base,type,a['GROUP-ID'],a.NAME,a.LANGUAGE,a['INSTREAM-ID']].join('|'),kind,url,manifestUrl:base,
         language:a.LANGUAGE,label:a.NAME,groupId:a['GROUP-ID'],default:a.DEFAULT==='YES',forced:a.FORCED==='YES',autoSelect:a.AUTOSELECT==='YES',
-        inBand:!url,format,source:'hls',state:'observed',segmented:!!url,sensitive:rootSensitive||!!url&&sensitiveURL(url)});
+        inBand:(cc||type==='AUDIO')&&!url,evidence:'declared',inBandEvidence:(cc||type==='AUDIO')&&!url?'manifest':undefined,format,source:'hls',state:'observed',segmented:!!url,sensitive:rootSensitive||!!url&&sensitiveURL(url)});
       if(url)add(url,a,type==='AUDIO'?'audio':'subtitle');continue;
     }
     if(tag==='#EXT-X-KEY'||tag==='#EXT-X-SESSION-KEY'){

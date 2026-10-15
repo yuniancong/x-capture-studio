@@ -40,6 +40,8 @@ function storageRead<T>(read:()=>unknown,fallback:T):Promise<T>{return new Promi
 });}
 export function createHost(kind:Host['kind']):Host{
   if(kind==='extension')return {kind,
+    async observe(action,sessionId){try{return await chrome.runtime.sendMessage({type:'xc:observe',action,sessionId})||{state:'unavailable',records:[]};}catch{return {state:'unavailable',records:[]};}},
+    async openObservationPermission(){try{return !!(await chrome.runtime.sendMessage({type:'xc:observe-enable'}))?.ok;}catch{return false;}},
     async getValue<T>(key:string,fallback:T){const v=await chrome.storage.local.get(key);return v[key]??fallback;},
     async setValue(key,value){await chrome.storage.local.set({[key]:value});},
     async readBytes(url,signal){if(!allowedAsset(url))throw new Error('资源域名不在允许列表。');if(signal?.aborted)throw new DOMException('已取消','AbortError');

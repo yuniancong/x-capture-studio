@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "X Capture Studio",
-  "version": "1.0.0.7",
-  "version_name": "1.0.0-rc.7",
+  "version": "1.0.0.8",
+  "version_name": "1.0.0-rc.8",
   "description": "将 X / Twitter 帖文、长文及选中回复保存为高清长图、文本 PDF、TXT 或 Markdown；支持复制文本与 AI 上下文，本地处理。",
   "permissions": [
     "storage",
     "clipboardWrite",
-    "scripting"
+    "scripting",
+    "alarms"
   ],
   "host_permissions": [
     "https://x.com/*",
@@ -48,5 +49,9 @@
       "run_at": "document_idle",
       "all_frames": false
     }
-  ]
+  ],
+  "optional_permissions": [
+    "webRequest"
+  ],
+  "minimum_chrome_version": "120"
 }

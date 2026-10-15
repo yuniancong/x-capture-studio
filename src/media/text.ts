@@ -1,14 +1,14 @@
 import type {Media,Post} from '../core/model';
 import {sourceURL} from '../core/urls';
 import {videoPageForMedia} from '../core/media-links';
-import {preferredImage,recommendedVariants,existingVariants,sensitiveURL,resourceURL,mediaFormat} from './resources';
+import {preferredImage,recommendedVariants,existingVariants,sensitiveURL,resourceURL,mediaFormat,trackEvidence,mergeTracks} from './resources';
 import type {ResourceVariant,MediaTrack} from './types';
 export interface MediaTextOptions { all:boolean; images:boolean; subtitles:boolean; sensitive:boolean; markdown:boolean; links:boolean; sources:boolean; }
 const escape=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/([\\`*_[\]~|])/g,'\\$1');
 const urlText=(s:string,md:boolean)=>md?'<'+s.replace(/[<>\s]/g,c=>encodeURIComponent(c))+'>':s;
 function details(v:ResourceVariant,all:boolean):string {
   const parts:string[]=[];
-  if(v.width&&v.height)parts.push(`${v.width}×${v.height}`);
+  if(v.width&&v.height&&!(v.kind==='hls'&&v.playlist==='master'))parts.push(`${v.width}×${v.height}`);
   if(all&&v.bitrate)parts.push(`${Math.round(v.bitrate/1000)} kbps`);
   if(all&&v.codecs)parts.push(v.codecs);
   if(v.kind==='hls')parts.push(v.playlist==='master'?'主播放列表':v.playlist==='media'?'子播放列表':'播放列表');
@@ -52,15 +52,21 @@ export function mediaTextLines(m:Media,p:Post,o:MediaTextOptions):{text:string;w
       lines.push((lines.length?'':marker+' ')+text(`${title}${o.all||v.kind!=='file'?' · '+format:''}${details(v,o.all)}：`)+a);
     }
     if(!lines.length){const original=o.sources?sourceURL(m.href||'')||sourceURL(p.url):undefined;lines.push(`${marker}${original?' 原帖（视频专属地址未获取）：'+urlText(original,o.markdown):'（视频链接未获取）'}`);}
-    const tracks=(m.tracks||[]).filter(t=>t.kind==='audio'?o.all:o.subtitles);
+    const tracks=mergeTracks(m.tracks).filter(t=>t.kind==='audio'?o.all:o.subtitles);
     for(const t of tracks){
       const format=t.format||(t.url?mediaFormat(t.url,t.mime):'')||'未确认格式';
+      const evidence=trackEvidence(t);
+      if(t.kind!=='audio'&&evidence==='hint'){
+        lines.push(text('检测到字幕轨道元信息，内容与独立地址尚未确认。'));continue;
+      }
       const name=[t.kind==='audio'?'音轨':'字幕',t.language,t.label,format,t.default?'默认':undefined,t.forced?'强制':undefined].filter(Boolean).join('｜');
       const u=t.url||t.manifestUrl;const a=u?addr(u,t.sensitive):undefined;
-      if(t.inBand){lines.push(text(name+'：内嵌轨道，无独立文件 URL'));}
+      if(t.inBand&&t.inBandEvidence==='manifest'){lines.push(text(name+'：清单声明内嵌轨道，无独立文件 URL'+(evidence==='cue-confirmed'?'（已确认内容）':'（内容未验证）')));}
       else if(a){lines.push(text(name+(t.segmented||!t.url?'｜分片/清单':'')+'：')+a);}
-      else lines.push(text(name+(u?'：受限链接未导出':'：已检测到，独立资源地址未获取')));
+      else lines.push(text(name+(u?'：受限链接未导出':evidence==='cue-confirmed'?'：已确认字幕内容，独立资源地址未获取':'：已声明轨道，内容与独立地址未确认')));
+      if(o.all)lines.push(text('轨道证据：'+evidence));
     }
+    if(o.all&&m.playbackDimensions)lines.push(text(`当前播放内在尺寸：${m.playbackDimensions.width}×${m.playbackDimensions.height}（不是最高画质声明）`));
     for(const info of m.manifests||[]){if(info.encrypted)warnings.push('检测到加密/受保护内容，仅记录流和轨道信息，未获取密钥或解密。');
       if(o.all&&(info.segmentCount||info.initializationCount||info.parts))lines.push(text(`清单结构：${info.segmentCount} 个媒体分片，${info.initializationCount} 个初始化片段${info.parts?'，低延迟片段 '+info.parts:''}（不输出为完整视频）`));
     }

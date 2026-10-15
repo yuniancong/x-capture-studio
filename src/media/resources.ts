@@ -1,5 +1,5 @@
 import type {Media,Post,Block,Capture} from '../core/model';
-import type {ResourceKind,ResourceSource,ResourceVariant,MediaTrack} from './types';
+import type {ResourceKind,ResourceSource,ResourceVariant,MediaTrack,TrackEvidence} from './types';
 
 export function resourceURL(value:unknown,base?:string):string|undefined {
   if(typeof value!=='string'||value.length>12000||/[\u0000-\u0020\u007f\\]/.test(value))return;
@@ -56,19 +56,22 @@ export function variant(value:unknown,source:ResourceSource='dom',hint?:Resource
   const mime=word(v.mime||v.content_type,100),kind=classifyResource(url,mime,hint||v.kind);
   if(!['image','file','hls','dash','audio','subtitle','poster','segment','vmap','page','unknown'].includes(kind))return;
   const out:ResourceVariant={url,kind,format:mediaFormat(url,mime)||word(v.format,32),source,mime,state:'observed',sensitive:sensitiveURL(url)||v.sensitive===true};
+  out.sources=[...new Set([...(Array.isArray(v.sources)?v.sources:[]),source])].filter((x):x is ResourceSource=>['dom','srcset','page-data','image-rule','hls','dash','vmap','legacy','track','network','performance'].includes(x));
   for(const k of ['width','height','bitrate','averageBitrate','frameRate','descriptorWidth','descriptorDensity'] as const){const n=positive(v[k]??(k==='bitrate'?v.bit_rate:undefined));if(n!==undefined&&n<1e12)out[k]=n;}
   for(const k of ['codecs','language','name','parentUrl','audioGroup','subtitleGroup','captionGroup','periodId','adaptationId','representationId','discoveredAt','checkedAt'] as const){const t=word(v[k],k==='parentUrl'?12000:180);if(t)out[k]=t;}
   if(['observed','candidate','verified','unverified','unavailable','blocked'].includes(v.state))out.state=v.state;
   if(['video','audio','subtitle','iframe'].includes(v.role))out.role=v.role;
   if(['master','media'].includes(v.playlist))out.playlist=v.playlist;
+  if(['page-data','manifest','file-metadata'].includes(v.dimensionSource))out.dimensionSource=v.dimensionSource;
   if(v.segmented!==undefined)out.segmented=!!v.segmented;
   for(const k of ['encrypted','drm','live'] as const)if(typeof v[k]==='boolean')out[k]=v[k];
   if(v.verifiedBy&&['image-decode','manifest-parse','headers'].includes(v.verifiedBy))out.verifiedBy=v.verifiedBy;
   if(typeof v.httpStatus==='number')out.httpStatus=v.httpStatus;
   if(typeof v.problem==='string')out.problem=v.problem;
+  if(out.kind==='hls'&&out.playlist==='master'){delete out.width;delete out.height;delete out.dimensionSource;}
   return out;
 }
-export function variantKey(v:ResourceVariant):string {return [v.kind,v.url,v.role||'',v.periodId||'',v.representationId||'',v.audioGroup||'',v.subtitleGroup||''].join('\u001f');}
+export function variantKey(v:ResourceVariant):string {return [v.kind,v.url,v.role||(['hls','dash','vmap'].includes(v.kind)?'video':''),v.periodId||'',v.representationId||'',v.audioGroup||'',v.subtitleGroup||''].join('\u001f');}
 export function mergeVariants(...arrays:(ResourceVariant[]|undefined)[]):ResourceVariant[] {
   const map=new Map<string,ResourceVariant>();
   for(const arr of arrays)for(const raw of (arr||[]).slice(0,512)){
@@ -79,21 +82,55 @@ export function mergeVariants(...arrays:(ResourceVariant[]|undefined)[]):Resourc
     if(!v.checkedAt&&a.checkedAt){out.state=a.state;out.checkedAt=a.checkedAt;out.problem=a.problem;out.verifiedBy=a.verifiedBy;out.width=a.width||v.width;out.height=a.height||v.height;}
     else if(a.state==='observed'&&v.state==='candidate')out.state='observed';
     if(a.sensitive||v.sensitive)out.sensitive=true;
+    out.sources=[...new Set([...(a.sources||[a.source]),...(v.sources||[v.source])])];
+    if(out.kind==='hls'&&out.playlist==='master'){delete out.width;delete out.height;delete out.dimensionSource;}
     map.set(key,out);
   }return [...map.values()];
 }
+const trackEvidenceRank:Record<TrackEvidence,number>={hint:0,declared:1,'url-observed':2,'resource-validated':3,'cue-confirmed':4};
+export function trackEvidence(t:MediaTrack):TrackEvidence {
+  if(t.cueCount&&t.cueCount>0)return 'cue-confirmed';
+  if(t.evidence&&t.evidence in trackEvidenceRank)return t.evidence;
+  if(t.url)return t.state==='verified'?'resource-validated':'url-observed';
+  if(['hls','dash','page-data'].includes(t.source))return 'declared';
+  return 'hint';
+}
+function sameTrack(a:MediaTrack,b:MediaTrack):boolean {
+  if(a.kind!==b.kind)return false;
+  for(const k of ['groupId','periodId','representationId','language'] as const)if(a[k]&&b[k]&&a[k]!==b[k])return false;
+  if(a.url&&b.url)return a.url===b.url;
+  if(a.manifestUrl&&b.manifestUrl&&a.manifestUrl!==b.manifestUrl)return false;
+  if(a.inBandEvidence&&b.inBandEvidence&&a.id!==b.id)return false; // e.g. CC1 vs CC2.
+  if(a.id===b.id&&a.source===b.source)return true;
+  // A browser hint may attach to ONE clearly matching named/language-declared track.
+  return !!(a.language&&b.language&&a.language===b.language&&a.label&&a.label===b.label)&&
+    (trackEvidence(a)==='hint'||trackEvidence(b)==='hint'||a.source==='track'||b.source==='track');
+}
 export function mergeTracks(...arrays:(MediaTrack[]|undefined)[]):MediaTrack[] {
-  const map=new Map<string,MediaTrack>();
+  const out:MediaTrack[]=[];
   for(const arr of arrays)for(const t of (arr||[]).slice(0,128)){
     if(!t||!['audio','subtitles','captions','descriptions'].includes(t.kind))continue;
-    const url=resourceURL(t.url),manifestUrl=resourceURL(t.manifestUrl);
-    const key=[t.kind,url||'',t.language||'',t.groupId||'',t.periodId||'',t.representationId||'',t.inBand?'in-band':'',!url?t.id:''].join('|');
-    const clean:MediaTrack={id:word(t.id,256)||key,kind:t.kind,url,manifestUrl,state:t.state||'observed',source:t.source||'track'};
+    const url=t.url?resourceURL(t.url):undefined,manifestUrl=t.manifestUrl?resourceURL(t.manifestUrl):undefined;
+    const clean:MediaTrack={id:word(t.id,256)||'unknown',kind:t.kind,url,manifestUrl,
+      state:t.state||'observed',source:t.source||'track',evidence:trackEvidence(t)};
     for(const k of ['language','label','format','mime','codecs','groupId','periodId','adaptationId','representationId'] as const)clean[k]=word(t[k]);
-    for(const k of ['inBand','default','forced','autoSelect','encrypted','segmented'] as const)if(typeof t[k]==='boolean')clean[k]=t[k];
+    for(const k of ['default','forced','autoSelect','encrypted','segmented'] as const)if(typeof t[k]==='boolean')clean[k]=t[k];
+    // Only a real manifest declaration proves an in-band relationship.
+    if(t.inBand===true&&['hls','dash'].includes(t.source)){clean.inBand=true;clean.inBandEvidence='manifest';}
+    else if(t.inBandEvidence==='manifest'&&t.inBand){clean.inBand=true;clean.inBandEvidence='manifest';}
+    if(t.cueCount&&Number.isFinite(t.cueCount))clean.cueCount=Math.min(100000,Math.max(1,Math.floor(t.cueCount)));
     clean.sensitive=t.sensitive||!!url&&sensitiveURL(url)||!!manifestUrl&&sensitiveURL(manifestUrl);
-    if(map.size<128||map.has(key))map.set(key,{...map.get(key),...clean});
-  }return [...map.values()];
+    const candidates=out.map((v,i)=>sameTrack(v,clean)?i:-1).filter(i=>i>=0);
+    if(candidates.length===1){
+      const i=candidates[0],a=out[i];const merged={...a};
+      for(const [key,value]of Object.entries(clean))if(value!==undefined)(merged as any)[key]=value;
+      merged.evidence=trackEvidenceRank[trackEvidence(a)]>trackEvidenceRank[trackEvidence(clean)]?trackEvidence(a):trackEvidence(clean);
+      if(a.state==='verified'&&clean.state==='observed')merged.state=a.state;
+      if(a.sensitive||clean.sensitive)merged.sensitive=true;
+      if(a.inBandEvidence==='manifest'){merged.inBand=true;merged.inBandEvidence='manifest';}
+      out[i]=merged;
+    }else if(out.length<128)out.push(clean);
+  }return out;
 }
 export function sameMediaKey(m:Partial<Media>):string|undefined {
   if(m.mediaId)return 'id:'+m.mediaId;
@@ -119,6 +156,8 @@ export function mergeMediaResources(target:Media,incoming:Partial<Media>):void {
   const info=new Map((target.manifests||[]).map(x=>[x.url,x]));for(const m of incoming.manifests||[])info.set(m.url,m);target.manifests=[...info.values()].slice(0,64);
   target.resourceNotes=[...new Set([...(target.resourceNotes||[]),...(incoming.resourceNotes||[])])].slice(0,40);
   if(!target.selectedImageUrl&&incoming.selectedImageUrl)target.selectedImageUrl=incoming.selectedImageUrl;
+  if(incoming.playbackDimensions&&(!target.playbackDimensions||incoming.playbackDimensions.observedAt>=target.playbackDimensions.observedAt))target.playbackDimensions={...incoming.playbackDimensions};
+  if(incoming.domSourceKind)target.domSourceKind=incoming.domSourceKind;
 }
 /** Candidate rank is a request strategy, never an assertion about existing originals. */
 export function imageCandidates(m:Media):ResourceVariant[] {

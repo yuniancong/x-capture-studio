@@ -62,15 +62,15 @@ if(__PLATFORM__==='demo'){
   if(document.documentElement)ready();else document.addEventListener('DOMContentLoaded',ready,{once:true});
 }else{
   const runtime=window as any;runtime.__xcRuntimeV2?.dispose?.();
-  let timer=0,disposed=false;
-  const refresh=()=>{timer=0;if(disposed)return;try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
+  let timer=0,disposed=false,pageAt=location.href;
+  const refresh=()=>{timer=0;if(disposed)return;if(pageAt!==location.href){active?.close();collector.reset();pageAt=location.href;}try{ensureLauncher();stayBoot?.markReady();attachButtons();}catch(e){lastError=(e as Error).message;stayBoot?.fail(e);}};
   // Leading deadline, not repeated debounce: a busy X timeline cannot starve reinjection forever.
   const schedule=()=>{if(!timer&&!disposed)timer=window.setTimeout(refresh,200);};
   const observer=new MutationObserver(records=>{if(records.every(r=>r.target instanceof Element&&r.target.closest('[data-xcapture-ui]')))return;schedule();});
   observer.observe(document,{childList:true,subtree:true});
   const interval=window.setInterval(()=>{if(!document.hidden)schedule();},2000);
   document.addEventListener('DOMContentLoaded',schedule);document.addEventListener('visibilitychange',schedule);window.addEventListener('pageshow',schedule);
-  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
+  runtime.__xcRuntimeV2={dispose:()=>{disposed=true;active?.close();clearTimeout(timer);clearInterval(interval);observer.disconnect();document.removeEventListener('DOMContentLoaded',schedule);document.removeEventListener('visibilitychange',schedule);window.removeEventListener('pageshow',schedule);}};
   refresh();
   if(__PLATFORM__==='extension')try{chrome.runtime.onMessage.addListener((msg:any,_sender:any,respond:any)=>{if(msg?.type==='xc:open'){void open(postID(location.href));respond({ok:true});}return false;});}catch(e){lastError=(e as Error).message;}
   if(__PLATFORM__==='stay'&&!stayBoot){

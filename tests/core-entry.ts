@@ -28,3 +28,7 @@ export * from '../src/media/resolver';
 export * from '../src/platform/resource-network';
 export * from '../src/media/text';
 export * from '../src/media/dom';
+export * from '../src/media/discovery';
+export * from '../src/platform/network-observer';
+export * from '../src/core/text-expansion';
+export * from '../src/media/discovery-client';

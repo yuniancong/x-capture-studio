@@ -1,3 +1,4 @@
+import {expandAnchoredText} from './text-expansion';
 import {Capture,Host,Post} from './model';
 import {collectDOM} from './parser';
 import {mergePosts} from './selection';
@@ -42,11 +43,8 @@ export class Collector {
         if(p.parentId)p.relationEvidence='data';
         if(raw.quote){p.quote=enrichQuote(p.quote,raw.quote,p.capturedAt);if(p.quote?.url)p.warnings=p.warnings.filter(w=>!w.includes('引用原帖链接未识别'));}
         else if(p.quote&&!p.quote.url&&/^\d+$/.test(raw.quotedId||'')){p.quote.id=raw.quotedId;p.quote.url=`https://x.com/i/web/status/${raw.quotedId}`;p.quote.warnings=p.quote.warnings.filter(w=>!w.includes('引用原帖链接未识别'));p.warnings=p.warnings.filter(w=>!w.includes('引用原帖链接未识别'));}
-        if(typeof raw.fullText==='string'&&p.warnings.some(w=>w.includes('正文可能折叠'))&&raw.fullText.length>p.blocks.filter(b=>b.kind==='text').map(b=>b.kind==='text'?b.runs.map(r=>r.text).join(''):'').join('').length&&p.kind==='post'){
-          const visible=p.blocks.filter(b=>b.kind==='text').map(b=>b.kind==='text'?b.runs.map(r=>r.text).join(''):'').join('');
-          const prefix=visible.replace(/[\s…]+$/g,'').slice(0,24);
-          if(prefix&&!raw.fullText.startsWith(prefix))continue;
-          const media=p.blocks.filter(b=>b.kind!=='text');p.blocks=[{kind:'text',runs:[{text:raw.fullText}]},...media];p.warnings=p.warnings.filter(w=>!w.includes('正文可能折叠'));
+        if(typeof raw.fullText==='string'&&p.warnings.some(w=>w.includes('正文可能折叠'))){
+          expandAnchoredText(p,raw.fullText);
         }
       }}catch{/* DOM fallback remains truthful about missing relation evidence. */}
     }

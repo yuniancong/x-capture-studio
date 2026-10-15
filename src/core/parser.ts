@@ -179,7 +179,7 @@ export function parsePost(el:Element,quoted=false,ownerId='visible',depth=0):Pos
   const parentId=el.getAttribute('data-in-reply-to-status-id')||undefined;
   const replyTo=ownNodes(el,'[data-testid="replying-to"] a',quote)[0];
   const note=ownNodes(el,'[data-testid="birdwatch-pivot"], [data-testid="communityNote"], [data-testid="birdwatch-pivot-footer"]',quote).map(n=>clean(n.textContent)).filter(Boolean).join('\n')||undefined;
-  const p:Post={id:id||`visible-quote-${ownerId}-${depth}`,url:url||'',author,blocks,kind:'post',published:time?.getAttribute('datetime')||undefined,displayTime:clean(time?.textContent)||undefined,
+  const p:Post={id:id||`visible-quote-${ownerId}-${depth}`,url:url||'',author,blocks,kind:'post',textStructure:inlineMedia?'interleaved':'text-with-attachments',published:time?.getAttribute('datetime')||undefined,displayTime:clean(time?.textContent)||undefined,
     metrics,poll:readPoll(el,quote),note,edited:clean(ownNodes(el,'a[href$="/history"], [data-testid="editHistory"]',quote)[0]?.textContent)||undefined,parentId,
     replyToHandle:replyTo?.textContent?.trim().replace(/^@/,''),relationEvidence:parentId?'dom':'unknown',warnings,capturedAt:new Date().toISOString()};
   if(quote){const qp=parsePost(quote,true,p.id,depth+1);if(qp&&qp.id!==p.id){p.quote=qp;p.warnings.push(...qp.warnings);}else p.warnings.push('检测到引用卡片，但当前可见内容未能完整读取。');}
@@ -202,7 +202,7 @@ export function parseArticle(scope:Document|Element=document):Post|undefined{
   const blocks=richBlocks(body);
   const cover=container.querySelector('[data-testid="twitterArticleCoverImage"] img') as HTMLImageElement|null;
   if(cover&&!body.contains(cover))blocks.unshift({kind:'media',media:{...mediaFromImage(cover),mediaRole:'cover'}});
-  return {id:postID(canonical)!,url:canonical,kind:'article',title,author:header?{name:clean(header.querySelector('a')?.textContent)||handle,handle,avatar:imageSrc([...container.querySelectorAll('img[src*="profile_images"]')].find(n=>!body.contains(n)))}:base?.author||{name:handle==='unknown'?'作者未识别':handle,handle},blocks,metrics:base?.metrics||{},published:base?.published,
+  return {id:postID(canonical)!,url:canonical,kind:'article',textStructure:'interleaved',title,author:header?{name:clean(header.querySelector('a')?.textContent)||handle,handle,avatar:imageSrc([...container.querySelectorAll('img[src*="profile_images"]')].find(n=>!body.contains(n)))}:base?.author||{name:handle==='unknown'?'作者未识别':handle,handle},blocks,metrics:base?.metrics||{},published:base?.published,
     relationEvidence:'unknown',warnings:blocks.length?[]:['文章正文未加载。'],capturedAt:new Date().toISOString()};
 }
 export function collectDOM(scope:Document|Element=document):Post[]{

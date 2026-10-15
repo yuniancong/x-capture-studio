@@ -31,7 +31,7 @@ export class Studio {
     this.stage=el('div',{class:'xc-stage'});this.preview=el('div',{class:'xc-preview'});this.stage.append(this.preview);
     this.counter=el('span',{class:'xc-counter'});this.dimensions=el('span');this.quality=el('div',{class:'xc-quality'});this.status=el('div',{class:'xc-status',role:'status','aria-live':'polite',hidden:true});
     this.controls=el('div',{class:'xc-controls'});
-    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay()});
+    this.textTools=new TextTools(()=>({capture:this.capture,selected:this.selected,order:this.order,privacy:this.options}),host,{notify:m=>this.toast(m),show:card=>this.showOverlay(card),close:()=>this.closeOverlay(),refresh:()=>this.refreshForDiscovery(),showPage:done=>this.showPageForObservation(done)});
     const fit=button('适应预览',()=>{this.autoZoom=true;this.paint();},'xc-textbtn');
     const zoomOut=el('button',{type:'button',class:'xc-iconbtn','aria-label':'缩小预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.max(.2,this.zoom/1.2);this.paint();}},icon('minus',15));
     const zoomIn=el('button',{type:'button',class:'xc-iconbtn','aria-label':'放大预览',onClick:()=>{this.autoZoom=false;this.zoom=Math.min(2.5,this.zoom*1.2);this.paint();}},icon('plus',15));
@@ -83,7 +83,7 @@ export class Studio {
   private toast(message:string,sticky=false){if(this.closed)return;clearTimeout(this.toastTimer);this.status.textContent=message;this.status.hidden=false;if(!sticky)this.toastTimer=window.setTimeout(()=>this.status.hidden=true,6500);}
   private schedule(){cancelAnimationFrame(this.repaint);this.repaint=requestAnimationFrame(()=>this.render());}
   update(patch:Partial<Options>,controls=false){this.options=normalizeOptions({...this.options,...patch});this.schedule();void this.host.setValue('options',this.options).catch(()=>this.toast('设置暂未持久保存。'));if(controls)this.renderControls();}
-  private render(){if(this.closed)return;this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();}
+  private render(){if(this.closed)return;this.textTools.selectionChanged();this.scene=layoutCapture(this.capture,this.selected,this.order,this.options,this.assets,this.measure);this.counter.textContent=`${this.selected.size} 条 / ${this.capture.posts.length} 条候选`;this.paint();this.renderFooter();}
   private renderFooter(){
     const b=exportBudget(this.scene.width,this.scene.height,this.options.scale,mobileDevice());this.dimensions.textContent=`${b.width.toLocaleString()} × ${b.height.toLocaleString()} px${b.ok?'':' · 尺寸超限'}`;
     this.quality.replaceChildren();for(const v of [1,2,3,4] as const)this.quality.append(button(v+'×',()=>this.update({scale:v}),this.options.scale===v?'is-active':''));
@@ -171,6 +171,24 @@ export class Studio {
     this.controls.replaceChildren(...nodes);
   }
   private move(id:string,delta:number){const i=this.order.indexOf(id),j=i+delta;if(j<0||j>=this.order.length)return;[this.order[i],this.order[j]]=[this.order[j],this.order[i]];this.render();this.renderControls();}
+  private async refreshForDiscovery():Promise<void> {
+    if(!this.collector||this.closed)return;
+    await this.collector.scan();if(this.closed)return;
+    this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);
+    this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];
+    // Keep the user's selection and active TextTools instance. No control-panel reconstruction here.
+    this.render();
+  }
+  private showPageForObservation(done:()=>void):()=>void {
+    const backdrop=this.shadow.querySelector<HTMLElement>('.xc-backdrop')!;
+    backdrop.classList.add('xc-hidden');this.hostElement.style.pointerEvents='none';document.documentElement.style.overflow=this.overflow;
+    const banner=el('div',{class:'xc-observation-banner',role:'status','data-xcapture-ui':'observation-return'},
+      el('span',{},'X Capture 正在短时观察。请手动播放要保存的视频。'),
+      button('返回结果并完成检查',()=>{restore();done();},'xc-button primary'));
+    this.shadow.append(banner);let restored=false;
+    const restore=()=>{if(restored)return;restored=true;banner.remove();if(!this.closed){this.hostElement.style.pointerEvents='';backdrop.classList.remove('xc-hidden');document.documentElement.style.overflow='hidden';this.studio.focus();}};
+    return restore;
+  }
   private async rescan(){if(!this.collector)return;await this.collector.scan();this.capture.posts=mergePosts(this.capture.posts,this.collector.posts);this.order=[...new Set([...this.order,...this.capture.posts.map(p=>p.id)])];this.render();this.renderControls();await this.refreshAssets();this.toast('候选已更新；保留了你本次的勾选与排序。');}
   private async collectMore(){
     if(this.abort){this.abort.abort();return;}if(!this.collector)return;

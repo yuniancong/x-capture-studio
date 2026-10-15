@@ -1,3 +1,5 @@
+import {ChromeObservationBridge} from './platform/network-observer';
+const observation=new ChromeObservationBridge(chrome);
 import {nativeResource,safeResourceRequest} from './platform/resource-network';
 const resourceTasks=new Map<string,AbortController>();
 const resourceRate=new Map<number,{at:number;count:number}>();
@@ -8,6 +10,12 @@ import {nativeBytes} from './platform/host';
 const isX=(url:string)=>{try{return /^(?:www\.|mobile\.)?(?:x\.com|twitter\.com)$/.test(new URL(url).hostname);}catch{return false;}};
 chrome.runtime.onMessage.addListener((msg:any,sender:any,respond:any)=>{
   if(sender.id!==chrome.runtime.id||!sender.tab?.id||!isX(sender.tab.url||sender.url||''))return false;
+  if(msg?.type==='xc:observe'){
+    observation.command(msg.action,sender,msg.sessionId).then(respond).catch(()=>respond({state:'unavailable',records:[]}));return true;
+  }
+  if(msg?.type==='xc:observe-enable'){
+    observation.openPermissionPage(sender).then(ok=>respond({ok})).catch(()=>respond({ok:false}));return true;
+  }
   if(msg?.type==='xc:asset'){
     if(typeof msg.url!=='string'||!allowedAsset(msg.url)){respond({ok:false,error:'资源地址不在允许列表。'});return false;}
     nativeBytes(msg.url).then(b=>respond({ok:true,data:base64(b)})).catch(e=>respond({ok:false,error:e.message}));return true;

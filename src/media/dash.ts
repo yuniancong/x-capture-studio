@@ -39,11 +39,11 @@ export function parseDASH(text:string,address:string):ManifestResult {
         if(targets.length)isDirect=true;
         const format=/stpp\.ttml\.im|imsc/.test(codecs+' '+(attrs.profiles||''))?'IMSC1':/ttml|stpp/.test(mime+' '+codecs)?'TTML':/vtt|wvtt/.test(mime+' '+codecs)?'WebVTT':undefined;
         if(sub||audio){for(const target of isDirect?targets:[undefined])tracks.push({id:`${periodId}:${adaptationId}:${id}:${target||''}`,kind:audio?'audio':c.roles.includes('caption')?'captions':'subtitles',language:attrs.lang,label:children(r,'Label')[0]?.text||children(a,'Label')[0]?.text||id,format:audio?mediaFormat(target||base,mime):format||'DASH 字幕',mime,codecs,
-          url:target,manifestUrl:base,periodId,adaptationId,representationId:id,default:c.roles.includes('main'),forced:c.roles.some(v=>/forced-subtitle|forced_subtitle/.test(v)),segmented,source:'dash',state:'observed',encrypted:c.protected,sensitive:sensitive||!!target&&sensitiveURL(target)});
+          url:target,manifestUrl:base,periodId,adaptationId,representationId:id,default:c.roles.includes('main'),forced:c.roles.some(v=>/forced-subtitle|forced_subtitle/.test(v)),segmented,evidence:'declared',source:'dash',state:'observed',encrypted:c.protected,sensitive:sensitive||!!target&&sensitiveURL(target)});
         }
         for(const target of isDirect?targets:[base]){
           const kind=sub?'subtitle':audio?'audio':isDirect?'file':'dash';
-          const v=variant({url:target,kind,format:isDirect?undefined:'dash',mime:isDirect?mime:undefined,codecs,role:sub?'subtitle':audio?'audio':'video',width:num(attrs.width),height:num(attrs.height),bitrate:num(attrs.bandwidth),frameRate:num(attrs.frameRate),language:attrs.lang,
+          const v=variant({url:target,kind,format:isDirect?undefined:'dash',mime:isDirect?mime:undefined,codecs,role:sub?'subtitle':audio?'audio':'video',dimensionSource:'manifest',width:num(attrs.width),height:num(attrs.height),bitrate:num(attrs.bandwidth),frameRate:num(attrs.frameRate),language:attrs.lang,
             periodId,adaptationId,representationId:id,parentUrl:base,segmented:!isDirect,encrypted:c.protected,drm:c.protected,sensitive},'dash',kind)!;
           // A representation pointing to a manifest remains a DASH representation, not a video file.
           v.kind=kind;v.format=isDirect?mediaFormat(target,mime):sub?format||'dash':'dash';variants.push(v);

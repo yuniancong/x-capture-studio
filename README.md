@@ -1,5 +1,7 @@
 # X Capture Studio
 
+> **rc.8 修复候选（本地交付）**：基于 rc.7 增加可选短时桌面媒体观察，修正字幕证据、HLS 画质与折叠长文媒体顺序。安装与权限说明见 [INSTALL_RC8.md](INSTALL_RC8.md)，实现边界见 [DISCOVERY_RC8.md](docs/DISCOVERY_RC8.md)。下面原 rc.7 安装入口为历史基线；不要将候选交付当作 main 已更新。
+
 > **v1.0.0-rc.7 多媒体升级候选。** 已提交到升级分支供安装测试和审查，rc.5 安装包保留为回退；真实 X 与 Safari＋Stay 真机尚待验收。阅读 [rc.7 安装与使用说明](INSTALL_RC7.md)。
 
 **A local-first, high-fidelity X / Twitter capture tool for Chromium and Safari + Stay.**

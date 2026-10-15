@@ -88,8 +88,8 @@ export class MediaResolver {
       const variants=parsed.variants.map(x=>({...x,parentUrl:x.url===v.url?v.parentUrl:x.parentUrl,sensitive:x.sensitive||v.sensitive}));
       m.variants=mergeVariants(m.variants,variants);
       // Root identity (parent/groups) must get the same successful check, not stay as duplicate observed.
-      m.variants=mergeVariants(m.variants,[{...v,state:'verified',verifiedBy:'manifest-parse',checkedAt:new Date().toISOString(),playlist:parsed.info.type==='hls-master'?'master':v.kind==='hls'?'media':undefined,live:parsed.info.live,encrypted:parsed.info.encrypted,drm:parsed.info.drm}]);
-      m.tracks=mergeTracks(m.tracks,parsed.tracks.map(t=>({...t,sensitive:t.sensitive||v.sensitive}))).map(t=>t.url===v.url?{...t,state:'verified',encrypted:t.encrypted||parsed!.info.encrypted}:t);
+      m.variants=mergeVariants(m.variants,[{...v,...(parsed.info.type==='hls-master'?{width:undefined,height:undefined,dimensionSource:undefined}:{}),state:'verified',verifiedBy:'manifest-parse',checkedAt:new Date().toISOString(),playlist:parsed.info.type==='hls-master'?'master':v.kind==='hls'?'media':undefined,live:parsed.info.live,encrypted:parsed.info.encrypted,drm:parsed.info.drm}]);
+      m.tracks=mergeTracks(m.tracks,parsed.tracks.map(t=>({...t,sensitive:t.sensitive||v.sensitive}))).map(t=>t.url===v.url?{...t,state:'verified',evidence:t.evidence==='cue-confirmed'?'cue-confirmed':'resource-validated',encrypted:t.encrypted||parsed!.info.encrypted}:t);
       const infos=new Map((m.manifests||[]).map(i=>[i.url,i]));infos.set(parsed.info.url,parsed.info);m.manifests=[...infos.values()].slice(0,64);
       if(parsed.info.encrypted)continue;
       const next=variants.filter(x=>['hls','dash','vmap'].includes(x.kind)&&x.url!==v.url&&!x.representationId&&x.role!=='iframe');
